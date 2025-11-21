@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
         }
 
         // Cria negócio automaticamente
-        await base44.asServiceRole.entities.NegocioFechado.create({
+        const negocio = await base44.asServiceRole.entities.NegocioFechado.create({
           nome_cliente: customer.name || 'Cliente',
           nome_empresa: customer.name || 'Empresa',
           email_cliente: customer.email,
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
         });
 
         // Cria lead no CRM
-        await base44.asServiceRole.entities.Lead.create({
+        const lead = await base44.asServiceRole.entities.Lead.create({
           nome_cliente: customer.name || 'Cliente',
           nome_empresa: customer.name || 'Empresa',
           email_cliente: customer.email,
@@ -99,10 +99,92 @@ Deno.serve(async (req) => {
           estagio: 'Negocio_Fechado',
           valor_estimado: price.unit_amount / 100,
           observacoes: '✨ Criado automaticamente via webhook do site',
-          prioridade: 'Alta'
+          prioridade: 'Alta',
+          negocio_id: negocio.id
         });
 
         console.log('✅ Negócio e Lead criados automaticamente!');
+
+        // 📧 ENVIAR EMAIL COM FORMULÁRIO DE ONBOARDING
+        try {
+          const formularioUrl = `https://preview--agenda-gloria-766ae684.base44.app/api/functions/formularioOnboarding?lead_id=${lead.id}&email=${encodeURIComponent(customer.email)}`;
+          
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: customer.email,
+            subject: '🎉 Bem-vindo! Complete seu cadastro',
+            body: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                  <h1 style="color: white; margin: 0;">🎉 Pagamento Confirmado!</h1>
+                </div>
+                
+                <div style="background: white; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px;">
+                  <p style="font-size: 16px; color: #374151;">Olá <strong>${customer.name || 'Cliente'}</strong>,</p>
+                  
+                  <p style="font-size: 16px; color: #374151;">
+                    Seu pagamento foi confirmado com sucesso! 🎊
+                  </p>
+                  
+                  <p style="font-size: 16px; color: #374151;">
+                    Para que possamos configurar seus serviços corretamente, por favor complete seu cadastro clicando no botão abaixo:
+                  </p>
+                  
+                  <div style="text-align: center; margin: 30px 0;">
+                    <a href="${formularioUrl}" 
+                       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; font-size: 16px;">
+                      📋 Completar Cadastro
+                    </a>
+                  </div>
+                  
+                  <p style="font-size: 14px; color: #6b7280;">
+                    Ou copie e cole este link no seu navegador:<br>
+                    <a href="${formularioUrl}" style="color: #667eea; word-break: break-all;">${formularioUrl}</a>
+                  </p>
+                  
+                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+                  
+                  <p style="font-size: 14px; color: #6b7280; text-align: center;">
+                    Qualquer dúvida, estamos à disposição!<br>
+                    <strong>Equipe Glória Vendas</strong>
+                  </p>
+                </div>
+              </div>
+            `
+          });
+          console.log('✅ Email de onboarding enviado!');
+        } catch (emailError) {
+          console.error('⚠️ Erro ao enviar email:', emailError);
+        }
+
+        // 📱 ENVIAR WHATSAPP COM FORMULÁRIO (se tiver telefone)
+        if (customer.phone) {
+          try {
+            const formularioUrl = `https://preview--agenda-gloria-766ae684.base44.app/api/functions/formularioOnboarding?lead_id=${lead.id}&email=${encodeURIComponent(customer.email)}`;
+            
+            await base44.asServiceRole.functions.invoke('whatsapp_sendMessage', {
+              phone: customer.phone,
+              message: `🎉 *Pagamento Confirmado!*
+
+Olá ${customer.name || 'Cliente'}!
+
+Seu pagamento foi aprovado com sucesso! 🎊
+
+Para configurarmos seus serviços, complete seu cadastro aqui:
+
+${formularioUrl}
+
+📋 *É rápido e fácil!*
+
+Qualquer dúvida, estamos à disposição!
+
+_Equipe Glória Vendas_`
+            });
+            console.log('✅ WhatsApp de onboarding enviado!');
+          } catch (whatsappError) {
+            console.error('⚠️ Erro ao enviar WhatsApp:', whatsappError);
+          }
+        }
+
         break;
       }
 
