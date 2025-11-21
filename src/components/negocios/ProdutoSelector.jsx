@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
+// Export para compatibilidade com arquivos antigos
+export const PRODUTOS = {};
 
 export default function ProdutoSelector({ produtos, onProdutosChange, valorPersonalizado, onValorChange }) {
   const [dialogAberto, setDialogAberto] = useState(false);
