@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Package, Check } from "lucide-react";
+import { User, Mail, Phone, Building2, Package, DollarSign, Calendar, Check } from "lucide-react";
 
 const produtoConfig = {
   Gloria_Atendente: { nome: "Glória Atendente", icon: "👤" },
@@ -21,6 +21,15 @@ const produtoConfig = {
   Gloria_Financas: { nome: "Glória Finanças", icon: "💰" },
   Avatar_ao_Vivo: { nome: "Avatar ao Vivo", icon: "🎭" }
 };
+
+const estagiosConfig = [
+  { id: "Reuniao_Marcada", nome: "Reunião Marcada", icon: "📅" },
+  { id: "Em_Avaliacao", nome: "Em Avaliação", icon: "🔍" },
+  { id: "Negocio_Fechado", nome: "Negócio Fechado", icon: "🤝" },
+  { id: "Implantacao", nome: "Implantação", icon: "⚙️" },
+  { id: "Inicio_de_Uso", nome: "Início de Uso", icon: "🚀" },
+  { id: "Estavel", nome: "Estável", icon: "✅" }
+];
 
 export default function NovoLeadDialog({ open, onOpenChange }) {
   const queryClient = useQueryClient();
@@ -33,14 +42,14 @@ export default function NovoLeadDialog({ open, onOpenChange }) {
     valor_estimado: "",
     data_reuniao: "",
     prioridade: "Media",
-    observacoes: ""
+    observacoes: "",
+    estagio: "Reuniao_Marcada"
   });
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.Lead.create({
       ...data,
-      valor_estimado: data.valor_estimado ? parseFloat(data.valor_estimado) : 0,
-      estagio: "Reuniao_Marcada"
+      valor_estimado: data.valor_estimado ? parseFloat(data.valor_estimado) : 0
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -54,7 +63,8 @@ export default function NovoLeadDialog({ open, onOpenChange }) {
         valor_estimado: "",
         data_reuniao: "",
         prioridade: "Media",
-        observacoes: ""
+        observacoes: "",
+        estagio: "Reuniao_Marcada"
       });
     },
   });
@@ -114,6 +124,32 @@ export default function NovoLeadDialog({ open, onOpenChange }) {
                   onChange={(e) => setFormData({...formData, telefone_cliente: e.target.value})}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Estágio Inicial */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+              📊 Estágio no Funil *
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {estagiosConfig.map((estagio) => (
+                <button
+                  key={estagio.id}
+                  type="button"
+                  onClick={() => setFormData({...formData, estagio: estagio.id})}
+                  className={`p-3 rounded-lg border-2 transition-all duration-200 text-left ${
+                    formData.estagio === estagio.id
+                      ? 'border-green-500 bg-green-50'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{estagio.icon}</span>
+                    <span className="text-sm font-medium">{estagio.nome}</span>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 
