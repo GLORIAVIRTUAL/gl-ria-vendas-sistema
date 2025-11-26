@@ -270,6 +270,28 @@ Deno.serve(async (req) => {
         mensagemConfirmacao += `\n\n🔗 Link da reunião:\n${linkReuniao}`;
       }
 
+      // Envia webhook para o chatbot enviar confirmação no WhatsApp
+      try {
+        await fetch('https://ra-bcknd.com/v1/api-trigger/cayly9lw2sl4z6jtvs5v', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agendamento_id: agendamento.id,
+            nome_cliente,
+            telefone_cliente: telefone_cliente || '',
+            email_cliente: emailFinal,
+            data: dataAgendamento,
+            horario: horarioAgendamento,
+            data_formatada: formatarDataExibicao(dataAgendamento),
+            produto: produtoFinal,
+            link_reuniao: linkReuniao,
+            mensagem: mensagemConfirmacao
+          })
+        });
+      } catch (webhookError) {
+        console.error('Erro ao enviar webhook:', webhookError);
+      }
+
       return Response.json({
         sucesso: true,
         mensagem: mensagemConfirmacao,
