@@ -1,11 +1,15 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, Users, DollarSign, Calendar, Package, ChevronRight, FileText, Send, Clock } from "lucide-react";
+import { Plus, TrendingUp, Users, DollarSign, Phone, Mail, Calendar, Package, ChevronRight, FileText, Send, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -249,7 +253,7 @@ Qualquer dúvida, estou à disposição!`;
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`w-80 flex-shrink-0 ${
+                      className={`w-96 flex-shrink-0 ${
                         snapshot.isDraggingOver ? 'bg-blue-50' : ''
                       } transition-colors duration-200`}
                     >
@@ -272,7 +276,7 @@ Qualquer dúvida, estou à disposição!`;
                             </p>
                           )}
                         </CardHeader>
-                        <CardContent className="p-4 space-y-3 min-h-[500px] max-h-[600px] overflow-y-auto">
+                        <CardContent className="p-4 space-y-3 min-h-[700px] max-h-[85vh] overflow-y-auto">
                           {leadsDoEstagio.map((lead, index) => (
                             <Draggable key={lead.id} draggableId={lead.id} index={index}>
                               {(provided, snapshot) => (
