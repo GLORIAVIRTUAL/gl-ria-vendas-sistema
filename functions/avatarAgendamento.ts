@@ -208,6 +208,41 @@ Deno.serve(async (req) => {
       const produtoFinal = produto || 'Gloria_Vendas';
       const emailFinal = email_cliente || `${telefone_cliente}@avatar.temp`;
 
+      // Cria evento no Google Calendar
+      let linkReuniao = '';
+      try {
+        const startDateTime = `${dataAgendamento}T${horarioAgendamento}:00`;
+        const [hora, minuto] = horarioAgendamento.split(':');
+        const endHora = String(parseInt(hora) + 1).padStart(2, '0');
+        const endDateTime = `${dataAgendamento}T${endHora}:${minuto}:00`;
+
+        const produtoNomes = {
+          'Gloria_Vendas': 'Glória Vendas',
+          'Gloria_Clinica': 'Glória Clínica',
+          'Gloria_Atendente': 'Glória Atendente',
+          'Maquina_de_Videos': 'Máquina de Vídeos',
+          'Atendimento_IA_24_7': 'Atendimento IA 24/7',
+          'Especialistas_Virtuais': 'Especialistas Virtuais',
+          'Sites_em_24_Horas': 'Sites em 24 Horas'
+        };
+        const produtoNome = produtoNomes[produtoFinal] || produtoFinal;
+
+        const calendarResponse = await base44.functions.invoke('createGoogleCalendarEvent', {
+          summary: `Reunião - ${produtoNome} - ${nome_cliente}`,
+          description: `Reunião sobre ${produtoNome}\n\nCliente: ${nome_cliente}\nTelefone: ${telefone_cliente || 'Não informado'}\nEmail: ${emailFinal}\n\nAgendado via Avatar Interativo`,
+          startDateTime,
+          endDateTime,
+          attendeeEmail: emailFinal,
+          attendeeName: nome_cliente
+        });
+
+        if (calendarResponse.status === 200 && calendarResponse.data?.meetLink) {
+          linkReuniao = calendarResponse.data.meetLink;
+        }
+      } catch (calendarError) {
+        console.error('Erro ao criar evento no Google Calendar:', calendarError);
+      }
+
       const agendamento = await base44.entities.Agendamento.create({
         nome_cliente,
         email_cliente: emailFinal,
@@ -215,6 +250,7 @@ Deno.serve(async (req) => {
         produto: produtoFinal,
         data: dataAgendamento,
         horario: horarioAgendamento,
+        link_reuniao: linkReuniao,
         status: 'Agendada',
         origem: 'Chatbot',
         observacoes: 'Agendado via Avatar Interativo'
@@ -233,16 +269,23 @@ Deno.serve(async (req) => {
         observacoes: 'Lead criado via Avatar Interativo'
       });
 
+      // Monta mensagem de confirmação
+      let mensagemConfirmacao = `✅ Reunião agendada com sucesso!\n\n📅 ${formatarDataExibicao(dataAgendamento)} às ${horarioAgendamento}`;
+      if (linkReuniao) {
+        mensagemConfirmacao += `\n\n🔗 Link da reunião:\n${linkReuniao}`;
+      }
+
       return Response.json({
         sucesso: true,
-        mensagem: `Reunião agendada com sucesso para ${formatarDataExibicao(dataAgendamento)} às ${horarioAgendamento}!`,
+        mensagem: mensagemConfirmacao,
         agendamento: {
           id: agendamento.id,
           nome_cliente,
           data: dataAgendamento,
           horario: horarioAgendamento,
           data_formatada: formatarDataExibicao(dataAgendamento),
-          produto: produtoFinal
+          produto: produtoFinal,
+          link_reuniao: linkReuniao
         }
       }, { status: 200, headers });
     }
