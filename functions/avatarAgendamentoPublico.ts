@@ -1,5 +1,5 @@
 // API PÚBLICA para Avatar Interativo - não requer autenticação
-import { createClient } from 'npm:@base44/sdk@0.8.4';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 const HORARIOS_DISPONIVEIS = [
   "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00",
@@ -81,11 +81,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Inicializa o SDK com service role (sem autenticação de usuário)
-    const base44 = createClient({
-      appId: Deno.env.get('BASE44_APP_ID'),
-      serviceRoleKey: Deno.env.get('BASE44_SERVICE_ROLE_KEY')
-    });
+    // Inicializa o SDK usando service role para acesso público
+    const base44 = createClientFromRequest(req);
+    const sdk = base44.asServiceRole; // Usa service role para não precisar de auth do usuário
 
     const url = new URL(req.url);
     
@@ -93,7 +91,7 @@ Deno.serve(async (req) => {
     // GET /proximo-horario - Busca próximo horário disponível
     // ========================================
     if (req.method === 'GET' && url.searchParams.get('acao') === 'proximo-horario') {
-      const proximo = await buscarProximoHorarioDisponivel(base44);
+      const proximo = await buscarProximoHorarioDisponivel(sdk);
       
       if (!proximo) {
         return Response.json({
@@ -124,7 +122,7 @@ Deno.serve(async (req) => {
         }, { status: 400, headers });
       }
 
-      const agendamentos = await base44.entities.Agendamento.filter({ 
+      const agendamentos = await sdk.entities.Agendamento.filter({ 
         data: data,
         status: { $ne: 'Cancelada' }
       });
@@ -166,7 +164,7 @@ Deno.serve(async (req) => {
       let horarioAgendamento = horario;
 
       if (usar_proximo_horario || (!data && !horario)) {
-        const proximo = await buscarProximoHorarioDisponivel(base44);
+        const proximo = await buscarProximoHorarioDisponivel(sdk);
         if (!proximo) {
           return Response.json({
             sucesso: false,
@@ -185,14 +183,14 @@ Deno.serve(async (req) => {
       }
 
       // Verifica disponibilidade
-      const agendamentosExistentes = await base44.entities.Agendamento.filter({
+      const agendamentosExistentes = await sdk.entities.Agendamento.filter({
         data: dataAgendamento,
         horario: horarioAgendamento,
         status: { $ne: 'Cancelada' }
       });
 
       if (agendamentosExistentes.length > 0) {
-        const proximo = await buscarProximoHorarioDisponivel(base44);
+        const proximo = await buscarProximoHorarioDisponivel(sdk);
         return Response.json({
           sucesso: false,
           mensagem: `Horário ${horarioAgendamento} do dia ${formatarDataExibicao(dataAgendamento)} não está disponível.`,
@@ -226,7 +224,7 @@ Deno.serve(async (req) => {
         };
         const produtoNome = produtoNomes[produtoFinal] || produtoFinal;
 
-        const calendarResponse = await base44.functions.invoke('createGoogleCalendarEvent', {
+        const calendarResponse = await sdk.functions.invoke('createGoogleCalendarEvent', {
           summary: `Reunião - ${produtoNome} - ${nome_cliente}`,
           description: `Reunião sobre ${produtoNome}\n\nCliente: ${nome_cliente}\nTelefone: ${telefone_cliente || 'Não informado'}\nEmail: ${emailFinal}\n\nAgendado via Avatar Interativo`,
           startDateTime,
@@ -242,7 +240,7 @@ Deno.serve(async (req) => {
         console.error('Erro ao criar evento no Google Calendar:', calendarError);
       }
 
-      const agendamento = await base44.entities.Agendamento.create({
+      const agendamento = await sdk.entities.Agendamento.create({
         nome_cliente,
         email_cliente: emailFinal,
         telefone_cliente: telefone_cliente || '',
@@ -255,7 +253,7 @@ Deno.serve(async (req) => {
         observacoes: 'Agendado via Avatar Interativo'
       });
 
-      await base44.entities.Lead.create({
+      await sdk.entities.Lead.create({
         nome_cliente,
         email_cliente: emailFinal,
         telefone_cliente: telefone_cliente || '',
