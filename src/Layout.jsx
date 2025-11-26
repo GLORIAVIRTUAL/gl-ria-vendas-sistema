@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, LayoutDashboard, List, Video, TrendingUp, Users, Clock, LogOut, Settings, ChevronDown, ChevronRight, CalendarCheck } from "lucide-react";
+import { Calendar, LayoutDashboard, List, Video, TestTube, TrendingUp, Users, Code, Clock, LogOut, Settings, ChevronDown, ChevronRight, CalendarCheck } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -101,6 +101,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "🌐 Código para Site", url: createPageUrl("CodigoEmbed") },
     { title: "📚 API / Chatbot", url: createPageUrl("APIDocumentacao") },
     { title: "🔧 Testar Stripe", url: createPageUrl("TesteStripe") },
+    { title: "🔗 Testar Webhook", url: createPageUrl("TesteWebhook") },
     { title: "➕ Criar Conta Afiliado", url: createPageUrl("CriarContaAfiliado") },
   ];
 
