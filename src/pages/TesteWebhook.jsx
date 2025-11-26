@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Send, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { testeWebhookAvatar } from "@/functions/testeWebhookAvatar";
 
 export default function TesteWebhook() {
   const [loading, setLoading] = useState(false);
@@ -15,38 +16,10 @@ export default function TesteWebhook() {
     setErro(null);
 
     try {
-      const dadosTeste = {
-        agendamento_id: "teste_" + Date.now(),
-        nome_cliente: "João Silva Teste",
-        telefone_cliente: "5511999999999",
-        email_cliente: "joao.teste@email.com",
-        data: "2025-11-28",
-        horario: "14:00",
-        data_formatada: "Sexta-feira, 28 de novembro",
-        produto: "Gloria_Vendas",
-        link_reuniao: "https://meet.google.com/abc-defg-hij",
-        mensagem: "✅ Reunião agendada com sucesso!\n\n📅 Sexta-feira, 28 de novembro às 14:00\n\n🔗 Link da reunião:\nhttps://meet.google.com/abc-defg-hij"
-      };
-
-      const response = await fetch('https://ra-bcknd.com/v1/api-trigger/cayly9lw2sl4z6jtvs5v', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dadosTeste)
-      });
-
-      const responseText = await response.text();
-
-      setResultado({
-        status: response.status,
-        statusText: response.statusText,
-        body: responseText,
-        dadosEnviados: dadosTeste
-      });
-
+      const response = await testeWebhookAvatar({});
+      setResultado(response.data);
     } catch (error) {
-      setErro(error.message);
+      setErro(error.message || "Erro ao enviar webhook");
     } finally {
       setLoading(false);
     }
