@@ -79,14 +79,22 @@ export default function TesteWebhook() {
           </Button>
 
           {resultado && (
-            <Alert className={resultado.status >= 200 && resultado.status < 300 ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"}>
+            <Alert className={resultado.sucesso ? "bg-green-50 border-green-200" : "bg-yellow-50 border-yellow-200"}>
               <CheckCircle className="w-5 h-5 text-green-600" />
               <AlertDescription>
-                <p className="font-bold mb-2">Webhook enviado!</p>
-                <p><strong>Status:</strong> {resultado.status} {resultado.statusText}</p>
-                <p className="mt-2"><strong>Resposta:</strong></p>
+                <p className="font-bold mb-2">{resultado.mensagem}</p>
+                {resultado.resposta_webhook && (
+                  <>
+                    <p><strong>Status:</strong> {resultado.resposta_webhook.status} {resultado.resposta_webhook.statusText}</p>
+                    <p className="mt-2"><strong>Resposta:</strong></p>
+                    <pre className="text-xs bg-white p-2 rounded mt-1 overflow-auto max-h-40">
+                      {resultado.resposta_webhook.body || "(vazio)"}
+                    </pre>
+                  </>
+                )}
+                <p className="mt-2"><strong>Dados enviados:</strong></p>
                 <pre className="text-xs bg-white p-2 rounded mt-1 overflow-auto max-h-40">
-                  {resultado.body || "(vazio)"}
+                  {JSON.stringify(resultado.dados_enviados, null, 2)}
                 </pre>
               </AlertDescription>
             </Alert>
