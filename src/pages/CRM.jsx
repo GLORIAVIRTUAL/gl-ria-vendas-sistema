@@ -71,6 +71,13 @@ export default function CRM() {
     },
   });
 
+  const deleteLeadMutation = useMutation({
+    mutationFn: (id) => base44.entities.Lead.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+    },
+  });
+
   const sendFormularioMutation = useMutation({
     mutationFn: async ({ telefone, mensagem, lead_id }) => {
       const response = await base44.functions.invoke('whatsapp/sendMessage', {
@@ -295,6 +302,7 @@ Qualquer dúvida, estou à disposição!`;
                                     }}
                                     onEnviarFormulario={handleEnviarFormulario}
                                     onVerOnboarding={handleVerOnboarding}
+                                    onDelete={(id) => deleteLeadMutation.mutate(id)}
                                   />
                                 </div>
                               )}
