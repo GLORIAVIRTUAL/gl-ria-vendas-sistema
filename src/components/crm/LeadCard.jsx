@@ -1,7 +1,8 @@
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, Calendar, DollarSign, Building2, Pencil, ExternalLink, FileText, Eye } from "lucide-react";
+import { Phone, Mail, Calendar, DollarSign, Building2, Pencil, ExternalLink, FileText, Eye, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
@@ -20,7 +21,7 @@ const statusOnboardingCor = {
   Concluido: "bg-green-100 text-green-700"
 };
 
-export default function LeadCard({ lead, produtoConfig, isDragging, onEdit, onEnviarFormulario, onVerOnboarding }) {
+export default function LeadCard({ lead, produtoConfig, isDragging, onEdit, onEnviarFormulario, onVerOnboarding, onDelete }) {
   // Busca o agendamento relacionado para pegar o link da reunião
   const { data: agendamento } = useQuery({
     queryKey: ['agendamento', lead.agendamento_id],
@@ -65,6 +66,19 @@ export default function LeadCard({ lead, produtoConfig, isDragging, onEdit, onEn
               className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
             >
               <Pencil className="w-4 h-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm(`Tem certeza que deseja excluir o lead "${lead.nome_cliente}"?`)) {
+                  onDelete(lead.id);
+                }
+              }}
+              className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50"
+            >
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </div>
