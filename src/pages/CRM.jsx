@@ -135,7 +135,7 @@ export default function CRM() {
     setLeadParaFormulario(lead);
     
     const baseUrl = window.location.origin;
-    const formLink = `${baseUrl}/api/functions/formularioOnboarding?email=${encodeURIComponent(lead.email_cliente)}&lead_id=${lead.id}`;
+    const formLink = `${baseUrl}/OnboardingPublico?email=${encodeURIComponent(lead.email_cliente)}&lead_id=${lead.id}`;
     
     const produtoNome = produtoConfig[lead.produto_interesse]?.nome || lead.produto_interesse;
     
