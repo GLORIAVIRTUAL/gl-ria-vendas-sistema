@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,17 +81,10 @@ export default function OnboardingPublico() {
     setErro(null);
 
     try {
-      const response = await fetch('/api/functions/submitOnboarding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await base44.functions.invoke('submitOnboarding', formData);
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
+      if (response.status !== 200 || !data.success) {
         throw new Error(data.error || data.message || "Erro ao enviar formulário");
       }
 
