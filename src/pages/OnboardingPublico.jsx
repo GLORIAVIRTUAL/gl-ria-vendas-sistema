@@ -17,6 +17,10 @@ export default function OnboardingPublico() {
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState(null);
 
+  useEffect(() => {
+    console.log("OnboardingPublico carregado");
+  }, []);
+
   // Dados iniciais da URL
   const initialLeadId = searchParams.get("lead_id") || "";
   const initialEmail = searchParams.get("email") || "";
