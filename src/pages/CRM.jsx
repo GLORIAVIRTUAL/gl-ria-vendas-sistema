@@ -14,6 +14,7 @@ import { ptBR } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 import LeadCard from "../components/crm/LeadCard";
 import NovoLeadDialog from "../components/crm/NovoLeadDialog";
@@ -85,6 +86,10 @@ export default function CRM() {
         mensagem,
         agendamento_id: null
       });
+
+      if (response.status !== 200) {
+        throw new Error(response.data?.error || 'Erro ao enviar mensagem');
+      }
       
       await base44.entities.Lead.update(lead_id, {
         status_onboarding: 'Aguardando_Cliente',
@@ -97,7 +102,12 @@ export default function CRM() {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       setDialogFormularioAberto(false);
       setLeadParaFormulario(null);
+      toast.success("Formulário enviado com sucesso!");
     },
+    onError: (error) => {
+      console.error("Erro ao enviar formulário:", error);
+      toast.error(`Erro ao enviar: ${error.message}`);
+    }
   });
 
   const handleDragEnd = (result) => {
