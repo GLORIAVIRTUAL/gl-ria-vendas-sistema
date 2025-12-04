@@ -27,6 +27,7 @@ import Agenda from './pages/Agenda';
 import AgendaAfiliado from './pages/AgendaAfiliado';
 import TesteWebhook from './pages/TesteWebhook';
 import OnboardingPublico from './pages/OnboardingPublico';
+import CRM from './pages/CRM';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +61,7 @@ export const PAGES = {
     "AgendaAfiliado": AgendaAfiliado,
     "TesteWebhook": TesteWebhook,
     "OnboardingPublico": OnboardingPublico,
+    "CRM": CRM,
 }
 
 export const pagesConfig = {
