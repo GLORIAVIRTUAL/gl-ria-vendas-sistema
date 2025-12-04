@@ -1,5 +1,4 @@
-
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
   console.log('\n🔍 === SEND MESSAGE START ===');
@@ -29,17 +28,20 @@ Deno.serve(async (req) => {
     const instanceToken = Deno.env.get('TOKEN_DA_INSTANCIA')?.trim();
     const instanceId = Deno.env.get('IA_DA_INSTANCIA')?.trim();
 
-    console.log('🔑 Client Token length:', clientToken?.length);
-    console.log('🔑 Instance Token length:', instanceToken?.length);
-    console.log('🔑 Instance ID length:', instanceId?.length);
+    // Log para debug (ocultando parte dos tokens)
+    console.log('🔑 Verificando credenciais...');
+    console.log('IA_DA_INSTANCIA:', instanceId ? instanceId.substring(0, 4) + '***' : 'NÃO DEFINIDO');
+    console.log('TOKEN_DA_INSTANCIA:', instanceToken ? instanceToken.substring(0, 4) + '***' : 'NÃO DEFINIDO');
+    console.log('CLIENT_TOKEN:', clientToken ? clientToken.substring(0, 4) + '***' : 'NÃO DEFINIDO');
 
     if (!clientToken || !instanceToken || !instanceId) {
+      console.error('❌ Erro: Credenciais do WhatsApp incompletas');
       return Response.json({ 
-        error: 'WhatsApp não configurado',
-        debug: {
-          hasClientToken: !!clientToken,
-          hasInstanceToken: !!instanceToken,
-          hasInstanceId: !!instanceId
+        error: 'WhatsApp não configurado corretamente. Verifique as variáveis de ambiente: CLIENT_TOKEN, TOKEN_DA_INSTANCIA, IA_DA_INSTANCIA.',
+        missing: {
+          CLIENT_TOKEN: !clientToken,
+          TOKEN_DA_INSTANCIA: !instanceToken,
+          IA_DA_INSTANCIA: !instanceId
         }
       }, { status: 500 });
     }
