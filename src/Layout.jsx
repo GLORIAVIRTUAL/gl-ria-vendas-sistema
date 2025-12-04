@@ -71,10 +71,10 @@ export default function Layout({ children, currentPageName }) {
     queryKey: ['current-user'],
     queryFn: () => base44.auth.me(),
     staleTime: Infinity,
-    enabled: currentPageName !== "AgendamentoPublico",
+    enabled: currentPageName !== "AgendamentoPublico" && currentPageName !== "OnboardingPublico",
   });
 
-  if (currentPageName === "AgendamentoPublico") {
+  if (currentPageName === "AgendamentoPublico" || currentPageName === "OnboardingPublico") {
     return <>{children}</>;
   }
 
