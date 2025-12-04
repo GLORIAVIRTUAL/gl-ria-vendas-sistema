@@ -4,7 +4,6 @@ import Agendamentos from './pages/Agendamentos';
 import Negocios from './pages/Negocios';
 import NovoNegocio from './pages/NovoNegocio';
 import TesteStripe from './pages/TesteStripe';
-import CRM from './pages/CRM';
 import APIDocumentacao from './pages/APIDocumentacao';
 import Afiliados from './pages/Afiliados';
 import CriarContaAfiliado from './pages/CriarContaAfiliado';
@@ -38,7 +37,6 @@ export const PAGES = {
     "Negocios": Negocios,
     "NovoNegocio": NovoNegocio,
     "TesteStripe": TesteStripe,
-    "CRM": CRM,
     "APIDocumentacao": APIDocumentacao,
     "Afiliados": Afiliados,
     "CriarContaAfiliado": CriarContaAfiliado,
