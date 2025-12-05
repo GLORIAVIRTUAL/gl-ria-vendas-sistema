@@ -67,14 +67,16 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const [configOpen, setConfigOpen] = useState(false);
 
+  const isPublicPage = location.pathname.startsWith("/OnboardingPublico") || location.pathname.startsWith("/AgendamentoPublico") || currentPageName === "AgendamentoPublico" || currentPageName === "OnboardingPublico";
+
   const { data: user } = useQuery({
     queryKey: ['current-user'],
     queryFn: () => base44.auth.me(),
     staleTime: Infinity,
-    enabled: currentPageName !== "AgendamentoPublico" && currentPageName !== "OnboardingPublico",
+    enabled: !isPublicPage,
   });
 
-  if (currentPageName === "AgendamentoPublico" || currentPageName === "OnboardingPublico") {
+  if (isPublicPage) {
     return <>{children}</>;
   }
 

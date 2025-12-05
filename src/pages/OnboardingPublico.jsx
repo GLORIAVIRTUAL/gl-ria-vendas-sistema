@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle2, AlertCircle, Building2, Phone, Globe, Briefcase, MapPin, Share2, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,10 +15,6 @@ export default function OnboardingPublico() {
   const [loading, setLoading] = useState(false);
   const [sucesso, setSucesso] = useState(false);
   const [erro, setErro] = useState(null);
-
-  useEffect(() => {
-    console.log("OnboardingPublico carregado");
-  }, []);
 
   // Dados iniciais da URL
   const initialLeadId = searchParams.get("lead_id") || "";
@@ -148,8 +143,10 @@ export default function OnboardingPublico() {
             {erro && (
               <Alert variant="destructive" className="mb-8">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Erro ao enviar</AlertTitle>
-                <AlertDescription>{erro}</AlertDescription>
+                <div className="ml-2">
+                  <h5 className="font-bold mb-1">Erro ao enviar</h5>
+                  <AlertDescription>{erro}</AlertDescription>
+                </div>
               </Alert>
             )}
 
@@ -181,10 +178,11 @@ export default function OnboardingPublico() {
                           : 'bg-white border-purple-100 hover:border-purple-300'
                       }`}
                     >
-                      <Checkbox 
+                      <input 
+                        type="checkbox"
                         checked={formData.produtos_escolhidos.includes(item.id)}
-                        onCheckedChange={() => handleCheckboxChange(item.id)}
-                        className="mt-1 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                        onChange={() => handleCheckboxChange(item.id)}
+                        className="mt-1 w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer accent-purple-600"
                       />
                       <div>
                         <span className="font-bold text-slate-900 block">{item.label}</span>
