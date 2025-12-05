@@ -67,7 +67,7 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const [configOpen, setConfigOpen] = useState(false);
 
-  const isPublicPage = location.pathname.startsWith("/OnboardingPublico") || location.pathname.startsWith("/AgendamentoPublico") || currentPageName === "AgendamentoPublico" || currentPageName === "OnboardingPublico";
+  const isPublicPage = location.pathname.startsWith("/OnboardingPublico") || location.pathname.startsWith("/AgendamentoPublico") || location.pathname.startsWith("/FormularioStart") || currentPageName === "AgendamentoPublico" || currentPageName === "OnboardingPublico" || currentPageName === "FormularioStart";
 
   const { data: user } = useQuery({
     queryKey: ['current-user'],

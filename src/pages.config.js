@@ -28,6 +28,7 @@ import AgendaAfiliado from './pages/AgendaAfiliado';
 import TesteWebhook from './pages/TesteWebhook';
 import CRM from './pages/CRM';
 import OnboardingPublico from './pages/OnboardingPublico';
+import FormularioStart from './pages/FormularioStart';
 import __Layout from './Layout.jsx';
 
 
@@ -62,6 +63,7 @@ export const PAGES = {
     "TesteWebhook": TesteWebhook,
     "CRM": CRM,
     "OnboardingPublico": OnboardingPublico,
+    "FormularioStart": FormularioStart,
 }
 
 export const pagesConfig = {
