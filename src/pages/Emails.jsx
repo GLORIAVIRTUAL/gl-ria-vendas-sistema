@@ -5,13 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Search, Trash2, ExternalLink, CheckCircle, Circle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Mail, Search, Trash2, ExternalLink, CheckCircle, Circle, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export default function Emails() {
   const queryClient = useQueryClient();
   const [busca, setBusca] = useState("");
+  const [emailSelecionado, setEmailSelecionado] = useState(null);
 
   const { data: emails = [], isLoading } = useQuery({
     queryKey: ['emails-list'],
@@ -142,11 +144,12 @@ export default function Emails() {
             emailsFiltrados.map((email) => (
               <Card 
                 key={email.id} 
-                className={`shadow-lg border-0 transition-all hover:shadow-xl ${
+                onClick={() => setEmailSelecionado(email)}
+                className={`shadow-lg border-0 transition-all hover:shadow-xl cursor-pointer ${
                   !email.lido ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
                 }`}
               >
-                <CardContent className="p-6">
+                <CardContent className="p-6" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
@@ -181,7 +184,7 @@ export default function Emails() {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-2 flex-shrink-0">
+                    <div className="flex flex-col gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                       {email.lido ? (
                         <Button
                           variant="outline"
@@ -219,6 +222,92 @@ export default function Emails() {
             ))
           )}
         </div>
+
+        {/* Dialog para visualizar email completo */}
+        <Dialog open={!!emailSelecionado} onOpenChange={() => setEmailSelecionado(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3 pr-8">
+                <Mail className="w-6 h-6 text-blue-600" />
+                <span className="flex-1">{emailSelecionado?.subject || 'Sem assunto'}</span>
+              </DialogTitle>
+            </DialogHeader>
+            {emailSelecionado && (
+              <div className="space-y-4 py-4">
+                <div className="bg-slate-50 rounded-lg p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-sm text-slate-600">De:</p>
+                      <p className="font-semibold text-slate-900">{emailSelecionado.from}</p>
+                    </div>
+                    <Badge variant={emailSelecionado.lido ? "secondary" : "default"}>
+                      {emailSelecionado.lido ? 'Lido' : 'Não lido'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600">Recebido em:</p>
+                    <p className="font-medium text-slate-900">
+                      {format(new Date(emailSelecionado.created_date), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold text-slate-900 mb-3">Conteúdo do Email:</h4>
+                  <div className="bg-white border rounded-lg p-4 min-h-[200px] max-h-[400px] overflow-y-auto">
+                    <p className="text-slate-700 whitespace-pre-wrap">
+                      {emailSelecionado.text || 'Este email não possui conteúdo de texto.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t">
+                  <Button
+                    onClick={openGmail}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Abrir no Gmail
+                  </Button>
+                  {emailSelecionado.lido ? (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        marcarComoNaoLidoMutation.mutate(emailSelecionado.id);
+                        setEmailSelecionado(null);
+                      }}
+                    >
+                      <Circle className="w-4 h-4 mr-2" />
+                      Marcar como Não Lido
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        marcarComoLidoMutation.mutate(emailSelecionado.id);
+                        setEmailSelecionado(null);
+                      }}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Marcar como Lido
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      deletarEmailMutation.mutate(emailSelecionado.id);
+                      setEmailSelecionado(null);
+                    }}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Excluir
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
