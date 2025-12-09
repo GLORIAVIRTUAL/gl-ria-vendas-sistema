@@ -1,46 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React, { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Mail, X, ExternalLink } from "lucide-react";
+import { Mail, X, ExternalLink, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function EmailNotification() {
   const [emails, setEmails] = useState([]);
   const [dismissed, setDismissed] = useState(new Set());
-  const [checking, setChecking] = useState(false);
-  const [error, setError] = useState(null);
 
-  const checkEmails = async () => {
-    if (checking) return;
-    
-    try {
-      setChecking(true);
-      setError(null);
-      const response = await base44.functions.invoke('checkNewEmails', {});
-      
-      if (response.status === 200 && response.data.success) {
-        const newEmails = response.data.emails || [];
-        setEmails(newEmails);
-        console.log('Emails encontrados:', newEmails.length);
-      } else {
-        setError(response.data?.error || 'Erro desconhecido');
-        console.error('Erro na resposta:', response.data);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar emails:', error);
-      setError(error.message);
-    } finally {
-      setChecking(false);
-    }
-  };
-
-  useEffect(() => {
-    // Verifica emails a cada 2 minutos
-    checkEmails();
-    const interval = setInterval(checkEmails, 2 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // Esta função será chamada pelo Google Apps Script via webhook
+  // Os emails chegarão automaticamente aqui
 
   const visibleEmails = emails.filter(email => 
     !dismissed.has(email.subject + email.from)
@@ -54,41 +23,25 @@ export default function EmailNotification() {
     window.open('https://mail.google.com', '_blank');
   };
 
-  // Mostra o botão de debug mesmo sem emails
-  const showDebugButton = true;
-
   return (
     <div className="fixed top-4 right-4 z-50 max-w-md space-y-3">
-      {/* Botão de verificação manual */}
-      {showDebugButton && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          <Alert className="bg-white border-slate-200 shadow-lg">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-slate-600" />
-                <span className="text-sm text-slate-700">Verificar emails</span>
-              </div>
-              <Button
-                onClick={checkEmails}
-                disabled={checking}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {checking ? 'Verificando...' : 'Verificar agora'}
-              </Button>
-            </div>
-            {error && (
-              <p className="text-xs text-red-600 mt-2">❌ {error}</p>
-            )}
-            {!checking && !error && emails.length === 0 && (
-              <p className="text-xs text-slate-500 mt-2">Nenhum email novo</p>
-            )}
-          </Alert>
-        </motion.div>
-      )}
+      {/* Indicador de status */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+      >
+        <Alert className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-lg">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-green-600" />
+            <span className="text-sm text-green-700 font-medium">
+              Monitoramento automático ativo
+            </span>
+          </div>
+          <p className="text-xs text-green-600 mt-1">
+            Via Google Apps Script
+          </p>
+        </Alert>
+      </motion.div>
       
       <AnimatePresence>
         {visibleEmails.slice(0, 3).map((email, index) => (
