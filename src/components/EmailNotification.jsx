@@ -60,37 +60,28 @@ export default function EmailNotification() {
     beep(1200, now + 0.3, 0.15);
   };
 
-  // Busca emails não lidos dos últimos 30 segundos
+  // Busca emails não lidos recentes
   const { data: emails = [] } = useQuery({
     queryKey: ['email-notifications'],
     queryFn: async () => {
       const agora = new Date();
-      const trintaSegundosAtras = new Date(agora.getTime() - 30000);
+      const cincoMinutosAtras = new Date(agora.getTime() - 300000); // 5 minutos
       
-      const todas = await base44.entities.EmailNotificacao.filter({ lido: false }, '-created_date', 10);
+      const todas = await base44.entities.EmailNotificacao.filter({ lido: false }, '-created_date', 20);
       
       // Busca IDs já exibidos
       const stored = localStorage.getItem('emails-ja-exibidos');
       const exibidos = stored ? new Set(JSON.parse(stored)) : new Set();
       
-      // Filtra apenas emails novos dos últimos 30 segundos que NUNCA foram exibidos
+      // Filtra apenas emails dos últimos 5 minutos que NUNCA foram exibidos
       const novos = todas.filter(email => {
         const dataCriacao = new Date(email.created_date);
-        return dataCriacao >= trintaSegundosAtras && !exibidos.has(email.id);
+        return dataCriacao >= cincoMinutosAtras && !exibidos.has(email.id);
       });
-      
-      // Marca todos como lido E adiciona ao localStorage IMEDIATAMENTE
-      if (novos.length > 0) {
-        for (const email of novos) {
-          await base44.entities.EmailNotificacao.update(email.id, { lido: true });
-          exibidos.add(email.id);
-        }
-        localStorage.setItem('emails-ja-exibidos', JSON.stringify([...exibidos]));
-      }
       
       return novos;
     },
-    refetchInterval: 10000,
+    refetchInterval: 5000, // Verifica a cada 5 segundos
     initialData: [],
   });
 
@@ -112,8 +103,16 @@ export default function EmailNotification() {
     !dismissed.has(email.id)
   );
 
-  const handleDismiss = (email) => {
+  const handleDismiss = async (email) => {
     setDismissed(prev => new Set([...prev, email.id]));
+    
+    // Marca como lido e adiciona ao localStorage quando fechar
+    await base44.entities.EmailNotificacao.update(email.id, { lido: true });
+    
+    const stored = localStorage.getItem('emails-ja-exibidos');
+    const exibidos = stored ? new Set(JSON.parse(stored)) : new Set();
+    exibidos.add(email.id);
+    localStorage.setItem('emails-ja-exibidos', JSON.stringify([...exibidos]));
   };
 
   const openGmail = () => {
