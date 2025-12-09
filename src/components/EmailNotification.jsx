@@ -10,12 +10,20 @@ export default function EmailNotification() {
   const [dismissed, setDismissed] = useState(new Set());
   const queryClient = useQueryClient();
 
-  // Busca emails não lidos a cada 10 segundos
+  // Busca apenas emails dos últimos 30 segundos
   const { data: emails = [] } = useQuery({
     queryKey: ['email-notifications'],
     queryFn: async () => {
-      const notificacoes = await base44.entities.EmailNotificacao.filter({ lido: false }, '-created_date', 10);
-      return notificacoes;
+      const agora = new Date();
+      const trintaSegundosAtras = new Date(agora.getTime() - 30000); // 30 segundos
+      
+      const todas = await base44.entities.EmailNotificacao.filter({ lido: false }, '-created_date', 10);
+      
+      // Filtra apenas emails criados nos últimos 30 segundos
+      return todas.filter(email => {
+        const dataCriacao = new Date(email.created_date);
+        return dataCriacao >= trintaSegundosAtras;
+      });
     },
     refetchInterval: 10000, // 10 segundos
     initialData: [],
