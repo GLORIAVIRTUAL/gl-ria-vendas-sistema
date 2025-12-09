@@ -9,12 +9,56 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 export default function EmailNotification() {
   const [dismissed, setDismissed] = useState(new Set());
   const queryClient = useQueryClient();
+  const [audioContext, setAudioContext] = useState(null);
 
   // Carrega IDs já exibidos do localStorage
   const [emailsJaExibidos, setEmailsJaExibidos] = useState(() => {
     const stored = localStorage.getItem('emails-ja-exibidos');
     return stored ? new Set(JSON.parse(stored)) : new Set();
   });
+
+  // Inicializa AudioContext
+  useEffect(() => {
+    const initAudio = () => {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      setAudioContext(ctx);
+      document.removeEventListener('click', initAudio);
+    };
+    document.addEventListener('click', initAudio);
+    return () => document.removeEventListener('click', initAudio);
+  }, []);
+
+  // Função para tocar som de notificação
+  const tocarSomEmail = () => {
+    if (!audioContext) return;
+    
+    if (audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+
+    // Cria sequência de beeps para email
+    const beep = (frequency, startTime, duration) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0.3, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    };
+
+    const now = audioContext.currentTime;
+    beep(800, now, 0.1);
+    beep(1000, now + 0.15, 0.1);
+    beep(1200, now + 0.3, 0.15);
+  };
 
   // Busca emails não lidos dos últimos 30 segundos
   const { data: emails = [] } = useQuery({
@@ -50,9 +94,10 @@ export default function EmailNotification() {
     initialData: [],
   });
 
-  // Atualiza o estado local quando novos emails chegam
+  // Atualiza o estado local quando novos emails chegam e toca som
   React.useEffect(() => {
     if (emails.length > 0) {
+      tocarSomEmail();
       setEmailsJaExibidos(prev => {
         const updated = new Set(prev);
         emails.forEach(email => updated.add(email.id));
