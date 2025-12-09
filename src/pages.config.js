@@ -29,6 +29,7 @@ import TesteWebhook from './pages/TesteWebhook';
 import CRM from './pages/CRM';
 import OnboardingPublico from './pages/OnboardingPublico';
 import FormularioStart from './pages/FormularioStart';
+import Emails from './pages/Emails';
 import __Layout from './Layout.jsx';
 
 
@@ -64,6 +65,7 @@ export const PAGES = {
     "CRM": CRM,
     "OnboardingPublico": OnboardingPublico,
     "FormularioStart": FormularioStart,
+    "Emails": Emails,
 }
 
 export const pagesConfig = {
