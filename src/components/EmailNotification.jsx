@@ -53,7 +53,7 @@ export default function EmailNotification() {
   };
 
   const openGmail = () => {
-    window.open('https://mail.google.com', '_blank');
+    window.open('https://mail.google.com/mail/u/adm@gloriavirtual.com/', '_blank');
   };
 
   return (
