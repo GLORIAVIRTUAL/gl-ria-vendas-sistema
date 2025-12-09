@@ -20,10 +20,17 @@ export default function EmailNotification() {
       const todas = await base44.entities.EmailNotificacao.filter({ lido: false }, '-created_date', 10);
       
       // Filtra apenas emails criados nos últimos 30 segundos
-      return todas.filter(email => {
+      const novos = todas.filter(email => {
         const dataCriacao = new Date(email.created_date);
         return dataCriacao >= trintaSegundosAtras;
       });
+
+      // Marca automaticamente como lido para não aparecer novamente
+      for (const email of novos) {
+        await base44.entities.EmailNotificacao.update(email.id, { lido: true });
+      }
+      
+      return novos;
     },
     refetchInterval: 10000, // 10 segundos
     initialData: [],
