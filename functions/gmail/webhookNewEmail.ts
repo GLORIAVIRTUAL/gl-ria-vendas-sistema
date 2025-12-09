@@ -18,10 +18,17 @@ Deno.serve(async (req) => {
 
     // Cria os registros de notificação no sistema
     const base44 = createClientFromRequest(req);
-    
-    // Aqui você pode processar os emails recebidos
-    // Por exemplo, criar notificações, enviar para o frontend, etc.
-    
+
+    // Salva cada email como uma notificação
+    for (const email of body.emails) {
+      await base44.asServiceRole.entities.EmailNotificacao.create({
+        subject: email.subject || 'Sem assunto',
+        from: email.from,
+        text: email.text || '',
+        lido: false
+      });
+    }
+
     return Response.json({ 
       success: true, 
       received: body.emails.length,

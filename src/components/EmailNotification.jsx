@@ -1,22 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Mail, X, ExternalLink, CheckCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function EmailNotification() {
-  const [emails, setEmails] = useState([]);
   const [dismissed, setDismissed] = useState(new Set());
+  const queryClient = useQueryClient();
 
-  // Esta função será chamada pelo Google Apps Script via webhook
-  // Os emails chegarão automaticamente aqui
+  // Busca emails não lidos a cada 10 segundos
+  const { data: emails = [] } = useQuery({
+    queryKey: ['email-notifications'],
+    queryFn: async () => {
+      const notificacoes = await base44.entities.EmailNotificacao.filter({ lido: false }, '-created_date', 10);
+      return notificacoes;
+    },
+    refetchInterval: 10000, // 10 segundos
+    initialData: [],
+  });
+
+  const marcarComoLidoMutation = useMutation({
+    mutationFn: (id) => base44.entities.EmailNotificacao.update(id, { lido: true }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-notifications'] });
+    },
+  });
 
   const visibleEmails = emails.filter(email => 
-    !dismissed.has(email.subject + email.from)
+    !dismissed.has(email.id)
   );
 
   const handleDismiss = (email) => {
-    setDismissed(prev => new Set([...prev, email.subject + email.from]));
+    setDismissed(prev => new Set([...prev, email.id]));
+    marcarComoLidoMutation.mutate(email.id);
   };
 
   const openGmail = () => {
@@ -46,7 +64,7 @@ export default function EmailNotification() {
       <AnimatePresence>
         {visibleEmails.slice(0, 3).map((email, index) => (
           <motion.div
-            key={email.subject + email.from + index}
+            key={email.id}
             initial={{ opacity: 0, x: 50, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 50, scale: 0.95 }}
