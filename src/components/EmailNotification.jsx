@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function EmailNotification() {
   const [dismissed, setDismissed] = useState(new Set());
+  const [emailsJaExibidos, setEmailsJaExibidos] = useState(new Set());
   const queryClient = useQueryClient();
 
   // Busca apenas emails dos últimos 30 segundos
@@ -19,22 +20,36 @@ export default function EmailNotification() {
       
       const todas = await base44.entities.EmailNotificacao.filter({ lido: false }, '-created_date', 10);
       
-      // Filtra apenas emails criados nos últimos 30 segundos
+      // Filtra apenas emails criados nos últimos 30 segundos E que ainda não foram exibidos
       const novos = todas.filter(email => {
         const dataCriacao = new Date(email.created_date);
         return dataCriacao >= trintaSegundosAtras;
       });
-
-      // Marca automaticamente como lido para não aparecer novamente
-      for (const email of novos) {
-        await base44.entities.EmailNotificacao.update(email.id, { lido: true });
-      }
       
       return novos;
     },
     refetchInterval: 10000, // 10 segundos
     initialData: [],
   });
+
+  // Marca como lido apenas emails que ainda não foram exibidos
+  React.useEffect(() => {
+    const novosEmails = emails.filter(email => !emailsJaExibidos.has(email.id));
+    
+    if (novosEmails.length > 0) {
+      // Marca como lido imediatamente
+      novosEmails.forEach(email => {
+        marcarComoLidoMutation.mutate(email.id);
+      });
+      
+      // Adiciona aos já exibidos
+      setEmailsJaExibidos(prev => {
+        const updated = new Set(prev);
+        novosEmails.forEach(email => updated.add(email.id));
+        return updated;
+      });
+    }
+  }, [emails]);
 
   const marcarComoLidoMutation = useMutation({
     mutationFn: (id) => base44.entities.EmailNotificacao.update(id, { lido: true }),
