@@ -19,14 +19,19 @@ Deno.serve(async (req) => {
     // Cria os registros de notificação no sistema
     const base44 = createClientFromRequest(req);
 
-    // Salva cada email como uma notificação
+    // Salva cada email como uma notificação (já marcado como lido após 30 segundos)
     for (const email of body.emails) {
-      await base44.asServiceRole.entities.EmailNotificacao.create({
+      const emailCriado = await base44.asServiceRole.entities.EmailNotificacao.create({
         subject: email.subject || 'Sem assunto',
         from: email.from,
         text: email.text || '',
         lido: false
       });
+
+      // Marca como lido após 30 segundos automaticamente
+      setTimeout(async () => {
+        await base44.asServiceRole.entities.EmailNotificacao.update(emailCriado.id, { lido: true });
+      }, 30000);
     }
 
     return Response.json({ 
