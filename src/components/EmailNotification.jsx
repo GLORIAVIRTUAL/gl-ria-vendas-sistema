@@ -8,55 +8,60 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function EmailNotification() {
   const [dismissed, setDismissed] = useState(new Set());
-  const [emailsJaExibidos, setEmailsJaExibidos] = useState(new Set());
   const queryClient = useQueryClient();
 
-  // Busca apenas emails dos últimos 30 segundos
+  // Carrega IDs já exibidos do localStorage
+  const [emailsJaExibidos, setEmailsJaExibidos] = useState(() => {
+    const stored = localStorage.getItem('emails-ja-exibidos');
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  });
+
+  // Busca emails não lidos dos últimos 30 segundos
   const { data: emails = [] } = useQuery({
     queryKey: ['email-notifications'],
     queryFn: async () => {
       const agora = new Date();
-      const trintaSegundosAtras = new Date(agora.getTime() - 30000); // 30 segundos
+      const trintaSegundosAtras = new Date(agora.getTime() - 30000);
       
       const todas = await base44.entities.EmailNotificacao.filter({ lido: false }, '-created_date', 10);
       
-      // Filtra apenas emails criados nos últimos 30 segundos E que ainda não foram exibidos
+      // Busca IDs já exibidos
+      const stored = localStorage.getItem('emails-ja-exibidos');
+      const exibidos = stored ? new Set(JSON.parse(stored)) : new Set();
+      
+      // Filtra apenas emails novos dos últimos 30 segundos que NUNCA foram exibidos
       const novos = todas.filter(email => {
         const dataCriacao = new Date(email.created_date);
-        return dataCriacao >= trintaSegundosAtras;
+        return dataCriacao >= trintaSegundosAtras && !exibidos.has(email.id);
       });
+      
+      // Marca todos como lido E adiciona ao localStorage IMEDIATAMENTE
+      if (novos.length > 0) {
+        for (const email of novos) {
+          await base44.entities.EmailNotificacao.update(email.id, { lido: true });
+          exibidos.add(email.id);
+        }
+        localStorage.setItem('emails-ja-exibidos', JSON.stringify([...exibidos]));
+      }
       
       return novos;
     },
-    refetchInterval: 10000, // 10 segundos
+    refetchInterval: 10000,
     initialData: [],
   });
 
-  // Marca como lido apenas emails que ainda não foram exibidos
+  // Atualiza o estado local quando novos emails chegam
   React.useEffect(() => {
-    const novosEmails = emails.filter(email => !emailsJaExibidos.has(email.id));
-    
-    if (novosEmails.length > 0) {
-      // Marca como lido imediatamente
-      novosEmails.forEach(email => {
-        marcarComoLidoMutation.mutate(email.id);
-      });
-      
-      // Adiciona aos já exibidos
+    if (emails.length > 0) {
       setEmailsJaExibidos(prev => {
         const updated = new Set(prev);
-        novosEmails.forEach(email => updated.add(email.id));
+        emails.forEach(email => updated.add(email.id));
         return updated;
       });
     }
   }, [emails]);
 
-  const marcarComoLidoMutation = useMutation({
-    mutationFn: (id) => base44.entities.EmailNotificacao.update(id, { lido: true }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-notifications'] });
-    },
-  });
+
 
   const visibleEmails = emails.filter(email => 
     !dismissed.has(email.id)
@@ -64,7 +69,6 @@ export default function EmailNotification() {
 
   const handleDismiss = (email) => {
     setDismissed(prev => new Set([...prev, email.id]));
-    marcarComoLidoMutation.mutate(email.id);
   };
 
   const openGmail = () => {
