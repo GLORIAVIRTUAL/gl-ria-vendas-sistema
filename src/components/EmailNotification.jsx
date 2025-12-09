@@ -51,24 +51,6 @@ export default function EmailNotification() {
 
   return (
     <div className="fixed top-4 right-4 z-50 max-w-md space-y-3">
-      {/* Indicador de status */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-      >
-        <Alert className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 shadow-lg">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-green-600" />
-            <span className="text-sm text-green-700 font-medium">
-              Monitoramento automático ativo
-            </span>
-          </div>
-          <p className="text-xs text-green-600 mt-1">
-            Via Google Apps Script
-          </p>
-        </Alert>
-      </motion.div>
-      
       <AnimatePresence>
         {visibleEmails.slice(0, 3).map((email, index) => (
           <motion.div
