@@ -9,20 +9,27 @@ export default function EmailNotification() {
   const [emails, setEmails] = useState([]);
   const [dismissed, setDismissed] = useState(new Set());
   const [checking, setChecking] = useState(false);
+  const [error, setError] = useState(null);
 
   const checkEmails = async () => {
     if (checking) return;
     
     try {
       setChecking(true);
+      setError(null);
       const response = await base44.functions.invoke('checkNewEmails', {});
       
       if (response.status === 200 && response.data.success) {
         const newEmails = response.data.emails || [];
         setEmails(newEmails);
+        console.log('Emails encontrados:', newEmails.length);
+      } else {
+        setError(response.data?.error || 'Erro desconhecido');
+        console.error('Erro na resposta:', response.data);
       }
     } catch (error) {
       console.error('Erro ao verificar emails:', error);
+      setError(error.message);
     } finally {
       setChecking(false);
     }
@@ -47,10 +54,42 @@ export default function EmailNotification() {
     window.open('https://mail.google.com', '_blank');
   };
 
-  if (visibleEmails.length === 0) return null;
+  // Mostra o botão de debug mesmo sem emails
+  const showDebugButton = true;
 
   return (
     <div className="fixed top-4 right-4 z-50 max-w-md space-y-3">
+      {/* Botão de verificação manual */}
+      {showDebugButton && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+        >
+          <Alert className="bg-white border-slate-200 shadow-lg">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-slate-600" />
+                <span className="text-sm text-slate-700">Verificar emails</span>
+              </div>
+              <Button
+                onClick={checkEmails}
+                disabled={checking}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {checking ? 'Verificando...' : 'Verificar agora'}
+              </Button>
+            </div>
+            {error && (
+              <p className="text-xs text-red-600 mt-2">❌ {error}</p>
+            )}
+            {!checking && !error && emails.length === 0 && (
+              <p className="text-xs text-slate-500 mt-2">Nenhum email novo</p>
+            )}
+          </Alert>
+        </motion.div>
+      )}
+      
       <AnimatePresence>
         {visibleEmails.slice(0, 3).map((email, index) => (
           <motion.div
