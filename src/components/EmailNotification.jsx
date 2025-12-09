@@ -8,90 +8,84 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export default function EmailNotification() {
   const [dismissed, setDismissed] = useState(new Set());
-  const queryClient = useQueryClient();
+  const [emailsExibidos, setEmailsExibidos] = useState(new Set());
   const [audioContext, setAudioContext] = useState(null);
+  const [audioHabilitado, setAudioHabilitado] = useState(false);
 
-  // Carrega IDs já exibidos do localStorage
-  const [emailsJaExibidos, setEmailsJaExibidos] = useState(() => {
-    const stored = localStorage.getItem('emails-ja-exibidos');
-    return stored ? new Set(JSON.parse(stored)) : new Set();
-  });
-
-  // Inicializa AudioContext
+  // Inicializa AudioContext no primeiro clique
   useEffect(() => {
     const initAudio = () => {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       setAudioContext(ctx);
+      setAudioHabilitado(true);
       document.removeEventListener('click', initAudio);
+      document.removeEventListener('keydown', initAudio);
     };
     document.addEventListener('click', initAudio);
-    return () => document.removeEventListener('click', initAudio);
+    document.addEventListener('keydown', initAudio);
+    return () => {
+      document.removeEventListener('click', initAudio);
+      document.removeEventListener('keydown', initAudio);
+    };
   }, []);
 
   // Função para tocar som de notificação
   const tocarSomEmail = () => {
-    if (!audioContext) return;
+    if (!audioContext || !audioHabilitado) return;
     
-    if (audioContext.state === 'suspended') {
-      audioContext.resume();
+    try {
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+
+      const beep = (frequency, startTime, duration) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.3, startTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
+
+      const now = audioContext.currentTime;
+      beep(800, now, 0.1);
+      beep(1000, now + 0.15, 0.1);
+      beep(1200, now + 0.3, 0.15);
+    } catch (error) {
+      console.log('Erro ao tocar som:', error);
     }
-
-    // Cria sequência de beeps para email
-    const beep = (frequency, startTime, duration) => {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = frequency;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.3, startTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-      
-      oscillator.start(startTime);
-      oscillator.stop(startTime + duration);
-    };
-
-    const now = audioContext.currentTime;
-    beep(800, now, 0.1);
-    beep(1000, now + 0.15, 0.1);
-    beep(1200, now + 0.3, 0.15);
   };
 
-  // Busca emails não lidos recentes
+  // Busca emails não lidos
   const { data: emails = [] } = useQuery({
     queryKey: ['email-notifications'],
     queryFn: async () => {
-      const agora = new Date();
-      const cincoMinutosAtras = new Date(agora.getTime() - 300000); // 5 minutos
-      
-      const todas = await base44.entities.EmailNotificacao.filter({ lido: false }, '-created_date', 20);
-      
-      // Busca IDs já exibidos
-      const stored = localStorage.getItem('emails-ja-exibidos');
-      const exibidos = stored ? new Set(JSON.parse(stored)) : new Set();
-      
-      // Filtra apenas emails dos últimos 5 minutos que NUNCA foram exibidos
-      const novos = todas.filter(email => {
-        const dataCriacao = new Date(email.created_date);
-        return dataCriacao >= cincoMinutosAtras && !exibidos.has(email.id);
-      });
-      
-      return novos;
+      const todas = await base44.entities.EmailNotificacao.filter({ lido: false }, '-created_date', 10);
+      return todas;
     },
-    refetchInterval: 5000, // Verifica a cada 5 segundos
+    refetchInterval: 3000,
     initialData: [],
   });
 
-  // Atualiza o estado local quando novos emails chegam e toca som
-  React.useEffect(() => {
-    if (emails.length > 0) {
+  // Detecta novos emails e toca som
+  useEffect(() => {
+    const novosEmails = emails.filter(email => !emailsExibidos.has(email.id));
+    
+    if (novosEmails.length > 0) {
+      console.log('🔔 Novos emails detectados:', novosEmails.length);
       tocarSomEmail();
-      setEmailsJaExibidos(prev => {
+      
+      setEmailsExibidos(prev => {
         const updated = new Set(prev);
-        emails.forEach(email => updated.add(email.id));
+        novosEmails.forEach(email => updated.add(email.id));
         return updated;
       });
     }
@@ -105,14 +99,7 @@ export default function EmailNotification() {
 
   const handleDismiss = async (email) => {
     setDismissed(prev => new Set([...prev, email.id]));
-    
-    // Marca como lido e adiciona ao localStorage quando fechar
     await base44.entities.EmailNotificacao.update(email.id, { lido: true });
-    
-    const stored = localStorage.getItem('emails-ja-exibidos');
-    const exibidos = stored ? new Set(JSON.parse(stored)) : new Set();
-    exibidos.add(email.id);
-    localStorage.setItem('emails-ja-exibidos', JSON.stringify([...exibidos]));
   };
 
   const openGmail = () => {
@@ -121,6 +108,13 @@ export default function EmailNotification() {
 
   return (
     <div className="fixed top-4 right-4 z-50 max-w-md space-y-3">
+      {!audioHabilitado && (
+        <Alert className="bg-yellow-50 border-yellow-300">
+          <AlertDescription className="text-sm text-yellow-800">
+            ⚠️ Clique em qualquer lugar para ativar alertas sonoros
+          </AlertDescription>
+        </Alert>
+      )}
       <AnimatePresence>
         {visibleEmails.slice(0, 3).map((email, index) => (
           <motion.div
