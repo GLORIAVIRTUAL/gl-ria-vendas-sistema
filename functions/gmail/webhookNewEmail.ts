@@ -19,19 +19,34 @@ Deno.serve(async (req) => {
     // Cria os registros de notificação no sistema
     const base44 = createClientFromRequest(req);
 
-    // Salva cada email como uma notificação (já marcado como lido após 30 segundos)
+    // Salva cada email como uma notificação (evitando duplicatas)
     for (const email of body.emails) {
-      const emailCriado = await base44.asServiceRole.entities.EmailNotificacao.create({
+      // Verifica se já existe um email idêntico (mesmo assunto e remetente) criado recentemente
+      const emailsExistentes = await base44.asServiceRole.entities.EmailNotificacao.filter({
+        subject: email.subject || 'Sem assunto',
+        from: email.from
+      }, '-created_date', 1);
+
+      // Se já existe um email igual criado nas últimas 2 horas, ignora
+      if (emailsExistentes.length > 0) {
+        const ultimoEmail = emailsExistentes[0];
+        const diferencaHoras = (new Date() - new Date(ultimoEmail.created_date)) / (1000 * 60 * 60);
+
+        if (diferencaHoras < 2) {
+          console.log('📧 Email duplicado ignorado:', email.subject);
+          continue; // Pula este email
+        }
+      }
+
+      // Cria o novo email
+      await base44.asServiceRole.entities.EmailNotificacao.create({
         subject: email.subject || 'Sem assunto',
         from: email.from,
         text: email.text || '',
         lido: false
       });
 
-      // Marca como lido após 30 segundos automaticamente
-      setTimeout(async () => {
-        await base44.asServiceRole.entities.EmailNotificacao.update(emailCriado.id, { lido: true });
-      }, 30000);
+      console.log('✅ Email novo salvo:', email.subject);
     }
 
     return Response.json({ 
