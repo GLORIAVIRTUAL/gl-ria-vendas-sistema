@@ -75,13 +75,18 @@ export default function EmailNotification() {
     initialData: [],
   });
 
-  // Detecta novos emails e toca som
+  // Detecta novos emails, toca som e marca como lido automaticamente
   useEffect(() => {
     const novosEmails = emails.filter(email => !emailsExibidos.has(email.id));
     
     if (novosEmails.length > 0) {
       console.log('🔔 Novos emails detectados:', novosEmails.length);
       tocarSomEmail();
+      
+      // Marca como lido no banco imediatamente
+      novosEmails.forEach(async (email) => {
+        await base44.entities.EmailNotificacao.update(email.id, { lido: true });
+      });
       
       setEmailsExibidos(prev => {
         const updated = new Set(prev);
