@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, LayoutDashboard, List, Video, TestTube, TrendingUp, Users, Code, Clock, LogOut, Settings, ChevronDown, ChevronRight, CalendarCheck, Mail } from "lucide-react";
+import { Calendar, LayoutDashboard, List, Video, TestTube, TrendingUp, Users, Code, Clock, LogOut, Settings, ChevronDown, ChevronRight, CalendarCheck, Mail, MessageSquare, Bot } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -87,6 +87,9 @@ export default function Layout({ children, currentPageName }) {
     { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
     { title: "📅 Agenda", url: createPageUrl("Agenda"), icon: CalendarCheck },
     { title: "CRM / Funil", url: createPageUrl("CRM"), icon: TrendingUp },
+    { title: "🤖 Chat IA", url: createPageUrl("ChatIA"), icon: MessageSquare },
+    { title: "🎯 Pipeline IA", url: createPageUrl("PipelineIA"), icon: Bot },
+    { title: "📊 Dashboard IA", url: createPageUrl("DashboardIA"), icon: LayoutDashboard },
     { title: "Agendar Reunião", url: createPageUrl("Agendar"), icon: Calendar },
     { title: "Todos Agendamentos", url: createPageUrl("Agendamentos"), icon: List },
     { title: "Negócios Fechados", url: createPageUrl("Negocios"), icon: Video },
@@ -96,6 +99,7 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   const configNavigationAdmin = [
+    { title: "🤖 Configurar IA", url: createPageUrl("ConfiguracoesIA") },
     { title: "📦 Importar Produtos", url: createPageUrl("ImportarProdutos") },
     { title: "📧 Disparos Email", url: createPageUrl("DisparosEmail") },
     { title: "📱 Disparos WhatsApp", url: createPageUrl("DisparosWhatsApp") },
