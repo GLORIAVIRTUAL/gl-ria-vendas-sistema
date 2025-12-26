@@ -1,0 +1,189 @@
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Search, Bell, BellOff, RefreshCw, Info } from 'lucide-react';
+import ContactList from '../components/chat/ContactList';
+import ChatWindow from '../components/chat/ChatWindow';
+import ContactDetails from '../components/chat/ContactDetails';
+import { cn } from "@/lib/utils";
+import { toast } from 'sonner';
+
+const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+export default function ChatIA() {
+  const queryClient = useQueryClient();
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDetails, setShowDetails] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [isSending, setIsSending] = useState(false);
+  const lastMessageCountRef = useRef({});
+
+  const { data: contacts = [], isLoading: loadingContacts, refetch: refetchContacts } = useQuery({
+    queryKey: ['contacts'],
+    queryFn: () => base44.entities.Contact.list('-last_message_at'),
+    refetchInterval: 5000,
+  });
+
+  const { data: messages = [], refetch: refetchMessages } = useQuery({
+    queryKey: ['messages', selectedContact?.id],
+    queryFn: () => selectedContact 
+      ? base44.entities.Message.filter({ contact_id: selectedContact.id }, 'created_date')
+      : [],
+    enabled: !!selectedContact,
+    refetchInterval: 3000,
+  });
+
+  useEffect(() => {
+    contacts.forEach(contact => {
+      const currentCount = messages.filter(m => m.contact_id === contact.id && m.direction === 'inbound').length;
+      const lastCount = lastMessageCountRef.current[contact.id] || 0;
+      
+      if (currentCount > lastCount && lastCount > 0 && notificationsEnabled) {
+        notificationSound.play().catch(() => {});
+        toast.info(`Nova mensagem de ${contact.name || contact.phone}`, {
+          duration: 5000,
+        });
+      }
+      lastMessageCountRef.current[contact.id] = currentCount;
+    });
+  }, [contacts, messages, notificationsEnabled]);
+
+  const updateContactMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Contact.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      toast.success('Contato atualizado!');
+    },
+  });
+
+  const createMessageMutation = useMutation({
+    mutationFn: (data) => base44.entities.Message.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['messages', selectedContact?.id] });
+    },
+  });
+
+  const handleSelectContact = useCallback((contact) => {
+    setSelectedContact(contact);
+    setUnreadCounts(prev => ({ ...prev, [contact.id]: 0 }));
+  }, []);
+
+  const handleSendMessage = async (messageData) => {
+    if (!selectedContact) return;
+    setIsSending(true);
+    
+    await createMessageMutation.mutateAsync({
+      contact_id: selectedContact.id,
+      direction: 'outbound',
+      sender: 'human',
+      content: messageData.content,
+      type: messageData.type || 'text',
+      media_url: messageData.media_url,
+      media_mime_type: messageData.media_mime_type,
+      status: 'sent'
+    });
+
+    await updateContactMutation.mutateAsync({
+      id: selectedContact.id,
+      data: { last_message_at: new Date().toISOString() }
+    });
+
+    setIsSending(false);
+    refetchMessages();
+  };
+
+  const handleUpdateContact = async (data) => {
+    if (!selectedContact) return;
+    await updateContactMutation.mutateAsync({ id: selectedContact.id, data });
+    setSelectedContact({ ...selectedContact, ...data });
+  };
+
+  const filteredContacts = contacts.filter(contact => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      (contact.name?.toLowerCase().includes(searchLower)) ||
+      (contact.phone?.includes(searchTerm)) ||
+      (contact.keywords?.some(k => k.toLowerCase().includes(searchLower)))
+    );
+  });
+
+  return (
+    <div className="h-[calc(100vh-80px)] flex bg-slate-50">
+      <div className="w-80 bg-white border-r border-slate-100 flex flex-col">
+        <div className="p-4 border-b border-slate-100">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-slate-800">Conversas IA</h2>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+                className={cn(
+                  notificationsEnabled ? "text-blue-500" : "text-slate-400"
+                )}
+              >
+                {notificationsEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => refetchContacts()}
+              >
+                <RefreshCw className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              placeholder="Buscar conversas..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+        
+        <ContactList 
+          contacts={filteredContacts}
+          selectedContact={selectedContact}
+          onSelectContact={handleSelectContact}
+          unreadCounts={unreadCounts}
+        />
+      </div>
+
+      <ChatWindow
+        contact={selectedContact}
+        messages={messages}
+        onSendMessage={handleSendMessage}
+        onUpdateContact={handleUpdateContact}
+        onClose={() => setSelectedContact(null)}
+        isSending={isSending}
+      />
+
+      {selectedContact && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-4 top-4 z-10"
+          onClick={() => setShowDetails(!showDetails)}
+        >
+          <Info className="w-5 h-5" />
+        </Button>
+      )}
+
+      {showDetails && selectedContact && (
+        <ContactDetails
+          contact={selectedContact}
+          onUpdate={handleUpdateContact}
+          onClose={() => setShowDetails(false)}
+        />
+      )}
+    </div>
+  );
+}

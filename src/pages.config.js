@@ -30,6 +30,10 @@ import CRM from './pages/CRM';
 import OnboardingPublico from './pages/OnboardingPublico';
 import FormularioStart from './pages/FormularioStart';
 import Emails from './pages/Emails';
+import ChatIA from './pages/ChatIA';
+import PipelineIA from './pages/PipelineIA';
+import DashboardIA from './pages/DashboardIA';
+import ConfiguracoesIA from './pages/ConfiguracoesIA';
 import __Layout from './Layout.jsx';
 
 
@@ -66,6 +70,10 @@ export const PAGES = {
     "OnboardingPublico": OnboardingPublico,
     "FormularioStart": FormularioStart,
     "Emails": Emails,
+    "ChatIA": ChatIA,
+    "PipelineIA": PipelineIA,
+    "DashboardIA": DashboardIA,
+    "ConfiguracoesIA": ConfiguracoesIA,
 }
 
 export const pagesConfig = {
