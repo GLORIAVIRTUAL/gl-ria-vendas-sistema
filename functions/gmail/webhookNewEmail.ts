@@ -21,21 +21,20 @@ Deno.serve(async (req) => {
 
     // Salva cada email como uma notificação (evitando duplicatas)
     for (const email of body.emails) {
-      // Verifica se já existe um email idêntico (mesmo assunto e remetente) criado recentemente
-      const emailsExistentes = await base44.asServiceRole.entities.EmailNotificacao.filter({
-        subject: email.subject || 'Sem assunto',
-        from: email.from
-      }, '-created_date', 1);
+      // Cria um identificador único para o email (hash do subject + from + primeiras 100 chars do texto)
+      const emailId = `${email.subject || 'sem_assunto'}_${email.from}_${(email.text || '').substring(0, 100)}`;
 
-      // Se já existe um email igual criado nas últimas 2 horas, ignora
-      if (emailsExistentes.length > 0) {
-        const ultimoEmail = emailsExistentes[0];
-        const diferencaHoras = (new Date() - new Date(ultimoEmail.created_date)) / (1000 * 60 * 60);
+      // Verifica se já existe um email idêntico nos últimos 30 dias
+      const todosEmails = await base44.asServiceRole.entities.EmailNotificacao.list('-created_date', 1000);
 
-        if (diferencaHoras < 2) {
-          console.log('📧 Email duplicado ignorado:', email.subject);
-          continue; // Pula este email
-        }
+      const emailDuplicado = todosEmails.find(e => {
+        const existingId = `${e.subject || 'sem_assunto'}_${e.from}_${(e.text || '').substring(0, 100)}`;
+        return existingId === emailId;
+      });
+
+      if (emailDuplicado) {
+        console.log('📧 Email duplicado ignorado:', email.subject);
+        continue;
       }
 
       // Cria o novo email
