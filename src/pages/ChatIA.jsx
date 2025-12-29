@@ -111,24 +111,42 @@ export default function ChatIA() {
     if (!selectedContact) return;
     setIsSending(true);
     
-    await createMessageMutation.mutateAsync({
-      contact_id: selectedContact.id,
-      direction: 'outbound',
-      sender: 'human',
-      content: messageData.content,
-      type: messageData.type || 'text',
-      media_url: messageData.media_url,
-      media_mime_type: messageData.media_mime_type,
-      status: 'sent'
-    });
+    try {
+      // Salva mensagem no banco
+      await createMessageMutation.mutateAsync({
+        contact_id: selectedContact.id,
+        direction: 'outbound',
+        sender: 'human',
+        content: messageData.content,
+        type: messageData.type || 'text',
+        media_url: messageData.media_url,
+        media_mime_type: messageData.media_mime_type,
+        status: 'sent'
+      });
 
-    await updateContactMutation.mutateAsync({
-      id: selectedContact.id,
-      data: { last_message_at: new Date().toISOString() }
-    });
+      // Envia via WhatsApp
+      try {
+        await base44.functions.invoke('whatsapp_sendMessage', {
+          telefone: selectedContact.phone,
+          mensagem: messageData.content
+        });
+        toast.success('Mensagem enviada!');
+      } catch (whatsappError) {
+        console.error('Erro ao enviar WhatsApp:', whatsappError);
+        toast.error('Mensagem salva mas não enviada ao WhatsApp');
+      }
 
-    setIsSending(false);
-    refetchMessages();
+      await updateContactMutation.mutateAsync({
+        id: selectedContact.id,
+        data: { last_message_at: new Date().toISOString() }
+      });
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+      toast.error('Erro ao enviar mensagem');
+    } finally {
+      setIsSending(false);
+      refetchMessages();
+    }
   };
 
   const handleUpdateContact = async (data) => {
