@@ -232,31 +232,26 @@ async function processAIResponse(base44, contact, phone) {
             // Horários comerciais
             const horariosComerciais = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
 
-            // Se o cliente pedir horários disponíveis, busca no banco
+            // SEMPRE verifica horários disponíveis se tiver data ou se estiver perguntando sobre horários
             let horariosInfo = '';
-            const pedindoHorarios = /horário|horario|disponível|disponivel|quando|pode|agendar|marcar|reunião|reuniao/i.test(currentMessage);
+            let dataParaVerificar = dataSalva; // Usa data já salva se existir
             
-            if (pedindoHorarios) {
-              // Tenta extrair data da mensagem
-              const dataMatch = currentMessage.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-              let dataConsulta = null;
-              
-              if (dataMatch) {
-                const dia = dataMatch[1].padStart(2, '0');
-                const mes = dataMatch[2].padStart(2, '0');
-                const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
-                dataConsulta = `${ano}-${mes}-${dia}`;
-              } else {
-                // Usa data de hoje se não especificado
-                const hoje = new Date();
-                dataConsulta = hoje.toISOString().split('T')[0];
-              }
-
-              console.log('📅 Consultando horários para:', dataConsulta);
+            // Ou tenta extrair data da mensagem atual
+            const dataMatch = currentMessage.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+            if (dataMatch) {
+              const dia = dataMatch[1].padStart(2, '0');
+              const mes = dataMatch[2].padStart(2, '0');
+              const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
+              dataParaVerificar = `${ano}-${mes}-${dia}`;
+            }
+            
+            // Se tiver data, SEMPRE busca horários disponíveis
+            if (dataParaVerificar) {
+              console.log('📅 Consultando horários para:', dataParaVerificar);
 
               // Busca agendamentos do dia
               const agendamentosDoDia = await base44.asServiceRole.entities.Agendamento.filter({
-                data: dataConsulta
+                data: dataParaVerificar
               });
 
               const horariosOcupados = agendamentosDoDia
@@ -266,9 +261,9 @@ async function processAIResponse(base44, contact, phone) {
               const horariosLivres = horariosComerciais.filter(h => !horariosOcupados.includes(h));
 
               if (horariosLivres.length > 0) {
-                horariosInfo = `\n\n🕐 HORÁRIOS DISPONÍVEIS EM ${dataConsulta}:\n${horariosLivres.join(', ')}`;
+                horariosInfo = `\n\n🕐 HORÁRIOS DISPONÍVEIS EM ${dataParaVerificar}:\n${horariosLivres.join(', ')}\n\n⚠️ IMPORTANTE: VOCÊ DEVE SUGERIR APENAS HORÁRIOS DESTA LISTA! Não invente horários.`;
               } else {
-                horariosInfo = `\n\n❌ Nenhum horário disponível em ${dataConsulta}. Tente outra data.`;
+                horariosInfo = `\n\n❌ Nenhum horário disponível em ${dataParaVerificar}. Pergunte outra data ao cliente.`;
               }
             }
 
@@ -321,11 +316,11 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
             
-            // Extrai horário
+            // Extrai horário (aceita vários formatos)
             if (!updateFields.horario) {
-              const horarioMatch = currentMessage.match(/(\d{1,2}):(\d{2})|(\d{1,2})h/);
+              const horarioMatch = currentMessage.match(/(\d{1,2}):(\d{2})|(\d{1,2})h|(\d{1,2})\s*horas?|as\s*(\d{1,2})/i);
               if (horarioMatch) {
-                const hora = horarioMatch[1] || horarioMatch[3];
+                const hora = horarioMatch[1] || horarioMatch[3] || horarioMatch[4] || horarioMatch[5];
                 const minuto = horarioMatch[2] || '00';
                 updateFields.horario = `${hora.padStart(2, '0')}:${minuto}`;
               }
@@ -387,12 +382,24 @@ ${shouldTransfer ? '⚠️ ATENÇÃO: Cliente solicitou falar com humano. Inform
 
 ${dadosFaltantes.length > 0 ? `⚠️ DADOS QUE AINDA FALTAM: ${dadosFaltantes.join(', ')}` : '✅ TODOS OS DADOS COLETADOS! Pronto para agendar.'}
 
-🎯 INSTRUÇÕES CRÍTICAS - LEIA COM ATENÇÃO:
-1. ⛔ PROIBIDO perguntar dados que aparecem na seção "DADOS JÁ COLETADOS"
-2. ✅ Pergunte SOMENTE os dados listados em "DADOS QUE AINDA FALTAM"
-3. ⚠️ Se a lista de "DADOS QUE AINDA FALTAM" está vazia, NÃO pergunte NADA - apenas use [AGENDAR]
-4. 🔍 Antes de perguntar qualquer coisa, verifique se o dado já está coletado
-5. 📝 Seja direto: pergunte um dado de cada vez
+🎯 REGRAS OBRIGATÓRIAS - SIGA RIGOROSAMENTE:
+
+1. ⛔ NUNCA REPITA PERGUNTAS
+   - Verifique "DADOS JÁ COLETADOS" antes de perguntar qualquer coisa
+   - Se o dado já está lá, NÃO PERGUNTE novamente
+   
+2. ⏰ HORÁRIOS - REGRA CRÍTICA
+   - Se aparecer "HORÁRIOS DISPONÍVEIS", APENAS sugira horários dessa lista
+   - NUNCA sugira horários que não estão na lista
+   - Se não houver lista de horários, pergunte a data primeiro
+   
+3. ✅ QUANDO AGENDAR
+   - Se "DADOS QUE AINDA FALTAM" está vazio, use [AGENDAR] IMEDIATAMENTE
+   - Não pergunte confirmação, apenas agende
+   
+4. 📝 PERGUNTAS
+   - Pergunte apenas 1 dado por vez
+   - Só pergunte dados da lista "DADOS QUE AINDA FALTAM"
 
 📦 PRODUTOS DISPONÍVEIS:
 ${produtosDisponiveis.map(p => `- ${p.replace(/_/g, ' ')}`).join('\n')}
