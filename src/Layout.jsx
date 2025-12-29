@@ -23,9 +23,9 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-// import ReminderAlert from "../components/ReminderAlert";
-// import CompromissoAlert from "../components/agenda/CompromissoAlert";
-// import EmailNotification from "../components/EmailNotification";
+import ReminderAlert from "../components/ReminderAlert";
+import CompromissoAlert from "../components/agenda/CompromissoAlert";
+import EmailNotification from "../components/EmailNotification";
 
 function RelogioBrasil() {
   const [horaAtual, setHoraAtual] = useState(new Date());
@@ -130,9 +130,9 @@ export default function Layout({ children, currentPageName }) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
-        {/* <ReminderAlert />
+        <ReminderAlert />
         <CompromissoAlert />
-        <EmailNotification /> */}
+        <EmailNotification />
         
         <Sidebar className="border-r border-slate-200">
           <SidebarHeader className="border-b border-slate-200 p-6">
