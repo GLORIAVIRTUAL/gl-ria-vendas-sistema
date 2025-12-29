@@ -104,14 +104,21 @@ export default function MessageBubble({ message }) {
             {(() => {
               if (!message.created_date) return '';
               try {
-                const date = new Date(message.created_date);
+                // Se já é objeto Date, usa direto; se não, converte
+                const date = message.created_date instanceof Date 
+                  ? message.created_date 
+                  : new Date(message.created_date);
+                  
                 if (isNaN(date.getTime())) return '';
+                
+                // Garante conversão para horário de Recife (UTC-3)
                 return date.toLocaleTimeString('pt-BR', { 
                   timeZone: 'America/Recife',
                   hour: '2-digit', 
                   minute: '2-digit' 
                 });
               } catch (e) {
+                console.error('Erro ao formatar horário:', e);
                 return '';
               }
             })()}
