@@ -124,13 +124,28 @@ export default function ChatIA() {
         status: 'sent'
       });
 
-      // Envia via WhatsApp
+      // Envia via WhatsApp (Meta API)
       try {
-        await base44.functions.invoke('whatsapp_sendMessage', {
-          telefone: selectedContact.phone,
-          mensagem: messageData.content
+        const PHONE_NUMBER_ID = 'YOUR_PHONE_NUMBER_ID'; // será pego do env no backend
+        const result = await fetch('/api/functions/sendWhatsAppMessage', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${await base44.auth.getToken()}`
+          },
+          body: JSON.stringify({
+            phone: selectedContact.phone,
+            message: messageData.content
+          })
         });
-        toast.success('Mensagem enviada!');
+
+        if (result.ok) {
+          toast.success('Mensagem enviada!');
+        } else {
+          const error = await result.json();
+          console.error('Erro ao enviar:', error);
+          toast.error('Erro ao enviar mensagem ao WhatsApp');
+        }
       } catch (whatsappError) {
         console.error('Erro ao enviar WhatsApp:', whatsappError);
         toast.error('Mensagem salva mas não enviada ao WhatsApp');
