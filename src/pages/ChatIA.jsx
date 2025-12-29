@@ -126,29 +126,20 @@ export default function ChatIA() {
 
       // Envia via WhatsApp (Meta API)
       try {
-        const PHONE_NUMBER_ID = 'YOUR_PHONE_NUMBER_ID'; // será pego do env no backend
-        const result = await fetch('/api/functions/sendWhatsAppMessage', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${await base44.auth.getToken()}`
-          },
-          body: JSON.stringify({
-            phone: selectedContact.phone,
-            message: messageData.content
-          })
+        const result = await base44.functions.invoke('sendWhatsAppMessage', {
+          phone: selectedContact.phone,
+          message: messageData.content
         });
 
-        if (result.ok) {
-          toast.success('Mensagem enviada!');
+        if (result.status === 200) {
+          console.log('✅ Mensagem enviada via WhatsApp');
         } else {
-          const error = await result.json();
-          console.error('Erro ao enviar:', error);
+          console.error('❌ Erro ao enviar:', result.data);
           toast.error('Erro ao enviar mensagem ao WhatsApp');
         }
       } catch (whatsappError) {
-        console.error('Erro ao enviar WhatsApp:', whatsappError);
-        toast.error('Mensagem salva mas não enviada ao WhatsApp');
+        console.error('❌ Erro ao enviar WhatsApp:', whatsappError);
+        toast.error('Erro ao enviar mensagem ao WhatsApp');
       }
 
       await updateContactMutation.mutateAsync({
