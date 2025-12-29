@@ -104,21 +104,33 @@ export default function MessageBubble({ message }) {
             {(() => {
               if (!message.created_date) return '';
               try {
-                // Se já é objeto Date, usa direto; se não, converte
-                const date = message.created_date instanceof Date 
-                  ? message.created_date 
-                  : new Date(message.created_date);
+                // Converte para Date UTC
+                let date;
+                if (message.created_date instanceof Date) {
+                  date = message.created_date;
+                } else if (typeof message.created_date === 'string') {
+                  // Se a string não termina com Z, adiciona para forçar UTC
+                  const dateStr = message.created_date.endsWith('Z') 
+                    ? message.created_date 
+                    : message.created_date + 'Z';
+                  date = new Date(dateStr);
+                } else {
+                  date = new Date(message.created_date);
+                }
                   
-                if (isNaN(date.getTime())) return '';
+                if (isNaN(date.getTime())) {
+                  console.error('Data inválida:', message.created_date);
+                  return '';
+                }
                 
-                // Garante conversão para horário de Recife (UTC-3)
+                // Converte para horário de Recife (UTC-3)
                 return date.toLocaleTimeString('pt-BR', { 
                   timeZone: 'America/Recife',
                   hour: '2-digit', 
                   minute: '2-digit' 
                 });
               } catch (e) {
-                console.error('Erro ao formatar horário:', e);
+                console.error('Erro ao formatar horário:', e, message.created_date);
                 return '';
               }
             })()}
