@@ -104,11 +104,13 @@ export default function MessageBubble({ message }) {
             {(() => {
               if (!message.created_date) return '';
               try {
-                const dateStr = message.created_date.endsWith('Z') ? message.created_date : message.created_date + 'Z';
-                const date = new Date(dateStr);
+                const date = new Date(message.created_date);
                 if (isNaN(date.getTime())) return '';
-                const brasiliaTime = new Date(date.getTime() - (3 * 60 * 60 * 1000));
-                return brasiliaTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                return date.toLocaleTimeString('pt-BR', { 
+                  timeZone: 'America/Recife',
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                });
               } catch (e) {
                 return '';
               }
