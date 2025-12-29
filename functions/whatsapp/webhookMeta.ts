@@ -348,9 +348,9 @@ async function processAIResponse(base44, contact, phone) {
               const horariosLivres = horariosComerciais.filter(h => !horariosOcupados.includes(h));
 
               if (horariosLivres.length > 0) {
-                horariosInfo = `\n\n🕐 HORÁRIOS DISPONÍVEIS EM ${dataSalva}:\n${horariosLivres.join(', ')}\n\n⚠️ IMPORTANTE: VOCÊ DEVE SUGERIR APENAS HORÁRIOS DESTA LISTA! Não invente horários.`;
+                horariosInfo = `\n\n🕐 HORÁRIOS DISPONÍVEIS EM ${dataSalva}:\n${horariosLivres.join(', ')}\n\n🚨 REGRA CRÍTICA - LEIA ISTO:\n- APENAS sugira horários desta lista acima\n- NUNCA sugira horários fora desta lista\n- Se o cliente pedir um horário que não está na lista, diga que está OCUPADO e sugira outro\n- NÃO INVENTE HORÁRIOS`;
               } else {
-                horariosInfo = `\n\n❌ Nenhum horário disponível em ${dataSalva}. Pergunte outra data ao cliente.`;
+                horariosInfo = `\n\n❌ NENHUM HORÁRIO DISPONÍVEL em ${dataSalva}.\n\n🚨 AÇÃO OBRIGATÓRIA:\n- Pergunte ao cliente por OUTRA DATA\n- NÃO sugira nenhum horário para esta data`;
               }
             }
 
@@ -401,10 +401,12 @@ ${dadosFaltantes.length > 0 ? `⚠️ DADOS QUE AINDA FALTAM: ${dadosFaltantes.j
    - Verifique "DADOS JÁ COLETADOS" antes de perguntar qualquer coisa
    - Se o dado já está lá, NÃO PERGUNTE novamente
    
-2. ⏰ HORÁRIOS - REGRA CRÍTICA
-   - Se aparecer "HORÁRIOS DISPONÍVEIS", APENAS sugira horários dessa lista
-   - NUNCA sugira horários que não estão na lista
+2. 🚨 HORÁRIOS - REGRA CRÍTICA (MUITO IMPORTANTE!)
+   - Se aparecer "HORÁRIOS DISPONÍVEIS", você DEVE sugerir APENAS horários dessa lista
+   - É PROIBIDO sugerir horários que não estão na lista
+   - Se cliente pedir horário não disponível, informe que está OCUPADO
    - Se não houver lista de horários, pergunte a data primeiro
+   - NUNCA, EM HIPÓTESE ALGUMA, sugira um horário que não está na lista de disponíveis
    
 3. ✅ QUANDO AGENDAR
    - Se "DADOS QUE AINDA FALTAM" está vazio, use [AGENDAR] IMEDIATAMENTE
@@ -524,20 +526,34 @@ Seja eficiente. Não repita perguntas. Foque nos dados faltantes.`;
                   console.log('📋 Extraído:', { nome, email, telefone, produto, data, horario });
 
                   if (nome && email && telefone && produto && data && horario) {
-                    // Verifica disponibilidade
-                    const todosAgendamentos = await base44.asServiceRole.entities.Agendamento.filter({
-                      data,
-                      horario
-                    });
+                   // VALIDAÇÃO RIGOROSA: Verifica se o horário está realmente disponível
+                   const todosAgendamentos = await base44.asServiceRole.entities.Agendamento.filter({
+                     data,
+                     horario
+                   });
 
-                    const ocupado = todosAgendamentos.some(a => 
-                      a.status === 'Agendada' || a.status === 'Confirmada'
-                    );
+                   const ocupado = todosAgendamentos.some(a => 
+                     a.status === 'Agendada' || a.status === 'Confirmada'
+                   );
 
-                    if (ocupado) {
-                      responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
-                      responseText += '\n\n❌ Este horário foi ocupado agora mesmo! Por favor, escolha outro.';
-                    } else {
+                   if (ocupado) {
+                     console.error('❌ HORÁRIO OCUPADO! IA tentou agendar horário já ocupado:', horario);
+                     responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
+
+                     // Busca horários disponíveis para sugerir
+                     const horariosOcupados = await base44.asServiceRole.entities.Agendamento.filter({ data })
+                       .then(agendamentos => agendamentos
+                         .filter(a => a.status === 'Agendada' || a.status === 'Confirmada')
+                         .map(a => a.horario)
+                       );
+                     const horariosDisponiveis = horariosComerciais.filter(h => !horariosOcupados.includes(h));
+
+                     if (horariosDisponiveis.length > 0) {
+                       responseText += `\n\n❌ Desculpe! O horário ${horario} está OCUPADO.\n\n✅ Horários disponíveis para ${data}:\n${horariosDisponiveis.join(', ')}\n\nQual horário você prefere?`;
+                     } else {
+                       responseText += `\n\n❌ Desculpe! Não há mais horários disponíveis em ${data}.\n\nPor favor, escolha outra data.`;
+                     }
+                   } else {
                       // Normaliza o nome do produto
                       const produtoMap = {
                         'Atendimento_IA_24_7': 'Atendimento_IA_24_7',
