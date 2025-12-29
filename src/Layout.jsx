@@ -32,7 +32,11 @@ function RelogioBrasil() {
 
   useEffect(() => {
     const atualizarHora = () => {
-      const opcoes = {
+      // Força criar um novo Date a cada atualização
+      const agora = new Date();
+      
+      // Usa Intl.DateTimeFormat para garantir timezone correto
+      const formatter = new Intl.DateTimeFormat('pt-BR', {
         timeZone: 'America/Sao_Paulo',
         weekday: 'long',
         year: 'numeric',
@@ -42,10 +46,9 @@ function RelogioBrasil() {
         minute: '2-digit',
         second: '2-digit',
         hour12: false
-      };
+      });
       
-      const horaAtual = new Date().toLocaleString('pt-BR', opcoes);
-      setHoraFormatada(horaAtual);
+      setHoraFormatada(formatter.format(agora));
     };
 
     atualizarHora();
