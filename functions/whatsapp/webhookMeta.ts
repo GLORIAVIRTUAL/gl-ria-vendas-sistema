@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
               });
 
               const horariosOcupados = agendamentosDoDia
-                .filter(a => ['Agendada', 'Confirmada'].includes(a.status))
+                .filter(a => a.status === 'Agendada' || a.status === 'Confirmada')
                 .map(a => a.horario);
 
               const horariosLivres = horariosComerciais.filter(h => !horariosOcupados.includes(h));
@@ -272,12 +272,14 @@ Seja natural e prestativo. Confirme os dados antes de agendar.`;
 
                   if (nome && email && telefone && produto && data && horario) {
                     // Verifica disponibilidade
-                    const jaAgendado = await base44.asServiceRole.entities.Agendamento.filter({
+                    const todosAgendamentos = await base44.asServiceRole.entities.Agendamento.filter({
                       data,
                       horario
                     });
 
-                    const ocupado = jaAgendado.some(a => ['Agendada', 'Confirmada'].includes(a.status));
+                    const ocupado = todosAgendamentos.some(a => 
+                      a.status === 'Agendada' || a.status === 'Confirmada'
+                    );
 
                     if (ocupado) {
                       responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
