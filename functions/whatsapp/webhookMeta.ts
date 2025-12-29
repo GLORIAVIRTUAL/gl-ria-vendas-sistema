@@ -27,29 +27,6 @@ Deno.serve(async (req) => {
       const body = await req.json();
       console.log('📩 Webhook recebido do Meta:', JSON.stringify(body, null, 2));
 
-      // Estrutura do webhook do Meta:
-      // {
-      //   "object": "whatsapp_business_account",
-      //   "entry": [{
-      //     "id": "WHATSAPP_BUSINESS_ACCOUNT_ID",
-      //     "changes": [{
-      //       "value": {
-      //         "messaging_product": "whatsapp",
-      //         "metadata": { "display_phone_number": "...", "phone_number_id": "..." },
-      //         "contacts": [{ "profile": { "name": "..." }, "wa_id": "..." }],
-      //         "messages": [{
-      //           "from": "5511999999999",
-      //           "id": "wamid.xxx",
-      //           "timestamp": "1234567890",
-      //           "type": "text",
-      //           "text": { "body": "Olá" }
-      //         }]
-      //       },
-      //       "field": "messages"
-      //     }]
-      //   }]
-      // }
-
       const entry = body.entry?.[0];
       const changes = entry?.changes?.[0];
       const value = changes?.value;
@@ -63,7 +40,6 @@ Deno.serve(async (req) => {
 
       for (const message of messages) {
         const phone = message.from;
-        const messageId = message.id;
         const timestamp = message.timestamp;
         let content = '';
         let messageType = 'text';
@@ -77,7 +53,7 @@ Deno.serve(async (req) => {
           case 'image':
             content = message.image?.caption || 'Imagem enviada';
             messageType = 'image';
-            mediaUrl = message.image?.id; // Meta envia ID, precisa buscar URL depois
+            mediaUrl = message.image?.id;
             break;
           case 'video':
             content = message.video?.caption || 'Vídeo enviado';
@@ -123,9 +99,9 @@ Deno.serve(async (req) => {
           });
         }
 
-        // Salva a mensagem
+        // Salva a mensagem do cliente
         console.log('💾 Salvando mensagem de:', phone);
-        const savedMessage = await base44.asServiceRole.entities.Message.create({
+        await base44.asServiceRole.entities.Message.create({
           contact_id: contact.id,
           direction: 'inbound',
           sender: 'customer',
@@ -137,101 +113,170 @@ Deno.serve(async (req) => {
 
         // Se IA estiver habilitada, processa resposta automática
         if (contact.ai_enabled) {
-          console.log('🤖 IA habilitada, processando resposta...');
+          console.log('🤖 IA habilitada para este contato');
           
           try {
             // Busca configurações da IA
             const aiSettings = await base44.asServiceRole.entities.AISettings.list();
             const settings = aiSettings.find(s => s.is_active) || aiSettings[0];
 
-            if (settings) {
-              // Busca histórico de mensagens do contato
-              const history = await base44.asServiceRole.entities.Message.filter(
-                { contact_id: contact.id },
-                'created_date',
-                20
+            if (!settings) {
+              console.log('⚠️ Nenhuma configuração de IA encontrada');
+              continue;
+            }
+
+            console.log('⚙️ Usando configuração:', settings.name);
+
+            // Horário de Brasília
+            const now = new Date();
+            const brasiliaTime = new Intl.DateTimeFormat('pt-BR', {
+              timeZone: 'America/Sao_Paulo',
+              dateStyle: 'full',
+              timeStyle: 'long'
+            }).format(now);
+
+            // Busca histórico de mensagens do contato (últimas 15)
+            const history = await base44.asServiceRole.entities.Message.filter(
+              { contact_id: contact.id },
+              'created_date',
+              15
+            );
+
+            // Monta histórico formatado
+            const conversationContext = history
+              .map(m => `${m.sender === 'customer' ? 'Cliente' : 'GLÓRIA'}: ${m.content}`)
+              .join('\n');
+
+            // Verifica palavras de transferência
+            const shouldTransfer = (settings.transfer_keywords || []).some(keyword =>
+              content.toLowerCase().includes(keyword.toLowerCase())
+            );
+
+            // Monta prompt completo
+            const systemPrompt = settings.system_prompt || 'Você é GLÓRIA, uma assistente virtual inteligente e prestativa.';
+            
+            const fullPrompt = `${systemPrompt}
+
+📅 INFORMAÇÕES ATUAIS:
+- Data/Hora em Brasília: ${brasiliaTime}
+- Cliente: ${contact.name || 'Não informado'}
+- Telefone: ${contact.phone}
+
+💬 HISTÓRICO DA CONVERSA:
+${conversationContext || 'Esta é a primeira mensagem.'}
+
+📨 MENSAGEM ATUAL DO CLIENTE:
+${content}
+
+${shouldTransfer ? '⚠️ ATENÇÃO: Cliente solicitou falar com humano. Informe que está transferindo para atendente.' : ''}
+
+Responda de forma natural, útil e direta.`;
+
+            console.log('🔄 Enviando para IA...');
+
+            // Chama a IA (SEM JSON SCHEMA - retorna texto direto)
+            let responseText;
+            try {
+              responseText = await base44.asServiceRole.integrations.Core.InvokeLLM({
+                prompt: fullPrompt
+              });
+              
+              console.log('✅ IA respondeu:', responseText);
+            } catch (llmError) {
+              console.error('❌ Erro na LLM:', llmError);
+              responseText = 'Desculpe, estou com dificuldades técnicas. Um atendente humano irá ajudá-lo em breve.';
+            }
+
+            // Garante que sempre tem resposta
+            if (!responseText || responseText.trim() === '') {
+              responseText = 'Desculpe, não consegui processar sua mensagem. Pode repetir?';
+            }
+
+            // Se deve transferir para humano, desabilita IA
+            if (shouldTransfer) {
+              await base44.asServiceRole.entities.Contact.update(contact.id, {
+                ai_enabled: false
+              });
+              console.log('👤 Conversa transferida para atendente humano');
+            }
+
+            // Salva resposta da IA no banco
+            console.log('💾 Salvando resposta da IA no banco...');
+            await base44.asServiceRole.entities.Message.create({
+              contact_id: contact.id,
+              direction: 'outbound',
+              sender: 'ai',
+              content: responseText,
+              type: 'text',
+              status: 'sent',
+              extracted_data: {}
+            });
+
+            // Envia via WhatsApp API do Meta
+            const PHONE_NUMBER_ID = Deno.env.get('META_PHONE_NUMBER_ID');
+            const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
+
+            if (PHONE_NUMBER_ID && ACCESS_TOKEN) {
+              console.log('📤 Enviando mensagem via Meta API...');
+              
+              const sendResponse = await fetch(
+                `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${ACCESS_TOKEN}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    messaging_product: 'whatsapp',
+                    to: phone,
+                    type: 'text',
+                    text: { body: responseText }
+                  })
+                }
               );
 
-              // Monta contexto para a IA
-              const conversationHistory = history.map(m => ({
-                role: m.sender === 'customer' ? 'user' : 'assistant',
-                content: m.content
-              }));
-
-              // Chama a IA para gerar resposta
-              const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-                prompt: content,
-                response_json_schema: {
-                  type: "object",
-                  properties: {
-                    response: { type: "string" },
-                    should_transfer_to_human: { type: "boolean" },
-                    extracted_data: { type: "object" }
-                  }
+              if (sendResponse.ok) {
+                const result = await sendResponse.json();
+                console.log('✅ Mensagem enviada com sucesso via Meta!', result);
+                
+                // Atualiza status da mensagem
+                const lastAIMessage = await base44.asServiceRole.entities.Message.filter(
+                  { contact_id: contact.id, sender: 'ai' },
+                  '-created_date',
+                  1
+                );
+                if (lastAIMessage.length > 0) {
+                  await base44.asServiceRole.entities.Message.update(lastAIMessage[0].id, {
+                    status: 'delivered'
+                  });
                 }
-              });
-
-              console.log('🤖 Resposta da IA:', aiResponse);
-
-              // Garante que sempre tem uma resposta
-              if (!aiResponse.response || aiResponse.response.trim() === '') {
-                aiResponse.response = 'Desculpe, não entendi. Pode reformular sua pergunta?';
-              }
-
-              // Se deve transferir para humano, desabilita IA
-              if (aiResponse.should_transfer_to_human) {
-                await base44.asServiceRole.entities.Contact.update(contact.id, {
-                  ai_enabled: false
-                });
-                console.log('👤 Conversa transferida para humano');
-              }
-
-              // Salva resposta da IA
-              console.log('💾 Salvando resposta da IA no banco...');
-              if (aiResponse.response) {
-                await base44.asServiceRole.entities.Message.create({
-                  contact_id: contact.id,
-                  direction: 'outbound',
-                  sender: 'ai',
-                  content: aiResponse.response,
-                  type: 'text',
-                  status: 'pending',
-                  extracted_data: aiResponse.extracted_data || {}
-                });
-
-                // Envia via WhatsApp API do Meta
-                const PHONE_NUMBER_ID = Deno.env.get('META_PHONE_NUMBER_ID');
-                const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
-
-                if (PHONE_NUMBER_ID && ACCESS_TOKEN) {
-                  const sendResponse = await fetch(
-                    `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,
-                    {
-                      method: 'POST',
-                      headers: {
-                        'Authorization': `Bearer ${ACCESS_TOKEN}`,
-                        'Content-Type': 'application/json'
-                      },
-                      body: JSON.stringify({
-                        messaging_product: 'whatsapp',
-                        to: phone,
-                        type: 'text',
-                        text: { body: aiResponse.response }
-                      })
-                    }
-                  );
-
-                  if (sendResponse.ok) {
-                    console.log('✅ Mensagem enviada via Meta API');
-                  } else {
-                    console.error('❌ Erro ao enviar via Meta:', await sendResponse.text());
-                  }
+              } else {
+                const errorText = await sendResponse.text();
+                console.error('❌ Erro ao enviar via Meta:', errorText);
+                
+                // Marca como falha
+                const lastAIMessage = await base44.asServiceRole.entities.Message.filter(
+                  { contact_id: contact.id, sender: 'ai' },
+                  '-created_date',
+                  1
+                );
+                if (lastAIMessage.length > 0) {
+                  await base44.asServiceRole.entities.Message.update(lastAIMessage[0].id, {
+                    status: 'failed',
+                    error_message: errorText
+                  });
                 }
               }
+            } else {
+              console.error('❌ Credenciais Meta não configuradas (META_PHONE_NUMBER_ID ou META_ACCESS_TOKEN)');
             }
+
           } catch (error) {
             console.error('❌ Erro ao processar IA:', error);
           }
+        } else {
+          console.log('🚫 IA desabilitada para este contato (modo humano)');
         }
       }
 
