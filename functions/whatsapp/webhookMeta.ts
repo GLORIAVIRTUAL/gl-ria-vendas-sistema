@@ -171,29 +171,40 @@ async function processAIResponse(base44, contact, phone) {
               timeStyle: 'long'
             }).format(now);
 
-            // Busca histórico de mensagens (últimas 20)
-            const history = await base44.asServiceRole.entities.Message.filter(
+            // Busca histórico completo em ordem decrescente (mais recente primeiro)
+            const allMessages = await base44.asServiceRole.entities.Message.filter(
               { contact_id: contact.id },
-              'created_date',
-              20
+              '-created_date',
+              30
             );
 
-            // Separa mensagens do cliente não processadas (últimas mensagens antes da resposta da IA)
-            const lastAIResponse = history.findIndex(m => m.sender === 'ai');
-            const recentCustomerMessages = lastAIResponse === -1 
-              ? history.filter(m => m.sender === 'customer')
-              : history.slice(0, lastAIResponse).filter(m => m.sender === 'customer');
+            // Separa mensagens do cliente que ainda não foram respondidas pela IA
+            // Pega mensagens do cliente até encontrar uma resposta da IA
+            const recentCustomerMessages = [];
+            for (const msg of allMessages) {
+              if (msg.sender === 'ai') {
+                // Encontrou resposta da IA, para de acumular
+                break;
+              }
+              if (msg.sender === 'customer') {
+                recentCustomerMessages.unshift(msg); // Adiciona no início para manter ordem cronológica
+              }
+            }
 
-            // Acumula conteúdo das mensagens recentes do cliente
+            // Acumula conteúdo das mensagens do cliente
             const currentMessage = recentCustomerMessages
               .map(m => m.content)
               .join('\n');
 
-            console.log(`📦 Processando ${recentCustomerMessages.length} mensagens acumuladas`);
+            console.log(`📦 Acumuladas ${recentCustomerMessages.length} mensagens do cliente`);
+            console.log(`📝 Conteúdo acumulado: ${currentMessage.substring(0, 100)}...`);
 
-            // Monta histórico formatado (excluindo as mensagens sendo processadas agora)
-            const conversationContext = history
-              .slice(lastAIResponse === -1 ? recentCustomerMessages.length : lastAIResponse)
+            // Monta histórico formatado (mensagens antigas, exceto as sendo processadas agora)
+            const olderMessages = allMessages
+              .filter(m => !recentCustomerMessages.some(rcm => rcm.id === m.id))
+              .reverse(); // Inverte para ordem cronológica
+            
+            const conversationContext = olderMessages
               .map(m => {
                 let msg = `${m.sender === 'customer' ? 'Cliente' : 'GLÓRIA'}: ${m.content}`;
                 if (m.type !== 'text' && m.media_url) {
