@@ -411,6 +411,8 @@ ${dadosFaltantes.length > 0 ? `⚠️ DADOS QUE AINDA FALTAM: ${dadosFaltantes.j
 3. ✅ QUANDO AGENDAR
    - Se "DADOS QUE AINDA FALTAM" está vazio, use [AGENDAR] IMEDIATAMENTE
    - Não pergunte confirmação, apenas agende
+   - IMPORTANTE: NÃO diga "reunião agendada" antes de usar o comando [AGENDAR]
+   - Apenas informe sucesso APÓS o sistema confirmar
    
 4. 📝 PERGUNTAS
    - Pergunte apenas 1 dado por vez
@@ -420,6 +422,8 @@ ${dadosFaltantes.length > 0 ? `⚠️ DADOS QUE AINDA FALTAM: ${dadosFaltantes.j
 ${produtosDisponiveis.map(p => `- ${p.replace(/_/g, ' ')}`).join('\n')}
 
 📋 COMANDO PARA AGENDAR:
+Quando tiver TODOS os dados, use EXATAMENTE este formato:
+
 [AGENDAR]
 NOME: ${nomeClienteSalvo || 'extrair da conversa ou perguntar'}
 EMAIL: ${emailClienteSalvo || 'extrair ou perguntar'}
@@ -428,6 +432,12 @@ PRODUTO: ${produtoSalvo || 'extrair ou perguntar'}
 DATA: ${dataSalva || 'extrair ou perguntar'}
 HORARIO: ${horarioSalvo || 'extrair ou perguntar'}
 [/AGENDAR]
+
+🚨 MUITO IMPORTANTE:
+- NÃO escreva NADA sobre "reunião agendada" ou "confirmado" junto com o comando [AGENDAR]
+- Apenas use o comando e pare
+- O sistema irá adicionar a mensagem de confirmação automaticamente
+- Se você disser "agendado" antes do comando, o cliente verá a mensagem mas o agendamento pode não estar no sistema
 
 Seja eficiente. Não repita perguntas. Foque nos dados faltantes.`;
 
@@ -607,47 +617,72 @@ Seja eficiente. Não repita perguntas. Foque nos dados faltantes.`;
                         linkReuniao = 'Link será enviado por email';
                       }
                       
-                      const agendamento = await base44.asServiceRole.entities.Agendamento.create({
-                        nome_cliente: nome,
-                        email_cliente: email,
-                        telefone_cliente: telefone,
-                        produto: produtoNormalizado,
-                        data: data,
-                        horario: horario,
-                        link_reuniao: linkReuniao,
-                        status: 'Agendada',
-                        origem: 'Chatbot',
-                        observacoes: 'Agendamento via IA WhatsApp - GLÓRIA'
-                      });
+                      try {
+                        console.log('💾 Criando agendamento no banco de dados...');
+                        
+                        const agendamento = await base44.asServiceRole.entities.Agendamento.create({
+                          nome_cliente: nome,
+                          email_cliente: email,
+                          telefone_cliente: telefone,
+                          produto: produtoNormalizado,
+                          data: data,
+                          horario: horario,
+                          link_reuniao: linkReuniao,
+                          status: 'Agendada',
+                          origem: 'Chatbot',
+                          observacoes: 'Agendamento via IA WhatsApp - GLÓRIA'
+                        });
 
-                      console.log('✅ Agendamento criado:', agendamento.id);
+                        if (!agendamento || !agendamento.id) {
+                          throw new Error('Falha ao criar agendamento - ID não retornado');
+                        }
 
-                      // Cria Lead no CRM
-                      await base44.asServiceRole.entities.Lead.create({
-                        nome_cliente: nome,
-                        email_cliente: email,
-                        telefone_cliente: telefone,
-                        produto_interesse: produtoNormalizado,
-                        data_reuniao: data,
-                        observacoes: 'Lead via IA WhatsApp',
-                        agendamento_id: agendamento.id,
-                        estagio: 'Reuniao_Marcada',
-                        prioridade: 'Media'
-                      });
+                        console.log('✅ AGENDAMENTO CRIADO COM SUCESSO! ID:', agendamento.id);
 
-                      // Remove comando da resposta
-                      responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
-                      
-                      // Adiciona confirmação
-                      const dataFormatada = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
-                      responseText += `\n\n✅ *Reunião agendada com sucesso!*\n\n📅 Data: ${dataFormatada}\n🕐 Horário: ${horario}\n💼 Produto: ${produtoNomes[produtoNormalizado] || produtoNormalizado}\n🔗 Link: ${linkReuniao}\n\nVocê receberá um email de confirmação em breve!`;
+                        // Cria Lead no CRM
+                        console.log('💾 Criando Lead no CRM...');
+                        const lead = await base44.asServiceRole.entities.Lead.create({
+                          nome_cliente: nome,
+                          email_cliente: email,
+                          telefone_cliente: telefone,
+                          produto_interesse: produtoNormalizado,
+                          data_reuniao: data,
+                          observacoes: 'Lead via IA WhatsApp',
+                          agendamento_id: agendamento.id,
+                          estagio: 'Reuniao_Marcada',
+                          prioridade: 'Media'
+                        });
 
-                      // Atualiza contato
-                      await base44.asServiceRole.entities.Contact.update(contact.id, {
-                        name: nome,
-                        email: email,
-                        pipeline_stage: 'qualificado'
-                      });
+                        console.log('✅ LEAD CRIADO! ID:', lead.id);
+
+                        // Atualiza contato
+                        console.log('💾 Atualizando contato...');
+                        await base44.asServiceRole.entities.Contact.update(contact.id, {
+                          name: nome,
+                          email: email,
+                          pipeline_stage: 'qualificado',
+                          custom_fields: {
+                            ...contact.custom_fields,
+                            ultimo_agendamento_id: agendamento.id,
+                            agendamento_confirmado: true
+                          }
+                        });
+
+                        console.log('✅ CONTATO ATUALIZADO!');
+
+                        // TUDO DEU CERTO - CONFIRMA PARA O CLIENTE
+                        responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
+                        
+                        const dataFormatada = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+                        responseText += `\n\n✅ *Reunião agendada com sucesso!*\n\n📅 Data: ${dataFormatada}\n🕐 Horário: ${horario}\n💼 Produto: ${produtoNomes[produtoNormalizado] || produtoNormalizado}\n🔗 Link: ${linkReuniao}\n\n🎉 Seu agendamento foi registrado no sistema!\nVocê receberá um email de confirmação em breve.`;
+                        
+                      } catch (agendamentoError) {
+                        console.error('❌ ERRO AO CRIAR AGENDAMENTO:', agendamentoError);
+                        
+                        // Remove comando e informa erro
+                        responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
+                        responseText += `\n\n❌ Desculpe, houve um erro ao criar o agendamento no sistema. Por favor, tente novamente ou entre em contato com nosso suporte.\n\nDetalhes do erro: ${agendamentoError.message}`;
+                      }
                     }
                   } else {
                     responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
