@@ -81,7 +81,13 @@ export default function MessageBubble({ message }) {
             isAI ? "text-blue-100" : "text-slate-300"
           )}>
             {isAI ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
-            <span>{isAI ? 'IA GLÓRIA' : 'Atendente'}</span>
+            <span>{isAI ? 'IA GLÓRIA' : (message.extracted_data?.sent_by || 'Atendente')}</span>
+          </div>
+        )}
+        {!isOutbound && message.extracted_data?.sender_name && (
+          <div className="flex items-center gap-1.5 text-[10px] mb-1 text-slate-500">
+            <User className="w-3 h-3" />
+            <span>{message.extracted_data.sender_name}</span>
           </div>
         )}
         

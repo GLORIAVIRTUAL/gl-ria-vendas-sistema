@@ -112,7 +112,7 @@ export default function ChatIA() {
     setIsSending(true);
     
     try {
-      // Salva mensagem no banco
+      // Salva mensagem no banco com nome do atendente
       await createMessageMutation.mutateAsync({
         contact_id: selectedContact.id,
         direction: 'outbound',
@@ -121,7 +121,8 @@ export default function ChatIA() {
         type: messageData.type || 'text',
         media_url: messageData.media_url,
         media_mime_type: messageData.media_mime_type,
-        status: 'sent'
+        status: 'sent',
+        extracted_data: { sent_by: currentUser?.full_name || currentUser?.email }
       });
 
       // Envia via WhatsApp (Meta API)
