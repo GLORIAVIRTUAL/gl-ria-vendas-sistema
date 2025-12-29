@@ -272,12 +272,37 @@ async function processAIResponse(base44, contact, phone) {
             
             // Extrai data
             if (!updateFields.data) {
-              const dataMatch = currentMessage.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-              if (dataMatch) {
-                const dia = dataMatch[1].padStart(2, '0');
-                const mes = dataMatch[2].padStart(2, '0');
-                const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
-                updateFields.data = `${ano}-${mes}-${dia}`;
+              // Verifica se é "amanhã" ou "depois de amanhã"
+              if (/amanh[ãa]|amanha/i.test(currentMessage)) {
+                const amanha = new Date();
+                amanha.setDate(amanha.getDate() + 1);
+                updateFields.data = amanha.toISOString().split('T')[0];
+                console.log('📅 Cliente disse "amanhã", data calculada:', updateFields.data);
+              } else if (/depois de amanh[ãa]|depois de amanha|daqui a 2 dias|2 dias/i.test(currentMessage)) {
+                const depoisAmanha = new Date();
+                depoisAmanha.setDate(depoisAmanha.getDate() + 2);
+                updateFields.data = depoisAmanha.toISOString().split('T')[0];
+                console.log('📅 Cliente disse "depois de amanhã", data calculada:', updateFields.data);
+              } else if (/hoje/i.test(currentMessage)) {
+                const hoje = new Date();
+                updateFields.data = hoje.toISOString().split('T')[0];
+                console.log('📅 Cliente disse "hoje", data calculada:', updateFields.data);
+              } else if (/daqui a (\d+) dias?/i.test(currentMessage)) {
+                const match = currentMessage.match(/daqui a (\d+) dias?/i);
+                const dias = parseInt(match[1]);
+                const data = new Date();
+                data.setDate(data.getDate() + dias);
+                updateFields.data = data.toISOString().split('T')[0];
+                console.log(`📅 Cliente disse "daqui a ${dias} dias", data calculada:`, updateFields.data);
+              } else {
+                // Tenta extrair data no formato dd/mm ou dd-mm
+                const dataMatch = currentMessage.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+                if (dataMatch) {
+                  const dia = dataMatch[1].padStart(2, '0');
+                  const mes = dataMatch[2].padStart(2, '0');
+                  const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
+                  updateFields.data = `${ano}-${mes}-${dia}`;
+                }
               }
             }
             
