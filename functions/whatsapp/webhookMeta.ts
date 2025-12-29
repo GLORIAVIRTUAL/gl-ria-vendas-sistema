@@ -232,41 +232,6 @@ async function processAIResponse(base44, contact, phone) {
             // Horários comerciais
             const horariosComerciais = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
 
-            // SEMPRE verifica horários disponíveis se tiver data ou se estiver perguntando sobre horários
-            let horariosInfo = '';
-            let dataParaVerificar = dataSalva; // Usa data já salva se existir
-            
-            // Ou tenta extrair data da mensagem atual
-            const dataMatch = currentMessage.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-            if (dataMatch) {
-              const dia = dataMatch[1].padStart(2, '0');
-              const mes = dataMatch[2].padStart(2, '0');
-              const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
-              dataParaVerificar = `${ano}-${mes}-${dia}`;
-            }
-            
-            // Se tiver data, SEMPRE busca horários disponíveis
-            if (dataParaVerificar) {
-              console.log('📅 Consultando horários para:', dataParaVerificar);
-
-              // Busca agendamentos do dia
-              const agendamentosDoDia = await base44.asServiceRole.entities.Agendamento.filter({
-                data: dataParaVerificar
-              });
-
-              const horariosOcupados = agendamentosDoDia
-                .filter(a => a.status === 'Agendada' || a.status === 'Confirmada')
-                .map(a => a.horario);
-
-              const horariosLivres = horariosComerciais.filter(h => !horariosOcupados.includes(h));
-
-              if (horariosLivres.length > 0) {
-                horariosInfo = `\n\n🕐 HORÁRIOS DISPONÍVEIS EM ${dataParaVerificar}:\n${horariosLivres.join(', ')}\n\n⚠️ IMPORTANTE: VOCÊ DEVE SUGERIR APENAS HORÁRIOS DESTA LISTA! Não invente horários.`;
-              } else {
-                horariosInfo = `\n\n❌ Nenhum horário disponível em ${dataParaVerificar}. Pergunte outra data ao cliente.`;
-              }
-            }
-
             // Busca campos personalizados já capturados e extrai dados da conversa ANTES de enviar para IA
             const customFields = contact.custom_fields || {};
             const updateFields = { ...customFields };
@@ -340,6 +305,29 @@ async function processAIResponse(base44, contact, phone) {
             const nomeClienteSalvo = updateFields.nome_cliente || contact.name;
             const emailClienteSalvo = updateFields.email_cliente || contact.email;
             const telefoneSalvo = updateFields.telefone_cliente || contact.phone;
+
+            // SEMPRE verifica horários disponíveis se tiver data
+            let horariosInfo = '';
+            if (dataSalva) {
+              console.log('📅 Consultando horários para:', dataSalva);
+
+              // Busca agendamentos do dia
+              const agendamentosDoDia = await base44.asServiceRole.entities.Agendamento.filter({
+                data: dataSalva
+              });
+
+              const horariosOcupados = agendamentosDoDia
+                .filter(a => a.status === 'Agendada' || a.status === 'Confirmada')
+                .map(a => a.horario);
+
+              const horariosLivres = horariosComerciais.filter(h => !horariosOcupados.includes(h));
+
+              if (horariosLivres.length > 0) {
+                horariosInfo = `\n\n🕐 HORÁRIOS DISPONÍVEIS EM ${dataSalva}:\n${horariosLivres.join(', ')}\n\n⚠️ IMPORTANTE: VOCÊ DEVE SUGERIR APENAS HORÁRIOS DESTA LISTA! Não invente horários.`;
+              } else {
+                horariosInfo = `\n\n❌ Nenhum horário disponível em ${dataSalva}. Pergunte outra data ao cliente.`;
+              }
+            }
 
             // Identifica quais dados ainda faltam
             const dadosFaltantes = [];
