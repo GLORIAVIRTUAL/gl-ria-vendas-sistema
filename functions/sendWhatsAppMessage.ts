@@ -10,11 +10,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { phone, message } = await req.json();
+    const { phone, message, senderName } = await req.json();
     
     if (!phone || !message) {
       return Response.json({ error: 'Phone and message are required' }, { status: 400 });
     }
+
+    // Adiciona nome do atendente na mensagem
+    const messageWithSender = senderName 
+      ? `*${senderName}:*\n${message}` 
+      : message;
 
     const PHONE_NUMBER_ID = Deno.env.get('META_PHONE_NUMBER_ID');
     const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
@@ -44,7 +49,7 @@ Deno.serve(async (req) => {
           messaging_product: 'whatsapp',
           to: phoneFormatted,
           type: 'text',
-          text: { body: message }
+          text: { body: messageWithSender }
         })
       }
     );

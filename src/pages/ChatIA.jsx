@@ -129,7 +129,8 @@ export default function ChatIA() {
       try {
         const result = await base44.functions.invoke('sendWhatsAppMessage', {
           phone: selectedContact.phone,
-          message: messageData.content
+          message: messageData.content,
+          senderName: currentUser?.full_name || 'Atendente'
         });
 
         if (result.status === 200) {
