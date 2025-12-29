@@ -162,7 +162,50 @@ Deno.serve(async (req) => {
               'Sites_em_24_Horas'
             ];
 
-            // Monta prompt completo com ferramentas
+            // Horários comerciais
+            const horariosComerciais = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+
+            // Se o cliente pedir horários disponíveis, busca no banco
+            let horariosInfo = '';
+            const pedindoHorarios = /horário|horario|disponível|disponivel|quando|pode|agendar|marcar|reunião|reuniao/i.test(content);
+            
+            if (pedindoHorarios) {
+              // Tenta extrair data da mensagem
+              const dataMatch = content.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+              let dataConsulta = null;
+              
+              if (dataMatch) {
+                const dia = dataMatch[1].padStart(2, '0');
+                const mes = dataMatch[2].padStart(2, '0');
+                const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
+                dataConsulta = `${ano}-${mes}-${dia}`;
+              } else {
+                // Usa data de hoje se não especificado
+                const hoje = new Date();
+                dataConsulta = hoje.toISOString().split('T')[0];
+              }
+
+              console.log('📅 Consultando horários para:', dataConsulta);
+
+              // Busca agendamentos do dia
+              const agendamentosDoDia = await base44.asServiceRole.entities.Agendamento.filter({
+                data: dataConsulta
+              });
+
+              const horariosOcupados = agendamentosDoDia
+                .filter(a => ['Agendada', 'Confirmada'].includes(a.status))
+                .map(a => a.horario);
+
+              const horariosLivres = horariosComerciais.filter(h => !horariosOcupados.includes(h));
+
+              if (horariosLivres.length > 0) {
+                horariosInfo = `\n\n🕐 HORÁRIOS DISPONÍVEIS EM ${dataConsulta}:\n${horariosLivres.join(', ')}`;
+              } else {
+                horariosInfo = `\n\n❌ Nenhum horário disponível em ${dataConsulta}. Tente outra data.`;
+              }
+            }
+
+            // Monta prompt completo
             const systemPrompt = settings.system_prompt || 'Você é GLÓRIA, uma assistente virtual inteligente e prestativa.';
             
             const fullPrompt = `${systemPrompt}
@@ -177,33 +220,30 @@ ${conversationContext || 'Esta é a primeira mensagem.'}
 
 📨 MENSAGEM ATUAL DO CLIENTE:
 ${content}
+${horariosInfo}
 
 ${shouldTransfer ? '⚠️ ATENÇÃO: Cliente solicitou falar com humano. Informe que está transferindo para atendente.' : ''}
 
-🛠️ FERRAMENTAS DISPONÍVEIS:
-Você pode realizar agendamentos de reuniões! 
+🛠️ VOCÊ PODE AGENDAR REUNIÕES!
 
-PRODUTOS DISPONÍVEIS:
+📦 PRODUTOS DISPONÍVEIS:
 ${produtosDisponiveis.map(p => `- ${p.replace(/_/g, ' ')}`).join('\n')}
 
-HORÁRIOS DISPONÍVEIS: 08:00 às 20:00 (de hora em hora)
+📋 PARA AGENDAR:
+Quando tiver TODAS estas informações (Nome, Email, Telefone, Produto, Data e Horário), use:
 
-Se o cliente pedir para:
-1. CONSULTAR HORÁRIOS: responda normalmente perguntando a data e produto desejado
-2. AGENDAR REUNIÃO: quando tiver Nome, Email, Telefone, Produto e Data/Horário, use o formato especial:
+[AGENDAR]
+NOME: João Silva
+EMAIL: joao@email.com
+TELEFONE: 5511999999999
+PRODUTO: Gloria_Vendas
+DATA: 2025-01-15
+HORARIO: 14:00
+[/AGENDAR]
 
-[AÇÃO:AGENDAR]
-NOME: nome completo
-EMAIL: email@exemplo.com
-TELEFONE: telefone
-PRODUTO: nome_do_produto
-DATA: AAAA-MM-DD
-HORARIO: HH:00
-[/AÇÃO]
+Seja natural e prestativo. Confirme os dados antes de agendar.`;
 
-Após isso, continue a conversa normalmente.`;
-
-            console.log('🔄 Enviando para IA com ferramentas...');
+            console.log('🔄 Enviando para IA...');
 
             // Chama a IA
             let responseText;
@@ -215,11 +255,10 @@ Após isso, continue a conversa normalmente.`;
               console.log('✅ IA respondeu:', responseText);
 
               // Verifica se a IA quer agendar
-              if (responseText.includes('[AÇÃO:AGENDAR]')) {
+              if (responseText.includes('[AGENDAR]')) {
                 console.log('📅 IA solicitou agendamento, processando...');
                 
-                // Extrai dados do agendamento
-                const match = responseText.match(/\[AÇÃO:AGENDAR\]([\s\S]*?)\[\/AÇÃO\]/);
+                const match = responseText.match(/\[AGENDAR\]([\s\S]*?)\[\/AGENDAR\]/);
                 if (match) {
                   const dados = match[1];
                   const nome = dados.match(/NOME:\s*(.+)/)?.[1]?.trim();
@@ -229,45 +268,56 @@ Após isso, continue a conversa normalmente.`;
                   const data = dados.match(/DATA:\s*(.+)/)?.[1]?.trim();
                   const horario = dados.match(/HORARIO:\s*(.+)/)?.[1]?.trim();
 
-                  console.log('📋 Dados extraídos:', { nome, email, telefone, produto, data, horario });
+                  console.log('📋 Extraído:', { nome, email, telefone, produto, data, horario });
 
-                  // Verifica disponibilidade
-                  const agendamentosNaData = await base44.asServiceRole.entities.Agendamento.filter({
-                    data,
-                    horario,
-                    status: { $in: ['Agendada', 'Confirmada'] }
-                  });
+                  if (nome && email && telefone && produto && data && horario) {
+                    // Verifica disponibilidade
+                    const jaAgendado = await base44.asServiceRole.entities.Agendamento.filter({
+                      data,
+                      horario
+                    });
 
-                  if (agendamentosNaData.length > 0) {
-                    responseText = responseText.replace(/\[AÇÃO:AGENDAR\][\s\S]*?\[\/AÇÃO\]/, '').trim();
-                    responseText += '\n\n❌ Ops! Este horário já está ocupado. Tente outro horário ou data.';
+                    const ocupado = jaAgendado.some(a => ['Agendada', 'Confirmada'].includes(a.status));
+
+                    if (ocupado) {
+                      responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
+                      responseText += '\n\n❌ Este horário foi ocupado agora mesmo! Por favor, escolha outro.';
+                    } else {
+                      // Cria agendamento
+                      const linkReuniao = `https://meet.google.com/gloria-${Math.random().toString(36).substr(2, 9)}`;
+                      
+                      const agendamento = await base44.asServiceRole.entities.Agendamento.create({
+                        nome_cliente: nome,
+                        email_cliente: email,
+                        telefone_cliente: telefone,
+                        produto: produto,
+                        data: data,
+                        horario: horario,
+                        link_reuniao: linkReuniao,
+                        status: 'Agendada',
+                        origem: 'Chatbot',
+                        observacoes: 'Agendamento via IA WhatsApp - GLÓRIA'
+                      });
+
+                      console.log('✅ Agendamento criado:', agendamento.id);
+
+                      // Remove comando da resposta
+                      responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
+                      
+                      // Adiciona confirmação
+                      const dataFormatada = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
+                      responseText += `\n\n✅ *Reunião agendada com sucesso!*\n\n📅 Data: ${dataFormatada}\n🕐 Horário: ${horario}\n💼 Produto: ${produto.replace(/_/g, ' ')}\n🔗 Link: ${linkReuniao}\n\nVocê receberá um email de confirmação em breve!`;
+
+                      // Atualiza contato
+                      await base44.asServiceRole.entities.Contact.update(contact.id, {
+                        name: nome,
+                        email: email,
+                        pipeline_stage: 'qualificado'
+                      });
+                    }
                   } else {
-                    // Cria agendamento
-                    const novoAgendamento = await base44.asServiceRole.entities.Agendamento.create({
-                      nome_cliente: nome || contact.name || 'Cliente',
-                      email_cliente: email || '',
-                      telefone_cliente: telefone || contact.phone,
-                      produto: produto,
-                      data: data,
-                      horario: horario,
-                      link_reuniao: `https://meet.google.com/${Math.random().toString(36).substr(2, 9)}`,
-                      status: 'Agendada',
-                      origem: 'Chatbot',
-                      observacoes: 'Agendamento via IA - WhatsApp'
-                    });
-
-                    console.log('✅ Agendamento criado:', novoAgendamento.id);
-
-                    // Remove tag de ação da resposta
-                    responseText = responseText.replace(/\[AÇÃO:AGENDAR\][\s\S]*?\[\/AÇÃO\]/, '').trim();
-                    responseText += `\n\n✅ Reunião agendada com sucesso!\n📅 ${data} às ${horario}\n🔗 Link: ${novoAgendamento.link_reuniao}`;
-
-                    // Atualiza contato
-                    await base44.asServiceRole.entities.Contact.update(contact.id, {
-                      name: nome || contact.name,
-                      email: email || contact.email,
-                      pipeline_stage: 'qualificado'
-                    });
+                    responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
+                    responseText += '\n\n⚠️ Preciso de todas as informações para agendar. Me informe: nome, email, telefone, produto e horário desejado.';
                   }
                 }
               }
