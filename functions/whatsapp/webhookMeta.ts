@@ -144,7 +144,13 @@ Deno.serve(async (req) => {
 
             // Monta histórico formatado
             const conversationContext = history
-              .map(m => `${m.sender === 'customer' ? 'Cliente' : 'GLÓRIA'}: ${m.content}`)
+              .map(m => {
+                let msg = `${m.sender === 'customer' ? 'Cliente' : 'GLÓRIA'}: ${m.content}`;
+                if (m.type !== 'text' && m.media_url) {
+                  msg += ` [${m.type.toUpperCase()}]`;
+                }
+                return msg;
+              })
               .join('\n');
 
             // Verifica palavras de transferência
@@ -245,12 +251,80 @@ Seja natural e prestativo. Confirme os dados antes de agendar.`;
 
             console.log('🔄 Enviando para IA...');
 
+            // Se a mensagem atual tem mídia, baixa e prepara para enviar à IA
+            let fileUrls = [];
+            if (mediaUrl && messageType !== 'text') {
+              try {
+                console.log('📥 Baixando mídia do Meta:', mediaUrl);
+                const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
+                
+                // Busca URL da mídia
+                const mediaInfoResponse = await fetch(
+                  `https://graph.facebook.com/v18.0/${mediaUrl}`,
+                  {
+                    headers: {
+                      'Authorization': `Bearer ${ACCESS_TOKEN}`
+                    }
+                  }
+                );
+                
+                if (mediaInfoResponse.ok) {
+                  const mediaInfo = await mediaInfoResponse.json();
+                  const mediaDownloadUrl = mediaInfo.url;
+                  
+                  // Baixa o arquivo
+                  const mediaResponse = await fetch(mediaDownloadUrl, {
+                    headers: {
+                      'Authorization': `Bearer ${ACCESS_TOKEN}`
+                    }
+                  });
+                  
+                  if (mediaResponse.ok) {
+                    const mediaBlob = await mediaResponse.blob();
+                    const mediaFile = new File([mediaBlob], `media_${Date.now()}.${mediaInfo.mime_type?.split('/')[1] || 'bin'}`, {
+                      type: mediaInfo.mime_type
+                    });
+                    
+                    // Upload para base44
+                    const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({
+                      file: mediaFile
+                    });
+                    
+                    fileUrls.push(file_url);
+                    console.log('✅ Mídia enviada para IA:', file_url);
+                    
+                    // Atualiza a mensagem com a URL do arquivo
+                    const lastCustomerMessage = await base44.asServiceRole.entities.Message.filter(
+                      { contact_id: contact.id, sender: 'customer' },
+                      '-created_date',
+                      1
+                    );
+                    if (lastCustomerMessage.length > 0) {
+                      await base44.asServiceRole.entities.Message.update(lastCustomerMessage[0].id, {
+                        media_url: file_url
+                      });
+                    }
+                  }
+                }
+              } catch (mediaError) {
+                console.error('⚠️ Erro ao processar mídia:', mediaError);
+              }
+            }
+
             // Chama a IA
             let responseText;
             try {
-              responseText = await base44.asServiceRole.integrations.Core.InvokeLLM({
+              const llmParams = {
                 prompt: fullPrompt
-              });
+              };
+              
+              // Adiciona arquivos se houver
+              if (fileUrls.length > 0) {
+                llmParams.file_urls = fileUrls;
+                console.log('📎 Enviando arquivos para IA:', fileUrls);
+              }
+              
+              responseText = await base44.asServiceRole.integrations.Core.InvokeLLM(llmParams);
               
               console.log('✅ IA respondeu:', responseText);
 
