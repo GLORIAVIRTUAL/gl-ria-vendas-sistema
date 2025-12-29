@@ -39,6 +39,8 @@ function RelogioBrasil() {
   }, []);
 
   const formatarDataHora = () => {
+    const agora = new Date();
+    
     const opcoes = {
       timeZone: 'America/Sao_Paulo',
       weekday: 'long',
@@ -47,10 +49,11 @@ function RelogioBrasil() {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      hour12: false
     };
 
-    return horaAtual.toLocaleString('pt-BR', opcoes);
+    return agora.toLocaleString('pt-BR', opcoes);
   };
 
   return (
@@ -58,7 +61,7 @@ function RelogioBrasil() {
       <Clock className="w-4 h-4 text-blue-600 animate-pulse" />
       <div className="text-sm">
         <p className="font-semibold text-blue-900 capitalize">{formatarDataHora()}</p>
-        <p className="text-xs text-blue-600">Horário de Brasília (BRT)</p>
+        <p className="text-xs text-blue-600">Horário de Brasília (GMT-3)</p>
       </div>
     </div>
   );
