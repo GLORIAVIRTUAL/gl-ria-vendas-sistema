@@ -158,7 +158,7 @@ async function processAIResponse(base44, contact, phone) {
 
             if (!settings) {
               console.log('⚠️ Nenhuma configuração de IA encontrada');
-              continue;
+              return;
             }
 
             console.log('⚙️ Usando configuração:', settings.name);
@@ -622,9 +622,6 @@ Seja natural e prestativo. Confirme os dados antes de agendar.`;
               console.error('❌ Credenciais Meta não configuradas (META_PHONE_NUMBER_ID ou META_ACCESS_TOKEN)');
             }
 
-          } catch (error) {
-            console.error('❌ Erro ao processar IA:', error);
-          }
   } catch (error) {
     console.error('❌ Erro ao processar resposta da IA:', error);
   }
