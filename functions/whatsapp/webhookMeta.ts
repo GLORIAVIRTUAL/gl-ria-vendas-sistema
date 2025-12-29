@@ -1,5 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Map para controlar timeouts de processamento por contato
+const processingTimeouts = new Map();
+const DELAY_MS = 8000; // 8 segundos
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
@@ -111,11 +115,43 @@ Deno.serve(async (req) => {
           status: 'delivered'
         });
 
-        // Se IA estiver habilitada, processa resposta automática
+        // Se IA estiver habilitada, agenda processamento com delay
         if (contact.ai_enabled) {
-          console.log('🤖 IA habilitada para este contato');
+          console.log('⏰ Agendando processamento em 8 segundos...');
           
-          try {
+          // Cancela timeout anterior se existir
+          if (processingTimeouts.has(contact.id)) {
+            clearTimeout(processingTimeouts.get(contact.id));
+          }
+          
+          // Agenda novo processamento
+          const timeoutId = setTimeout(async () => {
+            console.log('🚀 Iniciando processamento após delay para:', phone);
+            processingTimeouts.delete(contact.id);
+            
+            // Processa todas as mensagens acumuladas
+            await processAIResponse(base44, contact, phone);
+          }, DELAY_MS);
+          
+          processingTimeouts.set(contact.id, timeoutId);
+          continue;
+        }
+      }
+
+      return Response.json({ success: true });
+
+    } catch (error) {
+      console.error('❌ Erro no webhook:', error);
+      return Response.json({ error: error.message }, { status: 500 });
+    }
+  }
+
+  return Response.json({ error: 'Method not allowed' }, { status: 405 });
+});
+
+// Função para processar resposta da IA
+async function processAIResponse(base44, contact, phone) {
+  try {
             // Busca configurações da IA
             const aiSettings = await base44.asServiceRole.entities.AISettings.list();
             const settings = aiSettings.find(s => s.is_active) || aiSettings[0];
@@ -135,15 +171,29 @@ Deno.serve(async (req) => {
               timeStyle: 'long'
             }).format(now);
 
-            // Busca histórico de mensagens do contato (últimas 15)
+            // Busca histórico de mensagens (últimas 20)
             const history = await base44.asServiceRole.entities.Message.filter(
               { contact_id: contact.id },
               'created_date',
-              15
+              20
             );
 
-            // Monta histórico formatado
+            // Separa mensagens do cliente não processadas (últimas mensagens antes da resposta da IA)
+            const lastAIResponse = history.findIndex(m => m.sender === 'ai');
+            const recentCustomerMessages = lastAIResponse === -1 
+              ? history.filter(m => m.sender === 'customer')
+              : history.slice(0, lastAIResponse).filter(m => m.sender === 'customer');
+
+            // Acumula conteúdo das mensagens recentes do cliente
+            const currentMessage = recentCustomerMessages
+              .map(m => m.content)
+              .join('\n');
+
+            console.log(`📦 Processando ${recentCustomerMessages.length} mensagens acumuladas`);
+
+            // Monta histórico formatado (excluindo as mensagens sendo processadas agora)
             const conversationContext = history
+              .slice(lastAIResponse === -1 ? recentCustomerMessages.length : lastAIResponse)
               .map(m => {
                 let msg = `${m.sender === 'customer' ? 'Cliente' : 'GLÓRIA'}: ${m.content}`;
                 if (m.type !== 'text' && m.media_url) {
@@ -155,7 +205,7 @@ Deno.serve(async (req) => {
 
             // Verifica palavras de transferência
             const shouldTransfer = (settings.transfer_keywords || []).some(keyword =>
-              content.toLowerCase().includes(keyword.toLowerCase())
+              currentMessage.toLowerCase().includes(keyword.toLowerCase())
             );
 
             // Produtos disponíveis
@@ -173,11 +223,11 @@ Deno.serve(async (req) => {
 
             // Se o cliente pedir horários disponíveis, busca no banco
             let horariosInfo = '';
-            const pedindoHorarios = /horário|horario|disponível|disponivel|quando|pode|agendar|marcar|reunião|reuniao/i.test(content);
+            const pedindoHorarios = /horário|horario|disponível|disponivel|quando|pode|agendar|marcar|reunião|reuniao/i.test(currentMessage);
             
             if (pedindoHorarios) {
               // Tenta extrair data da mensagem
-              const dataMatch = content.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+              const dataMatch = currentMessage.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
               let dataConsulta = null;
               
               if (dataMatch) {
@@ -224,8 +274,8 @@ Deno.serve(async (req) => {
 💬 HISTÓRICO DA CONVERSA:
 ${conversationContext || 'Esta é a primeira mensagem.'}
 
-📨 MENSAGEM ATUAL DO CLIENTE:
-${content}
+📨 MENSAGENS ATUAIS DO CLIENTE (acumuladas):
+${currentMessage}
 ${horariosInfo}
 
 ${shouldTransfer ? '⚠️ ATENÇÃO: Cliente solicitou falar com humano. Informe que está transferindo para atendente.' : ''}
@@ -251,63 +301,61 @@ Seja natural e prestativo. Confirme os dados antes de agendar.`;
 
             console.log('🔄 Enviando para IA...');
 
-            // Se a mensagem atual tem mídia, baixa e prepara para enviar à IA
+            // Busca mídias das mensagens acumuladas
             let fileUrls = [];
-            if (mediaUrl && messageType !== 'text') {
-              try {
-                console.log('📥 Baixando mídia do Meta:', mediaUrl);
-                const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
-                
-                // Busca URL da mídia
-                const mediaInfoResponse = await fetch(
-                  `https://graph.facebook.com/v18.0/${mediaUrl}`,
-                  {
-                    headers: {
-                      'Authorization': `Bearer ${ACCESS_TOKEN}`
-                    }
-                  }
-                );
-                
-                if (mediaInfoResponse.ok) {
-                  const mediaInfo = await mediaInfoResponse.json();
-                  const mediaDownloadUrl = mediaInfo.url;
-                  
-                  // Baixa o arquivo
-                  const mediaResponse = await fetch(mediaDownloadUrl, {
-                    headers: {
-                      'Authorization': `Bearer ${ACCESS_TOKEN}`
-                    }
-                  });
-                  
-                  if (mediaResponse.ok) {
-                    const mediaBlob = await mediaResponse.blob();
-                    const mediaFile = new File([mediaBlob], `media_${Date.now()}.${mediaInfo.mime_type?.split('/')[1] || 'bin'}`, {
-                      type: mediaInfo.mime_type
-                    });
+            for (const msg of recentCustomerMessages) {
+              if (msg.type !== 'text' && msg.media_url) {
+                // Se já é uma URL do base44, usa diretamente
+                if (msg.media_url.includes('supabase.co') || msg.media_url.includes('base44')) {
+                  fileUrls.push(msg.media_url);
+                  console.log('✅ Mídia já processada:', msg.media_url);
+                } else {
+                  // Precisa baixar do Meta
+                  try {
+                    console.log('📥 Baixando mídia do Meta:', msg.media_url);
+                    const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
                     
-                    // Upload para base44
-                    const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({
-                      file: mediaFile
-                    });
-                    
-                    fileUrls.push(file_url);
-                    console.log('✅ Mídia enviada para IA:', file_url);
-                    
-                    // Atualiza a mensagem com a URL do arquivo
-                    const lastCustomerMessage = await base44.asServiceRole.entities.Message.filter(
-                      { contact_id: contact.id, sender: 'customer' },
-                      '-created_date',
-                      1
+                    const mediaInfoResponse = await fetch(
+                      `https://graph.facebook.com/v18.0/${msg.media_url}`,
+                      {
+                        headers: {
+                          'Authorization': `Bearer ${ACCESS_TOKEN}`
+                        }
+                      }
                     );
-                    if (lastCustomerMessage.length > 0) {
-                      await base44.asServiceRole.entities.Message.update(lastCustomerMessage[0].id, {
-                        media_url: file_url
+                    
+                    if (mediaInfoResponse.ok) {
+                      const mediaInfo = await mediaInfoResponse.json();
+                      const mediaDownloadUrl = mediaInfo.url;
+                      
+                      const mediaResponse = await fetch(mediaDownloadUrl, {
+                        headers: {
+                          'Authorization': `Bearer ${ACCESS_TOKEN}`
+                        }
                       });
+                      
+                      if (mediaResponse.ok) {
+                        const mediaBlob = await mediaResponse.blob();
+                        const mediaFile = new File([mediaBlob], `media_${Date.now()}.${mediaInfo.mime_type?.split('/')[1] || 'bin'}`, {
+                          type: mediaInfo.mime_type
+                        });
+                        
+                        const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({
+                          file: mediaFile
+                        });
+                        
+                        fileUrls.push(file_url);
+                        console.log('✅ Mídia enviada para IA:', file_url);
+                        
+                        await base44.asServiceRole.entities.Message.update(msg.id, {
+                          media_url: file_url
+                        });
+                      }
                     }
+                  } catch (mediaError) {
+                    console.error('⚠️ Erro ao processar mídia:', mediaError);
                   }
                 }
-              } catch (mediaError) {
-                console.error('⚠️ Erro ao processar mídia:', mediaError);
               }
             }
 
@@ -577,18 +625,7 @@ Seja natural e prestativo. Confirme os dados antes de agendar.`;
           } catch (error) {
             console.error('❌ Erro ao processar IA:', error);
           }
-        } else {
-          console.log('🚫 IA desabilitada para este contato (modo humano)');
-        }
-      }
-
-      return Response.json({ success: true });
-
-    } catch (error) {
-      console.error('❌ Erro no webhook:', error);
-      return Response.json({ error: error.message }, { status: 500 });
-    }
+  } catch (error) {
+    console.error('❌ Erro ao processar resposta da IA:', error);
   }
-
-  return Response.json({ error: 'Method not allowed' }, { status: 405 });
-});
+}
