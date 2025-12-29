@@ -152,7 +152,17 @@ Deno.serve(async (req) => {
               content.toLowerCase().includes(keyword.toLowerCase())
             );
 
-            // Monta prompt completo
+            // Produtos disponíveis
+            const produtosDisponiveis = [
+              'Atendimento_IA_24_7',
+              'Maquina_de_Videos', 
+              'Gloria_Clinica',
+              'Gloria_Vendas',
+              'Especialistas_Virtuais',
+              'Sites_em_24_Horas'
+            ];
+
+            // Monta prompt completo com ferramentas
             const systemPrompt = settings.system_prompt || 'Você é GLÓRIA, uma assistente virtual inteligente e prestativa.';
             
             const fullPrompt = `${systemPrompt}
@@ -170,11 +180,32 @@ ${content}
 
 ${shouldTransfer ? '⚠️ ATENÇÃO: Cliente solicitou falar com humano. Informe que está transferindo para atendente.' : ''}
 
-Responda de forma natural, útil e direta.`;
+🛠️ FERRAMENTAS DISPONÍVEIS:
+Você pode realizar agendamentos de reuniões! 
 
-            console.log('🔄 Enviando para IA...');
+PRODUTOS DISPONÍVEIS:
+${produtosDisponiveis.map(p => `- ${p.replace(/_/g, ' ')}`).join('\n')}
 
-            // Chama a IA (SEM JSON SCHEMA - retorna texto direto)
+HORÁRIOS DISPONÍVEIS: 08:00 às 20:00 (de hora em hora)
+
+Se o cliente pedir para:
+1. CONSULTAR HORÁRIOS: responda normalmente perguntando a data e produto desejado
+2. AGENDAR REUNIÃO: quando tiver Nome, Email, Telefone, Produto e Data/Horário, use o formato especial:
+
+[AÇÃO:AGENDAR]
+NOME: nome completo
+EMAIL: email@exemplo.com
+TELEFONE: telefone
+PRODUTO: nome_do_produto
+DATA: AAAA-MM-DD
+HORARIO: HH:00
+[/AÇÃO]
+
+Após isso, continue a conversa normalmente.`;
+
+            console.log('🔄 Enviando para IA com ferramentas...');
+
+            // Chama a IA
             let responseText;
             try {
               responseText = await base44.asServiceRole.integrations.Core.InvokeLLM({
@@ -182,6 +213,65 @@ Responda de forma natural, útil e direta.`;
               });
               
               console.log('✅ IA respondeu:', responseText);
+
+              // Verifica se a IA quer agendar
+              if (responseText.includes('[AÇÃO:AGENDAR]')) {
+                console.log('📅 IA solicitou agendamento, processando...');
+                
+                // Extrai dados do agendamento
+                const match = responseText.match(/\[AÇÃO:AGENDAR\]([\s\S]*?)\[\/AÇÃO\]/);
+                if (match) {
+                  const dados = match[1];
+                  const nome = dados.match(/NOME:\s*(.+)/)?.[1]?.trim();
+                  const email = dados.match(/EMAIL:\s*(.+)/)?.[1]?.trim();
+                  const telefone = dados.match(/TELEFONE:\s*(.+)/)?.[1]?.trim();
+                  const produto = dados.match(/PRODUTO:\s*(.+)/)?.[1]?.trim();
+                  const data = dados.match(/DATA:\s*(.+)/)?.[1]?.trim();
+                  const horario = dados.match(/HORARIO:\s*(.+)/)?.[1]?.trim();
+
+                  console.log('📋 Dados extraídos:', { nome, email, telefone, produto, data, horario });
+
+                  // Verifica disponibilidade
+                  const agendamentosNaData = await base44.asServiceRole.entities.Agendamento.filter({
+                    data,
+                    horario,
+                    status: { $in: ['Agendada', 'Confirmada'] }
+                  });
+
+                  if (agendamentosNaData.length > 0) {
+                    responseText = responseText.replace(/\[AÇÃO:AGENDAR\][\s\S]*?\[\/AÇÃO\]/, '').trim();
+                    responseText += '\n\n❌ Ops! Este horário já está ocupado. Tente outro horário ou data.';
+                  } else {
+                    // Cria agendamento
+                    const novoAgendamento = await base44.asServiceRole.entities.Agendamento.create({
+                      nome_cliente: nome || contact.name || 'Cliente',
+                      email_cliente: email || '',
+                      telefone_cliente: telefone || contact.phone,
+                      produto: produto,
+                      data: data,
+                      horario: horario,
+                      link_reuniao: `https://meet.google.com/${Math.random().toString(36).substr(2, 9)}`,
+                      status: 'Agendada',
+                      origem: 'Chatbot',
+                      observacoes: 'Agendamento via IA - WhatsApp'
+                    });
+
+                    console.log('✅ Agendamento criado:', novoAgendamento.id);
+
+                    // Remove tag de ação da resposta
+                    responseText = responseText.replace(/\[AÇÃO:AGENDAR\][\s\S]*?\[\/AÇÃO\]/, '').trim();
+                    responseText += `\n\n✅ Reunião agendada com sucesso!\n📅 ${data} às ${horario}\n🔗 Link: ${novoAgendamento.link_reuniao}`;
+
+                    // Atualiza contato
+                    await base44.asServiceRole.entities.Contact.update(contact.id, {
+                      name: nome || contact.name,
+                      email: email || contact.email,
+                      pipeline_stage: 'qualificado'
+                    });
+                  }
+                }
+              }
+              
             } catch (llmError) {
               console.error('❌ Erro na LLM:', llmError);
               responseText = 'Desculpe, estou com dificuldades técnicas. Um atendente humano irá ajudá-lo em breve.';
