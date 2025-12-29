@@ -12,16 +12,6 @@ const formatMessageTime = (date) => {
     const d = new Date(date);
     if (isNaN(d.getTime())) return '';
     
-    // Usa timezone de Recife para formatar corretamente
-    const recifeTime = d.toLocaleString('pt-BR', {
-      timeZone: 'America/Recife',
-      hour: '2-digit',
-      minute: '2-digit',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-    
     // Verifica se é hoje
     const now = new Date();
     const todayRecife = now.toLocaleDateString('pt-BR', { timeZone: 'America/Recife' });
