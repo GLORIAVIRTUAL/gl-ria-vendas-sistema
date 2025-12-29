@@ -34,21 +34,21 @@ function RelogioBrasil() {
     const atualizarHora = () => {
       const agora = new Date();
       
-      // Converte para horário de Brasília (UTC-3)
-      const offsetBrasilia = -3;
+      // Converte para UTC primeiro, depois ajusta para Brasília (UTC-3)
       const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
-      const brasilia = new Date(utc + (3600000 * offsetBrasilia));
+      // Brasília é UTC-3, então subtrai 3 horas do UTC
+      const brasilia = new Date(utc - (3 * 3600000));
       
       const diasSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
       const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
       
-      const diaSemana = diasSemana[brasilia.getDay()];
-      const dia = brasilia.getDate();
-      const mes = meses[brasilia.getMonth()];
-      const ano = brasilia.getFullYear();
-      const hora = String(brasilia.getHours()).padStart(2, '0');
-      const minuto = String(brasilia.getMinutes()).padStart(2, '0');
-      const segundo = String(brasilia.getSeconds()).padStart(2, '0');
+      const diaSemana = diasSemana[brasilia.getUTCDay()];
+      const dia = brasilia.getUTCDate();
+      const mes = meses[brasilia.getUTCMonth()];
+      const ano = brasilia.getUTCFullYear();
+      const hora = String(brasilia.getUTCHours()).padStart(2, '0');
+      const minuto = String(brasilia.getUTCMinutes()).padStart(2, '0');
+      const segundo = String(brasilia.getUTCSeconds()).padStart(2, '0');
       
       setHoraFormatada(`${diaSemana}, ${dia} de ${mes} de ${ano} ${hora}:${minuto}:${segundo}`);
     };
