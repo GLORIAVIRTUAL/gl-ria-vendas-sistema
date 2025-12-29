@@ -10,6 +10,16 @@ import ChatWindow from '../components/chat/ChatWindow';
 import ContactDetails from '../components/chat/ContactDetails';
 import { cn } from "@/lib/utils";
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
@@ -21,7 +31,13 @@ export default function ChatIA() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [unreadCounts, setUnreadCounts] = useState({});
   const [isSending, setIsSending] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const lastMessageCountRef = useRef({});
+  
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: () => base44.auth.me(),
+  });
 
   const { data: contacts = [], isLoading: loadingContacts, refetch: refetchContacts } = useQuery({
     queryKey: ['contacts'],
@@ -68,6 +84,24 @@ export default function ChatIA() {
     },
   });
 
+  const deleteContactMutation = useMutation({
+    mutationFn: async (contactId) => {
+      const msgs = await base44.entities.Message.filter({ contact_id: contactId });
+      await Promise.all(msgs.map(m => base44.entities.Message.delete(m.id)));
+      await base44.entities.Contact.delete(contactId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      queryClient.invalidateQueries({ queryKey: ['messages'] });
+      setSelectedContact(null);
+      setDeleteDialogOpen(false);
+      toast.success('Conversa excluída com sucesso');
+    },
+    onError: () => {
+      toast.error('Erro ao excluir conversa');
+    }
+  });
+
   const handleSelectContact = useCallback((contact) => {
     setSelectedContact(contact);
     setUnreadCounts(prev => ({ ...prev, [contact.id]: 0 }));
@@ -101,6 +135,18 @@ export default function ChatIA() {
     if (!selectedContact) return;
     await updateContactMutation.mutateAsync({ id: selectedContact.id, data });
     setSelectedContact({ ...selectedContact, ...data });
+  };
+
+  const handleDeleteContact = () => {
+    if (selectedContact) {
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  const confirmDelete = () => {
+    if (selectedContact) {
+      deleteContactMutation.mutate(selectedContact.id);
+    }
   };
 
   const filteredContacts = contacts.filter(contact => {
@@ -163,8 +209,30 @@ export default function ChatIA() {
         onSendMessage={handleSendMessage}
         onUpdateContact={handleUpdateContact}
         onClose={() => setSelectedContact(null)}
+        onDelete={handleDeleteContact}
         isSending={isSending}
+        currentUser={currentUser}
       />
+      
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir conversa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. Todas as mensagens e dados do contato serão permanentemente excluídos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {selectedContact && (
         <Button
