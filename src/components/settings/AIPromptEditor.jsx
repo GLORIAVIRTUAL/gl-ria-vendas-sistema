@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Plus, X, Bot, Clock, Zap, AlertTriangle } from 'lucide-react';
+import { Save, Plus, X, Bot, Zap, AlertTriangle } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -24,9 +24,6 @@ export default function AIPromptEditor() {
     name: 'Principal',
     system_prompt: '',
     greeting_message: '',
-    business_hours_start: '09:00',
-    business_hours_end: '18:00',
-    out_of_hours_message: '',
     transfer_keywords: [],
     is_active: true,
     capture_fields: [],
@@ -148,56 +145,22 @@ export default function AIPromptEditor() {
         </CardContent>
       </Card>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Mensagem de Saudação</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              value={currentSettings.greeting_message || ''}
-              onChange={(e) => setCurrentSettings({ ...currentSettings, greeting_message: e.target.value })}
-              placeholder="Olá! 👋 Bem-vindo(a) à GLÓRIA. Como posso ajudar você hoje?"
-              rows={4}
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Fora do Horário Comercial
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <Label className="text-xs">Início</Label>
-                <Input
-                  type="time"
-                  value={currentSettings.business_hours_start || '09:00'}
-                  onChange={(e) => setCurrentSettings({ ...currentSettings, business_hours_start: e.target.value })}
-                />
-              </div>
-              <div className="flex-1">
-                <Label className="text-xs">Fim</Label>
-                <Input
-                  type="time"
-                  value={currentSettings.business_hours_end || '18:00'}
-                  onChange={(e) => setCurrentSettings({ ...currentSettings, business_hours_end: e.target.value })}
-                />
-              </div>
-            </div>
-            <Textarea
-              value={currentSettings.out_of_hours_message || ''}
-              onChange={(e) => setCurrentSettings({ ...currentSettings, out_of_hours_message: e.target.value })}
-              placeholder="Nosso horário de atendimento é de segunda a sexta, das 9h às 18h. Deixe sua mensagem que retornaremos em breve!"
-              rows={3}
-            />
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Mensagem de Saudação</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            value={currentSettings.greeting_message || ''}
+            onChange={(e) => setCurrentSettings({ ...currentSettings, greeting_message: e.target.value })}
+            placeholder="Olá! 👋 Bem-vindo(a) à GLÓRIA. Como posso ajudar você hoje?"
+            rows={4}
+          />
+          <p className="text-xs text-slate-500 mt-2">
+            💡 A IA atende 24 horas por dia, 7 dias por semana!
+          </p>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
