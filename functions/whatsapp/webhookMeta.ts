@@ -173,6 +173,11 @@ Deno.serve(async (req) => {
 
               console.log('🤖 Resposta da IA:', aiResponse);
 
+              // Garante que sempre tem uma resposta
+              if (!aiResponse.response || aiResponse.response.trim() === '') {
+                aiResponse.response = 'Desculpe, não entendi. Pode reformular sua pergunta?';
+              }
+
               // Se deve transferir para humano, desabilita IA
               if (aiResponse.should_transfer_to_human) {
                 await base44.asServiceRole.entities.Contact.update(contact.id, {
@@ -182,6 +187,7 @@ Deno.serve(async (req) => {
               }
 
               // Salva resposta da IA
+              console.log('💾 Salvando resposta da IA no banco...');
               if (aiResponse.response) {
                 await base44.asServiceRole.entities.Message.create({
                   contact_id: contact.id,
