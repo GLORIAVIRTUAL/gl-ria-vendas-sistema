@@ -118,9 +118,11 @@ export default function ContactList({ contacts, selectedContact, onSelectContact
                     <h3 className="font-semibold text-slate-800 truncate">
                       {contact.name || contact.phone}
                     </h3>
-                    <span className="text-xs text-slate-400 whitespace-nowrap ml-2">
-                      {formatMessageTime(contact.last_message_at)}
-                    </span>
+                    {contact.last_message_at && (
+                      <span className="text-xs text-slate-400 whitespace-nowrap ml-2">
+                        {formatMessageTime(contact.last_message_at)}
+                      </span>
+                    )}
                   </div>
                   
                   <div className="flex items-center justify-between">
