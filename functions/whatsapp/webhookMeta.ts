@@ -479,69 +479,92 @@ Seja natural e prestativo. Confirme os dados antes de agendar.`;
               console.log('👤 Conversa transferida para atendente humano');
             }
 
-            // Salva resposta da IA no banco
-            console.log('💾 Salvando resposta da IA no banco...');
-            await base44.asServiceRole.entities.Message.create({
-              contact_id: contact.id,
-              direction: 'outbound',
-              sender: 'ai',
-              content: responseText,
-              type: 'text',
-              status: 'sent',
-              extracted_data: {}
-            });
+            // Divide a resposta em blocos menores (quebra por \n\n ou a cada 300 caracteres)
+            const dividirEmBlocos = (texto) => {
+              const blocos = [];
+              const paragrafos = texto.split('\n\n');
+              
+              for (const paragrafo of paragrafos) {
+                if (paragrafo.trim().length === 0) continue;
+                
+                if (paragrafo.length <= 400) {
+                  blocos.push(paragrafo.trim());
+                } else {
+                  // Se o parágrafo é muito grande, divide em frases
+                  const frases = paragrafo.match(/[^.!?]+[.!?]+/g) || [paragrafo];
+                  let blocoAtual = '';
+                  
+                  for (const frase of frases) {
+                    if ((blocoAtual + frase).length <= 400) {
+                      blocoAtual += frase;
+                    } else {
+                      if (blocoAtual) blocos.push(blocoAtual.trim());
+                      blocoAtual = frase;
+                    }
+                  }
+                  if (blocoAtual) blocos.push(blocoAtual.trim());
+                }
+              }
+              
+              return blocos.length > 0 ? blocos : [texto];
+            };
 
-            // Envia via WhatsApp API do Meta
+            const blocosMensagem = dividirEmBlocos(responseText);
+            console.log(`📦 Mensagem dividida em ${blocosMensagem.length} blocos`);
+
             const PHONE_NUMBER_ID = Deno.env.get('META_PHONE_NUMBER_ID');
             const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
 
             if (PHONE_NUMBER_ID && ACCESS_TOKEN) {
-              console.log('📤 Enviando mensagem via Meta API...');
-              
-              const sendResponse = await fetch(
-                `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,
-                {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${ACCESS_TOKEN}`,
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify({
-                    messaging_product: 'whatsapp',
-                    to: phone,
-                    type: 'text',
-                    text: { body: responseText }
-                  })
-                }
-              );
-
-              if (sendResponse.ok) {
-                const result = await sendResponse.json();
-                console.log('✅ Mensagem enviada com sucesso via Meta!', result);
+              // Envia cada bloco com delay
+              for (let i = 0; i < blocosMensagem.length; i++) {
+                const blocoTexto = blocosMensagem[i];
                 
-                // Atualiza status da mensagem
-                const lastAIMessage = await base44.asServiceRole.entities.Message.filter(
-                  { contact_id: contact.id, sender: 'ai' },
-                  '-created_date',
-                  1
+                // Delay entre mensagens (exceto a primeira)
+                if (i > 0) {
+                  await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+                }
+
+                console.log(`📤 Enviando bloco ${i + 1}/${blocosMensagem.length}...`);
+                
+                // Salva no banco
+                const mensagemSalva = await base44.asServiceRole.entities.Message.create({
+                  contact_id: contact.id,
+                  direction: 'outbound',
+                  sender: 'ai',
+                  content: blocoTexto,
+                  type: 'text',
+                  status: 'sent',
+                  extracted_data: {}
+                });
+                
+                // Envia via WhatsApp
+                const sendResponse = await fetch(
+                  `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${ACCESS_TOKEN}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      messaging_product: 'whatsapp',
+                      to: phone,
+                      type: 'text',
+                      text: { body: blocoTexto }
+                    })
+                  }
                 );
-                if (lastAIMessage.length > 0) {
-                  await base44.asServiceRole.entities.Message.update(lastAIMessage[0].id, {
+
+                if (sendResponse.ok) {
+                  console.log(`✅ Bloco ${i + 1} enviado`);
+                  await base44.asServiceRole.entities.Message.update(mensagemSalva.id, {
                     status: 'delivered'
                   });
-                }
-              } else {
-                const errorText = await sendResponse.text();
-                console.error('❌ Erro ao enviar via Meta:', errorText);
-                
-                // Marca como falha
-                const lastAIMessage = await base44.asServiceRole.entities.Message.filter(
-                  { contact_id: contact.id, sender: 'ai' },
-                  '-created_date',
-                  1
-                );
-                if (lastAIMessage.length > 0) {
-                  await base44.asServiceRole.entities.Message.update(lastAIMessage[0].id, {
+                } else {
+                  const errorText = await sendResponse.text();
+                  console.error(`❌ Erro no bloco ${i + 1}:`, errorText);
+                  await base44.asServiceRole.entities.Message.update(mensagemSalva.id, {
                     status: 'failed',
                     error_message: errorText
                   });
