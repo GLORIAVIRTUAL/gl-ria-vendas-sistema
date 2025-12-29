@@ -285,14 +285,64 @@ Seja natural e prestativo. Confirme os dados antes de agendar.`;
                       responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
                       responseText += '\n\n❌ Este horário foi ocupado agora mesmo! Por favor, escolha outro.';
                     } else {
-                      // Cria agendamento
-                      const linkReuniao = `https://meet.google.com/gloria-${Math.random().toString(36).substr(2, 9)}`;
+                      // Normaliza o nome do produto
+                      const produtoMap = {
+                        'Atendimento_IA_24_7': 'Atendimento_IA_24_7',
+                        'Maquina_de_Videos': 'Maquina_de_Videos',
+                        'Gloria_Clinica': 'Gloria_Clinica',
+                        'Gloria_Vendas': 'Gloria_Vendas',
+                        'Especialistas_Virtuais': 'Especialistas_Virtuais',
+                        'Sites_em_24_Horas': 'Sites_em_24_Horas',
+                        'gloria_sites': 'Sites_em_24_Horas',
+                        'sites': 'Sites_em_24_Horas'
+                      };
+                      
+                      const produtoNormalizado = produtoMap[produto] || produto;
+                      
+                      const produtoNomes = {
+                        'Atendimento_IA_24_7': 'Glória Atendimento IA 24/7',
+                        'Maquina_de_Videos': 'Máquina de Vídeos',
+                        'Gloria_Clinica': 'Glória Clínica',
+                        'Gloria_Vendas': 'Glória Vendas',
+                        'Especialistas_Virtuais': 'Especialistas Virtuais',
+                        'Sites_em_24_Horas': 'Sites em 24 Horas'
+                      };
+
+                      // Cria evento no Google Calendar (link real do Meet)
+                      console.log('📅 Criando evento no Google Calendar...');
+                      const startDateTime = `${data}T${horario}:00`;
+                      const [hora, minuto] = horario.split(':');
+                      const endHora = String(parseInt(hora) + 1).padStart(2, '0');
+                      const endDateTime = `${data}T${endHora}:${minuto}:00`;
+
+                      let linkReuniao = '';
+                      try {
+                        const calendarResponse = await base44.asServiceRole.functions.invoke('createGoogleCalendarEvent', {
+                          summary: `Reunião - ${produtoNomes[produtoNormalizado] || produtoNormalizado} - ${nome}`,
+                          description: `Reunião sobre ${produtoNomes[produtoNormalizado] || produtoNormalizado}\n\nCliente: ${nome}\nEmail: ${email}\nTelefone: ${telefone}\n\nAgendamento via IA WhatsApp`,
+                          startDateTime,
+                          endDateTime,
+                          attendeeEmail: email,
+                          attendeeName: nome
+                        });
+
+                        if (calendarResponse.status === 200 && calendarResponse.data?.meetLink) {
+                          linkReuniao = calendarResponse.data.meetLink;
+                          console.log('✅ Link do Meet criado:', linkReuniao);
+                        } else {
+                          console.error('⚠️ Erro ao criar evento:', calendarResponse.data);
+                          linkReuniao = 'Link será enviado por email';
+                        }
+                      } catch (calError) {
+                        console.error('❌ Erro ao criar evento no Google Calendar:', calError);
+                        linkReuniao = 'Link será enviado por email';
+                      }
                       
                       const agendamento = await base44.asServiceRole.entities.Agendamento.create({
                         nome_cliente: nome,
                         email_cliente: email,
                         telefone_cliente: telefone,
-                        produto: produto,
+                        produto: produtoNormalizado,
                         data: data,
                         horario: horario,
                         link_reuniao: linkReuniao,
@@ -303,12 +353,25 @@ Seja natural e prestativo. Confirme os dados antes de agendar.`;
 
                       console.log('✅ Agendamento criado:', agendamento.id);
 
+                      // Cria Lead no CRM
+                      await base44.asServiceRole.entities.Lead.create({
+                        nome_cliente: nome,
+                        email_cliente: email,
+                        telefone_cliente: telefone,
+                        produto_interesse: produtoNormalizado,
+                        data_reuniao: data,
+                        observacoes: 'Lead via IA WhatsApp',
+                        agendamento_id: agendamento.id,
+                        estagio: 'Reuniao_Marcada',
+                        prioridade: 'Media'
+                      });
+
                       // Remove comando da resposta
                       responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
                       
                       // Adiciona confirmação
                       const dataFormatada = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
-                      responseText += `\n\n✅ *Reunião agendada com sucesso!*\n\n📅 Data: ${dataFormatada}\n🕐 Horário: ${horario}\n💼 Produto: ${produto.replace(/_/g, ' ')}\n🔗 Link: ${linkReuniao}\n\nVocê receberá um email de confirmação em breve!`;
+                      responseText += `\n\n✅ *Reunião agendada com sucesso!*\n\n📅 Data: ${dataFormatada}\n🕐 Horário: ${horario}\n💼 Produto: ${produtoNomes[produtoNormalizado] || produtoNormalizado}\n🔗 Link: ${linkReuniao}\n\nVocê receberá um email de confirmação em breve!`;
 
                       // Atualiza contato
                       await base44.asServiceRole.entities.Contact.update(contact.id, {
