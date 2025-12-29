@@ -272,14 +272,79 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
-            // Busca campos personalizados já capturados
+            // Busca campos personalizados já capturados e extrai dados da conversa ANTES de enviar para IA
             const customFields = contact.custom_fields || {};
-            const produtoSalvo = customFields.produto;
-            const dataSalva = customFields.data;
-            const horarioSalvo = customFields.horario;
-            const nomeClienteSalvo = customFields.nome_cliente || contact.name;
-            const emailClienteSalvo = customFields.email_cliente || contact.email;
-            const telefoneSalvo = customFields.telefone_cliente || contact.phone;
+            const updateFields = { ...customFields };
+            
+            // Extrai produto
+            if (!updateFields.produto) {
+              const produtoMatch = currentMessage.match(/(atendimento|videos|clinica|vendas|sites|especialistas|avatar)/i);
+              if (produtoMatch) {
+                const produtoMap = {
+                  'atendimento': 'Atendimento_IA_24_7',
+                  'videos': 'Maquina_de_Videos',
+                  'clinica': 'Gloria_Clinica',
+                  'vendas': 'Gloria_Vendas',
+                  'sites': 'Sites_em_24_Horas',
+                  'especialistas': 'Especialistas_Virtuais',
+                  'avatar': 'Especialistas_Virtuais'
+                };
+                updateFields.produto = produtoMap[produtoMatch[1].toLowerCase()];
+              }
+            }
+            
+            // Extrai nome
+            if (!updateFields.nome_cliente && !contact.name) {
+              const nomeMatch = currentMessage.match(/(?:me chamo|meu nome é|meu nome e|sou o|sou a|meu nome:|nome:)\s*([A-Za-zÀ-ÿ\s]+?)(?:\.|,|$|\n)/i);
+              if (nomeMatch) updateFields.nome_cliente = nomeMatch[1].trim();
+            }
+            
+            // Extrai email
+            if (!updateFields.email_cliente && !contact.email) {
+              const emailMatch = currentMessage.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
+              if (emailMatch) updateFields.email_cliente = emailMatch[1];
+            }
+            
+            // Extrai telefone
+            if (!updateFields.telefone_cliente && contact.phone) {
+              updateFields.telefone_cliente = contact.phone;
+            }
+            
+            // Extrai data
+            if (!updateFields.data) {
+              const dataMatch = currentMessage.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+              if (dataMatch) {
+                const dia = dataMatch[1].padStart(2, '0');
+                const mes = dataMatch[2].padStart(2, '0');
+                const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
+                updateFields.data = `${ano}-${mes}-${dia}`;
+              }
+            }
+            
+            // Extrai horário
+            if (!updateFields.horario) {
+              const horarioMatch = currentMessage.match(/(\d{1,2}):(\d{2})|(\d{1,2})h/);
+              if (horarioMatch) {
+                const hora = horarioMatch[1] || horarioMatch[3];
+                const minuto = horarioMatch[2] || '00';
+                updateFields.horario = `${hora.padStart(2, '0')}:${minuto}`;
+              }
+            }
+            
+            // Salva dados extraídos ANTES de chamar a IA
+            if (JSON.stringify(updateFields) !== JSON.stringify(customFields)) {
+              console.log('💾 Salvando dados extraídos ANTES da IA:', updateFields);
+              await base44.asServiceRole.entities.Contact.update(contact.id, {
+                custom_fields: updateFields
+              });
+            }
+            
+            const produtoSalvo = updateFields.produto;
+            const dataSalva = updateFields.data;
+            const horarioSalvo = updateFields.horario;
+            const nomeClienteSalvo = updateFields.nome_cliente || contact.name;
+            const emailClienteSalvo = updateFields.email_cliente || contact.email;
+            const telefoneSalvo = updateFields.telefone_cliente || contact.phone;
 
             // Identifica quais dados ainda faltam
             const dadosFaltantes = [];
@@ -322,11 +387,12 @@ ${shouldTransfer ? '⚠️ ATENÇÃO: Cliente solicitou falar com humano. Inform
 
 ${dadosFaltantes.length > 0 ? `⚠️ DADOS QUE AINDA FALTAM: ${dadosFaltantes.join(', ')}` : '✅ TODOS OS DADOS COLETADOS! Pronto para agendar.'}
 
-🎯 INSTRUÇÕES CRÍTICAS:
-1. NUNCA pergunte dados que já foram coletados (verifique a seção "DADOS JÁ COLETADOS")
-2. Pergunte APENAS os dados que ainda FALTAM
-3. Extraia informações da conversa atual antes de perguntar
-4. Quando tiver TODOS os dados, use o comando [AGENDAR] imediatamente
+🎯 INSTRUÇÕES CRÍTICAS - LEIA COM ATENÇÃO:
+1. ⛔ PROIBIDO perguntar dados que aparecem na seção "DADOS JÁ COLETADOS"
+2. ✅ Pergunte SOMENTE os dados listados em "DADOS QUE AINDA FALTAM"
+3. ⚠️ Se a lista de "DADOS QUE AINDA FALTAM" está vazia, NÃO pergunte NADA - apenas use [AGENDAR]
+4. 🔍 Antes de perguntar qualquer coisa, verifique se o dado já está coletado
+5. 📝 Seja direto: pergunte um dado de cada vez
 
 📦 PRODUTOS DISPONÍVEIS:
 ${produtosDisponiveis.map(p => `- ${p.replace(/_/g, ' ')}`).join('\n')}
@@ -420,71 +486,6 @@ Seja eficiente. Não repita perguntas. Foque nos dados faltantes.`;
               responseText = await base44.asServiceRole.integrations.Core.InvokeLLM(llmParams);
               
               console.log('✅ IA respondeu:', responseText);
-
-              // Extrai e salva dados mencionados na conversa (custom fields)
-              const updateFields = {};
-              
-              // Tenta extrair produto
-              const produtoMatch = currentMessage.match(/(atendimento|videos|clinica|vendas|sites|especialistas|avatar)/i);
-              if (produtoMatch && !customFields.produto) {
-                const produtoMap = {
-                  'atendimento': 'Atendimento_IA_24_7',
-                  'videos': 'Maquina_de_Videos',
-                  'clinica': 'Gloria_Clinica',
-                  'vendas': 'Gloria_Vendas',
-                  'sites': 'Sites_em_24_Horas',
-                  'especialistas': 'Especialistas_Virtuais',
-                  'avatar': 'Especialistas_Virtuais'
-                };
-                updateFields.produto = produtoMap[produtoMatch[1].toLowerCase()];
-              }
-              
-              // Tenta extrair nome
-              if (!customFields.nome_cliente && !contact.name) {
-                const nomeMatch = currentMessage.match(/(?:me chamo|meu nome é|sou o|sou a)\s+([A-Za-zÀ-ÿ\s]+)/i);
-                if (nomeMatch) updateFields.nome_cliente = nomeMatch[1].trim();
-              }
-              
-              // Tenta extrair email
-              if (!customFields.email_cliente && !contact.email) {
-                const emailMatch = currentMessage.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
-                if (emailMatch) updateFields.email_cliente = emailMatch[1];
-              }
-              
-              // Tenta extrair telefone
-              if (!customFields.telefone_cliente) {
-                const telMatch = currentMessage.match(/\(?(\d{2})\)?[\s-]?(\d{4,5})[\s-]?(\d{4})/);
-                if (telMatch) updateFields.telefone_cliente = `55${telMatch[1]}${telMatch[2]}${telMatch[3]}`;
-              }
-              
-              // Tenta extrair data
-              if (!customFields.data) {
-                const dataMatch = currentMessage.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-                if (dataMatch) {
-                  const dia = dataMatch[1].padStart(2, '0');
-                  const mes = dataMatch[2].padStart(2, '0');
-                  const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
-                  updateFields.data = `${ano}-${mes}-${dia}`;
-                }
-              }
-              
-              // Tenta extrair horário
-              if (!customFields.horario) {
-                const horarioMatch = currentMessage.match(/(\d{1,2}):(\d{2})|(\d{1,2})h/);
-                if (horarioMatch) {
-                  const hora = horarioMatch[1] || horarioMatch[3];
-                  const minuto = horarioMatch[2] || '00';
-                  updateFields.horario = `${hora.padStart(2, '0')}:${minuto}`;
-                }
-              }
-              
-              // Atualiza custom fields se houver novos dados
-              if (Object.keys(updateFields).length > 0) {
-                console.log('💾 Salvando dados capturados:', updateFields);
-                await base44.asServiceRole.entities.Contact.update(contact.id, {
-                  custom_fields: { ...customFields, ...updateFields }
-                });
-              }
 
               // Verifica se a IA quer agendar
               if (responseText.includes('[AGENDAR]')) {
