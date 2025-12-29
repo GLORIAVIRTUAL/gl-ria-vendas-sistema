@@ -32,23 +32,25 @@ function RelogioBrasil() {
 
   useEffect(() => {
     const atualizarHora = () => {
-      // Força criar um novo Date a cada atualização
       const agora = new Date();
       
-      // Usa Intl.DateTimeFormat para garantir timezone correto
-      const formatter = new Intl.DateTimeFormat('pt-BR', {
-        timeZone: 'America/Sao_Paulo',
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
+      // Converte para horário de Brasília (UTC-3)
+      const offsetBrasilia = -3;
+      const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
+      const brasilia = new Date(utc + (3600000 * offsetBrasilia));
       
-      setHoraFormatada(formatter.format(agora));
+      const diasSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+      const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+      
+      const diaSemana = diasSemana[brasilia.getDay()];
+      const dia = brasilia.getDate();
+      const mes = meses[brasilia.getMonth()];
+      const ano = brasilia.getFullYear();
+      const hora = String(brasilia.getHours()).padStart(2, '0');
+      const minuto = String(brasilia.getMinutes()).padStart(2, '0');
+      const segundo = String(brasilia.getSeconds()).padStart(2, '0');
+      
+      setHoraFormatada(`${diaSemana}, ${dia} de ${mes} de ${ano} ${hora}:${minuto}:${segundo}`);
     };
 
     atualizarHora();
