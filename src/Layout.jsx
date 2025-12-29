@@ -28,39 +28,37 @@ import CompromissoAlert from "../components/agenda/CompromissoAlert";
 import EmailNotification from "../components/EmailNotification";
 
 function RelogioBrasil() {
-  const [horaAtual, setHoraAtual] = useState(new Date());
+  const [horaFormatada, setHoraFormatada] = useState('');
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setHoraAtual(new Date());
-    }, 1000);
+    const atualizarHora = () => {
+      const opcoes = {
+        timeZone: 'America/Sao_Paulo',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      };
+      
+      const horaAtual = new Date().toLocaleString('pt-BR', opcoes);
+      setHoraFormatada(horaAtual);
+    };
+
+    atualizarHora();
+    const timer = setInterval(atualizarHora, 1000);
 
     return () => clearInterval(timer);
   }, []);
-
-  const formatarDataHora = () => {
-    const agora = new Date();
-    
-    const opcoes = {
-      timeZone: 'America/Sao_Paulo',
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    };
-
-    return agora.toLocaleString('pt-BR', opcoes);
-  };
 
   return (
     <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
       <Clock className="w-4 h-4 text-blue-600 animate-pulse" />
       <div className="text-sm">
-        <p className="font-semibold text-blue-900 capitalize">{formatarDataHora()}</p>
+        <p className="font-semibold text-blue-900 capitalize">{horaFormatada}</p>
         <p className="text-xs text-blue-600">Horário de Brasília (GMT-3)</p>
       </div>
     </div>
