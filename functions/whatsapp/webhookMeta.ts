@@ -407,7 +407,8 @@ Seja eficiente. Não repita perguntas. Foque nos dados faltantes.`;
             let responseText;
             try {
               const llmParams = {
-                prompt: fullPrompt
+                prompt: fullPrompt,
+                model: settings.ai_model || 'gpt-4o'
               };
               
               // Adiciona arquivos se houver
