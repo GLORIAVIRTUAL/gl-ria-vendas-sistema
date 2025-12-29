@@ -9,15 +9,47 @@ import { cn } from "@/lib/utils";
 const formatMessageTime = (date) => {
   if (!date) return '';
   try {
-    const dateStr = date.endsWith('Z') ? date : date + 'Z';
-    const d = new Date(dateStr);
+    const d = new Date(date);
     if (isNaN(d.getTime())) return '';
-    const brasiliaTime = new Date(d.getTime() - (3 * 60 * 60 * 1000));
-    if (isToday(brasiliaTime)) {
-      return brasiliaTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    
+    // Usa timezone de Recife para formatar corretamente
+    const recifeTime = d.toLocaleString('pt-BR', {
+      timeZone: 'America/Recife',
+      hour: '2-digit',
+      minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+    
+    // Verifica se é hoje
+    const now = new Date();
+    const todayRecife = now.toLocaleDateString('pt-BR', { timeZone: 'America/Recife' });
+    const messageDateRecife = d.toLocaleDateString('pt-BR', { timeZone: 'America/Recife' });
+    
+    if (todayRecife === messageDateRecife) {
+      return d.toLocaleTimeString('pt-BR', { 
+        timeZone: 'America/Recife',
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
     }
-    if (isYesterday(brasiliaTime)) return 'Ontem';
-    return format(brasiliaTime, 'dd/MM', { locale: ptBR });
+    
+    // Verifica se é ontem
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayRecife = yesterday.toLocaleDateString('pt-BR', { timeZone: 'America/Recife' });
+    
+    if (yesterdayRecife === messageDateRecife) {
+      return 'Ontem';
+    }
+    
+    // Retorna data formatada
+    return d.toLocaleDateString('pt-BR', { 
+      timeZone: 'America/Recife',
+      day: '2-digit', 
+      month: '2-digit' 
+    });
   } catch (e) {
     return '';
   }
