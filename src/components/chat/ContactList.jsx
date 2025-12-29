@@ -9,11 +9,24 @@ import { cn } from "@/lib/utils";
 const formatMessageTime = (date) => {
   if (!date) return '';
   try {
-    // Se já é objeto Date, usa direto; se não, converte
-    const d = date instanceof Date ? date : new Date(date);
-    if (isNaN(d.getTime())) return '';
+    // Converte para Date UTC
+    let d;
+    if (date instanceof Date) {
+      d = date;
+    } else if (typeof date === 'string') {
+      // Se a string não termina com Z, adiciona para forçar UTC
+      const dateStr = date.endsWith('Z') ? date : date + 'Z';
+      d = new Date(dateStr);
+    } else {
+      d = new Date(date);
+    }
     
-    // Verifica se é hoje
+    if (isNaN(d.getTime())) {
+      console.error('Data inválida:', date);
+      return '';
+    }
+    
+    // Verifica se é hoje (no fuso de Recife)
     const now = new Date();
     const todayRecife = now.toLocaleDateString('pt-BR', { timeZone: 'America/Recife' });
     const messageDateRecife = d.toLocaleDateString('pt-BR', { timeZone: 'America/Recife' });
@@ -42,7 +55,7 @@ const formatMessageTime = (date) => {
       month: '2-digit' 
     });
   } catch (e) {
-    console.error('Erro ao formatar horário:', e);
+    console.error('Erro ao formatar horário:', e, date);
     return '';
   }
 };
