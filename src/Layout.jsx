@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import ReminderAlert from "../components/ReminderAlert";
 import CompromissoAlert from "../components/agenda/CompromissoAlert";
 import EmailNotification from "../components/EmailNotification";
+import NovasMensagensAlert from "../components/NovasMensagensAlert";
 
 function RelogioBrasil() {
   const [horaFormatada, setHoraFormatada] = useState('');
@@ -136,6 +137,7 @@ export default function Layout({ children, currentPageName }) {
         <ReminderAlert />
         <CompromissoAlert />
         <EmailNotification />
+        <NovasMensagensAlert />
         
         <Sidebar className="border-r border-slate-200">
           <SidebarHeader className="border-b border-slate-200 p-6">
