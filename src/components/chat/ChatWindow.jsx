@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Send, Paperclip, Bot, User, 
-  MoreVertical, X, Loader2, FileText 
+  MoreVertical, X, Loader2, FileText, Trash2 
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -34,13 +34,17 @@ export default function ChatWindow({
   onSendMessage, 
   onUpdateContact,
   onClose,
-  isSending 
+  onDelete,
+  isSending,
+  currentUser
 }) {
   const [newMessage, setNewMessage] = useState('');
   const [attachmentFile, setAttachmentFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  
+  const isAdmin = currentUser?.role === 'admin';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -178,6 +182,15 @@ export default function ChatWindow({
               <DropdownMenuItem className="text-red-500" onClick={onClose}>
                 Fechar conversa
               </DropdownMenuItem>
+              {isAdmin && (
+                <DropdownMenuItem 
+                  className="text-red-600 font-semibold" 
+                  onClick={onDelete}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Excluir conversa
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
