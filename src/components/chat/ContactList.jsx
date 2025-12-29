@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 const formatMessageTime = (date) => {
   if (!date) return '';
   try {
-    const d = new Date(date);
+    // Se já é objeto Date, usa direto; se não, converte
+    const d = date instanceof Date ? date : new Date(date);
     if (isNaN(d.getTime())) return '';
     
     // Verifica se é hoje
@@ -41,6 +42,7 @@ const formatMessageTime = (date) => {
       month: '2-digit' 
     });
   } catch (e) {
+    console.error('Erro ao formatar horário:', e);
     return '';
   }
 };
