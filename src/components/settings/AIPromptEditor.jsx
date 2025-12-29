@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save, Plus, X, Bot, Zap, AlertTriangle } from 'lucide-react';
+import { Save, Plus, X, Bot, Zap, AlertTriangle, Cpu } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -27,7 +28,8 @@ export default function AIPromptEditor() {
     transfer_keywords: [],
     is_active: true,
     capture_fields: [],
-    functions: []
+    functions: [],
+    ai_model: 'gpt-4o'
   });
 
   const [newTransferKeyword, setNewTransferKeyword] = useState('');
@@ -125,6 +127,57 @@ export default function AIPromptEditor() {
             </div>
           </div>
         </CardHeader>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Cpu className="w-5 h-5 text-purple-500" />
+            Modelo de IA
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <Label>Selecione o modelo GPT</Label>
+            <Select
+              value={currentSettings.ai_model || 'gpt-4o'}
+              onValueChange={(value) => setCurrentSettings({ ...currentSettings, ai_model: value })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione um modelo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="gpt-4o">
+                  <div className="flex flex-col">
+                    <span className="font-semibold">GPT-4o</span>
+                    <span className="text-xs text-slate-500">Mais inteligente e completo - Recomendado</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="gpt-4o-mini">
+                  <div className="flex flex-col">
+                    <span className="font-semibold">GPT-4o Mini</span>
+                    <span className="text-xs text-slate-500">Rápido e econômico - Bom para tarefas simples</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="gpt-4-turbo">
+                  <div className="flex flex-col">
+                    <span className="font-semibold">GPT-4 Turbo</span>
+                    <span className="text-xs text-slate-500">Alto desempenho - Versão anterior</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="gpt-3.5-turbo">
+                  <div className="flex flex-col">
+                    <span className="font-semibold">GPT-3.5 Turbo</span>
+                    <span className="text-xs text-slate-500">Econômico - Para alto volume</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500">
+              💡 GPT-4o oferece melhor qualidade de resposta e compreensão de contexto.
+            </p>
+          </div>
+        </CardContent>
       </Card>
 
       <Card>
