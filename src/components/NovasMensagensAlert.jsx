@@ -40,7 +40,7 @@ export default function NovasMensagensAlert() {
     setAudioEnabled(true);
   };
 
-  // Detecta novas mensagens
+  // Detecta novas mensagens (apenas PRIMEIRA mensagem do contato)
   useEffect(() => {
     if (messages.length === 0) return;
 
@@ -54,19 +54,25 @@ export default function NovasMensagensAlert() {
     if (latestMessage.id !== lastMessageIdRef.current && !displayedAlerts.has(latestMessage.id)) {
       const contact = contacts.find(c => c.id === latestMessage.contact_id);
       
-      setAlert({
-        id: latestMessage.id,
-        contact: contact,
-        message: latestMessage,
-        timestamp: new Date()
-      });
+      // Verifica se é a primeira mensagem deste contato (contato criado recentemente)
+      const contactCreatedRecently = contact && 
+        new Date(contact.created_date).getTime() > (Date.now() - 60000); // Criado nos últimos 60 segundos
+      
+      if (contactCreatedRecently) {
+        setAlert({
+          id: latestMessage.id,
+          contact: contact,
+          message: latestMessage,
+          timestamp: new Date()
+        });
+
+        if (audioEnabled) {
+          notificationSound.play().catch(() => {});
+        }
+      }
 
       setDisplayedAlerts(prev => new Set([...prev, latestMessage.id]));
       lastMessageIdRef.current = latestMessage.id;
-
-      if (audioEnabled) {
-        notificationSound.play().catch(() => {});
-      }
     }
   }, [messages, contacts, audioEnabled, displayedAlerts]);
 
