@@ -34,23 +34,20 @@ function RelogioBrasil() {
     const atualizarHora = () => {
       const agora = new Date();
       
-      // Converte para UTC primeiro, depois ajusta para Brasília (UTC-3)
-      const utc = agora.getTime() + (agora.getTimezoneOffset() * 60000);
-      // Brasília é UTC-3, então subtrai 3 horas do UTC
-      const brasilia = new Date(utc - (3 * 3600000));
+      // Usa toLocaleString com timezone de Recife/Brasil
+      const horaRecife = agora.toLocaleString('pt-BR', {
+        timeZone: 'America/Recife',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
       
-      const diasSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
-      const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-      
-      const diaSemana = diasSemana[brasilia.getUTCDay()];
-      const dia = brasilia.getUTCDate();
-      const mes = meses[brasilia.getUTCMonth()];
-      const ano = brasilia.getUTCFullYear();
-      const hora = String(brasilia.getUTCHours()).padStart(2, '0');
-      const minuto = String(brasilia.getUTCMinutes()).padStart(2, '0');
-      const segundo = String(brasilia.getUTCSeconds()).padStart(2, '0');
-      
-      setHoraFormatada(`${diaSemana}, ${dia} de ${mes} de ${ano} ${hora}:${minuto}:${segundo}`);
+      setHoraFormatada(horaRecife);
     };
 
     atualizarHora();
@@ -64,7 +61,7 @@ function RelogioBrasil() {
       <Clock className="w-4 h-4 text-blue-600 animate-pulse" />
       <div className="text-sm">
         <p className="font-semibold text-blue-900 capitalize">{horaFormatada}</p>
-        <p className="text-xs text-blue-600">Horário de Brasília (GMT-3)</p>
+        <p className="text-xs text-blue-600">Horário de Recife, Brasil (GMT-3)</p>
       </div>
     </div>
   );
