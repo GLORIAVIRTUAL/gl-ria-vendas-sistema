@@ -27,8 +27,13 @@ export default function LeadCard({ lead, produtoConfig, isDragging, onEdit, onEn
     queryKey: ['agendamento', lead.agendamento_id],
     queryFn: async () => {
       if (!lead.agendamento_id) return null;
-      const agendamentos = await base44.entities.Agendamento.filter({ id: lead.agendamento_id });
-      return agendamentos.length > 0 ? agendamentos[0] : null;
+      try {
+        const agendamentos = await base44.entities.Agendamento.list();
+        return agendamentos.find(a => a.id === lead.agendamento_id) || null;
+      } catch (error) {
+        console.error('Erro ao buscar agendamento:', error);
+        return null;
+      }
     },
     enabled: !!lead.agendamento_id,
   });
