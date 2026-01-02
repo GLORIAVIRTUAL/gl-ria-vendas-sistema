@@ -272,36 +272,75 @@ async function processAIResponse(base44, contact, phone) {
             
             // Extrai data
             if (!updateFields.data) {
-              // Verifica se é "amanhã" ou "depois de amanhã"
-              if (/amanh[ãa]|amanha/i.test(currentMessage)) {
-                const amanha = new Date();
-                amanha.setDate(amanha.getDate() + 1);
-                updateFields.data = amanha.toISOString().split('T')[0];
-                console.log('📅 Cliente disse "amanhã", data calculada:', updateFields.data);
-              } else if (/depois de amanh[ãa]|depois de amanha|daqui a 2 dias|2 dias/i.test(currentMessage)) {
-                const depoisAmanha = new Date();
-                depoisAmanha.setDate(depoisAmanha.getDate() + 2);
-                updateFields.data = depoisAmanha.toISOString().split('T')[0];
-                console.log('📅 Cliente disse "depois de amanhã", data calculada:', updateFields.data);
-              } else if (/hoje/i.test(currentMessage)) {
-                const hoje = new Date();
-                updateFields.data = hoje.toISOString().split('T')[0];
-                console.log('📅 Cliente disse "hoje", data calculada:', updateFields.data);
-              } else if (/daqui a (\d+) dias?/i.test(currentMessage)) {
-                const match = currentMessage.match(/daqui a (\d+) dias?/i);
-                const dias = parseInt(match[1]);
-                const data = new Date();
-                data.setDate(data.getDate() + dias);
-                updateFields.data = data.toISOString().split('T')[0];
-                console.log(`📅 Cliente disse "daqui a ${dias} dias", data calculada:`, updateFields.data);
-              } else {
-                // Tenta extrair data no formato dd/mm ou dd-mm
-                const dataMatch = currentMessage.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-                if (dataMatch) {
-                  const dia = dataMatch[1].padStart(2, '0');
-                  const mes = dataMatch[2].padStart(2, '0');
-                  const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
-                  updateFields.data = `${ano}-${mes}-${dia}`;
+              const msgLower = currentMessage.toLowerCase();
+              
+              // Dias da semana (segunda, terça, etc.)
+              const diasSemana = {
+                'domingo': 0, 'segunda': 1, 'terca': 2, 'terça': 2,
+                'quarta': 3, 'quinta': 4, 'sexta': 5, 'sabado': 6, 'sábado': 6
+              };
+              
+              // Verifica se mencionou dia da semana
+              let diaDaSemanaEncontrado = false;
+              for (const [nome, diaSemana] of Object.entries(diasSemana)) {
+                if (new RegExp(`\\b${nome}\\b`, 'i').test(msgLower)) {
+                  const hoje = new Date();
+                  const diaAtual = hoje.getDay();
+                  
+                  // Calcula quantos dias faltam para o próximo dia da semana mencionado
+                  let diasParaAdicionar = diaSemana - diaAtual;
+                  
+                  // Se o dia já passou nesta semana ou é hoje, pega a próxima semana
+                  if (diasParaAdicionar <= 0) {
+                    diasParaAdicionar += 7;
+                  }
+                  
+                  // Se tem "que vem" ou "proxim", garante que é próxima semana
+                  if (/que vem|proxi|pr[oó]xim/i.test(msgLower) && diasParaAdicionar < 7) {
+                    diasParaAdicionar += 7;
+                  }
+                  
+                  const dataCalculada = new Date();
+                  dataCalculada.setDate(dataCalculada.getDate() + diasParaAdicionar);
+                  updateFields.data = dataCalculada.toISOString().split('T')[0];
+                  console.log(`📅 Cliente disse "${nome}", data calculada:`, updateFields.data);
+                  diaDaSemanaEncontrado = true;
+                  break;
+                }
+              }
+              
+              // Se não encontrou dia da semana, tenta outras expressões
+              if (!diaDaSemanaEncontrado) {
+                if (/amanh[ãa]|amanha/i.test(msgLower)) {
+                  const amanha = new Date();
+                  amanha.setDate(amanha.getDate() + 1);
+                  updateFields.data = amanha.toISOString().split('T')[0];
+                  console.log('📅 Cliente disse "amanhã", data calculada:', updateFields.data);
+                } else if (/depois de amanh[ãa]|depois de amanha|daqui a 2 dias|2 dias/i.test(msgLower)) {
+                  const depoisAmanha = new Date();
+                  depoisAmanha.setDate(depoisAmanha.getDate() + 2);
+                  updateFields.data = depoisAmanha.toISOString().split('T')[0];
+                  console.log('📅 Cliente disse "depois de amanhã", data calculada:', updateFields.data);
+                } else if (/hoje/i.test(msgLower)) {
+                  const hoje = new Date();
+                  updateFields.data = hoje.toISOString().split('T')[0];
+                  console.log('📅 Cliente disse "hoje", data calculada:', updateFields.data);
+                } else if (/daqui a (\d+) dias?/i.test(msgLower)) {
+                  const match = msgLower.match(/daqui a (\d+) dias?/i);
+                  const dias = parseInt(match[1]);
+                  const data = new Date();
+                  data.setDate(data.getDate() + dias);
+                  updateFields.data = data.toISOString().split('T')[0];
+                  console.log(`📅 Cliente disse "daqui a ${dias} dias", data calculada:`, updateFields.data);
+                } else {
+                  // Tenta extrair data no formato dd/mm ou dd-mm
+                  const dataMatch = msgLower.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+                  if (dataMatch) {
+                    const dia = dataMatch[1].padStart(2, '0');
+                    const mes = dataMatch[2].padStart(2, '0');
+                    const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
+                    updateFields.data = `${ano}-${mes}-${dia}`;
+                  }
                 }
               }
             }
