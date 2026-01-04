@@ -42,7 +42,7 @@ export default function ChatIA() {
   const { data: contacts = [], isLoading: loadingContacts, refetch: refetchContacts } = useQuery({
     queryKey: ['contacts'],
     queryFn: () => base44.entities.Contact.list('-last_message_at'),
-    refetchInterval: 5000,
+    refetchInterval: 15000,
   });
 
   const { data: messages = [], refetch: refetchMessages } = useQuery({
@@ -51,7 +51,7 @@ export default function ChatIA() {
       ? base44.entities.Message.filter({ contact_id: selectedContact.id }, 'created_date')
       : [],
     enabled: !!selectedContact,
-    refetchInterval: 3000,
+    refetchInterval: 10000,
   });
 
   useEffect(() => {

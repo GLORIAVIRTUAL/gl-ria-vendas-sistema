@@ -12,6 +12,7 @@ export default function PipelineIA() {
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ['contacts'],
     queryFn: () => base44.entities.Contact.list('-last_message_at'),
+    refetchInterval: 20000,
   });
 
   const updateContactMutation = useMutation({

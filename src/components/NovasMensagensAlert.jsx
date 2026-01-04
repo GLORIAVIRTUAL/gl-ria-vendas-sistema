@@ -21,7 +21,7 @@ export default function NovasMensagensAlert() {
       const msgs = await base44.entities.Message.list('-created_date', 10);
       return msgs.filter(m => m.direction === 'inbound' && m.sender === 'customer');
     },
-    refetchInterval: 5000,
+    refetchInterval: 15000,
   });
 
   const { data: contacts = [] } = useQuery({
