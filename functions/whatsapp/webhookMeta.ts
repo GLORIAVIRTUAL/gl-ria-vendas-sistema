@@ -411,74 +411,92 @@ async function processAIResponse(base44, contact, phone) {
             if (dataSalva) dadosColetados += `\n✅ Data: ${dataSalva}`;
             if (horarioSalvo) dadosColetados += `\n✅ Horário: ${horarioSalvo}`;
 
+            // Verifica se já tem agendamento confirmado recentemente
+            const temAgendamentoRecente = updateFields.agendamento_confirmado === true;
+
             // Monta prompt completo
             const systemPrompt = settings.system_prompt || 'Você é GLÓRIA, uma assistente virtual inteligente e prestativa.';
-            
+
             const fullPrompt = `${systemPrompt}
 
-📅 INFORMAÇÕES ATUAIS:
-- Data/Hora em Brasília: ${brasiliaTime}
-- Cliente: ${contact.name || 'Não informado'}
-- Telefone: ${contact.phone}
+            📅 INFORMAÇÕES ATUAIS:
+            - Data/Hora em Brasília: ${brasiliaTime}
+            - Cliente: ${contact.name || 'Não informado'}
+            - Telefone: ${contact.phone}
+            ${temAgendamentoRecente ? '\n🎉 STATUS: AGENDAMENTO JÁ CONFIRMADO! Cliente já tem reunião marcada.' : ''}
 
-💬 HISTÓRICO DA CONVERSA:
-${conversationContext || 'Esta é a primeira mensagem.'}
+            💬 HISTÓRICO DA CONVERSA:
+            ${conversationContext || 'Esta é a primeira mensagem.'}
 
-📨 MENSAGENS ATUAIS DO CLIENTE (acumuladas):
-${currentMessage}
-${horariosInfo}
+            📨 MENSAGENS ATUAIS DO CLIENTE (acumuladas):
+            ${currentMessage}
+            ${!temAgendamentoRecente ? horariosInfo : ''}
 
-${shouldTransfer ? '⚠️ ATENÇÃO: Cliente solicitou falar com humano. Informe que está transferindo para atendente.' : ''}
+            ${shouldTransfer ? '⚠️ ATENÇÃO: Cliente solicitou falar com humano. Informe que está transferindo para atendente.' : ''}
 
-📊 DADOS JÁ COLETADOS DO CLIENTE:${dadosColetados || '\n❌ Nenhum dado coletado ainda'}
+            ${temAgendamentoRecente ? `
+            🎉 AGENDAMENTO JÁ REALIZADO!
+            ✅ Este cliente já tem uma reunião confirmada no sistema
 
-${dadosFaltantes.length > 0 ? `⚠️ DADOS QUE AINDA FALTAM: ${dadosFaltantes.join(', ')}` : '✅ TODOS OS DADOS COLETADOS! Pronto para agendar.'}
+            🚨 REGRA CRÍTICA:
+            - NÃO pergunte sobre reagendar
+            - NÃO peça mais dados
+            - NÃO use o comando [AGENDAR] novamente
+            - Seja prestativo e responda perguntas
+            - Se cliente quiser marcar OUTRA reunião (adicional), aí sim pode coletar novos dados
+            - Aceite despedidas naturalmente (obrigado, tchau, até logo)
+            - Ofereça ajuda com dúvidas sobre o produto ou outros assuntos
+            ` : `
+            📊 DADOS JÁ COLETADOS DO CLIENTE:${dadosColetados || '\n❌ Nenhum dado coletado ainda'}
 
-🎯 REGRAS OBRIGATÓRIAS - SIGA RIGOROSAMENTE:
+            ${dadosFaltantes.length > 0 ? `⚠️ DADOS QUE AINDA FALTAM: ${dadosFaltantes.join(', ')}` : '✅ TODOS OS DADOS COLETADOS! Pronto para agendar.'}
 
-1. ⛔ NUNCA REPITA PERGUNTAS
-   - Verifique "DADOS JÁ COLETADOS" antes de perguntar qualquer coisa
-   - Se o dado já está lá, NÃO PERGUNTE novamente
-   
-2. 🚨 HORÁRIOS - REGRA CRÍTICA (MUITO IMPORTANTE!)
-   - Se aparecer "HORÁRIOS DISPONÍVEIS", você DEVE sugerir APENAS horários dessa lista
-   - É PROIBIDO sugerir horários que não estão na lista
-   - Se cliente pedir horário não disponível, informe que está OCUPADO
-   - Se não houver lista de horários, pergunte a data primeiro
-   - NUNCA, EM HIPÓTESE ALGUMA, sugira um horário que não está na lista de disponíveis
-   
-3. ✅ QUANDO AGENDAR
-   - Se "DADOS QUE AINDA FALTAM" está vazio, use [AGENDAR] IMEDIATAMENTE
-   - Não pergunte confirmação, apenas agende
-   - IMPORTANTE: NÃO diga "reunião agendada" antes de usar o comando [AGENDAR]
-   - Apenas informe sucesso APÓS o sistema confirmar
-   
-4. 📝 PERGUNTAS
-   - Pergunte apenas 1 dado por vez
-   - Só pergunte dados da lista "DADOS QUE AINDA FALTAM"
+            🎯 REGRAS OBRIGATÓRIAS - SIGA RIGOROSAMENTE:
 
-📦 PRODUTOS DISPONÍVEIS:
-${produtosDisponiveis.map(p => `- ${p.replace(/_/g, ' ')}`).join('\n')}
+            1. ⛔ NUNCA REPITA PERGUNTAS
+            - Verifique "DADOS JÁ COLETADOS" antes de perguntar qualquer coisa
+            - Se o dado já está lá, NÃO PERGUNTE novamente
 
-📋 COMANDO PARA AGENDAR:
-Quando tiver TODOS os dados, use EXATAMENTE este formato:
+            2. 🚨 HORÁRIOS - REGRA CRÍTICA (MUITO IMPORTANTE!)
+            - Se aparecer "HORÁRIOS DISPONÍVEIS", você DEVE sugerir APENAS horários dessa lista
+            - É PROIBIDO sugerir horários que não estão na lista
+            - Se cliente pedir horário não disponível, informe que está OCUPADO
+            - Se não houver lista de horários, pergunte a data primeiro
+            - NUNCA, EM HIPÓTESE ALGUMA, sugira um horário que não está na lista de disponíveis
 
-[AGENDAR]
-NOME: ${nomeClienteSalvo || 'extrair da conversa ou perguntar'}
-EMAIL: ${emailClienteSalvo || 'extrair ou perguntar'}
-TELEFONE: ${telefoneSalvo || 'extrair ou perguntar'}
-PRODUTO: ${produtoSalvo || 'extrair ou perguntar'}
-DATA: ${dataSalva || 'extrair ou perguntar'}
-HORARIO: ${horarioSalvo || 'extrair ou perguntar'}
-[/AGENDAR]
+            3. ✅ QUANDO AGENDAR
+            - Se "DADOS QUE AINDA FALTAM" está vazio, use [AGENDAR] IMEDIATAMENTE
+            - Não pergunte confirmação, apenas agende
+            - IMPORTANTE: NÃO diga "reunião agendada" antes de usar o comando [AGENDAR]
+            - Apenas informe sucesso APÓS o sistema confirmar
 
-🚨 MUITO IMPORTANTE:
-- NÃO escreva NADA sobre "reunião agendada" ou "confirmado" junto com o comando [AGENDAR]
-- Apenas use o comando e pare
-- O sistema irá adicionar a mensagem de confirmação automaticamente
-- Se você disser "agendado" antes do comando, o cliente verá a mensagem mas o agendamento pode não estar no sistema
+            4. 📝 PERGUNTAS
+            - Pergunte apenas 1 dado por vez
+            - Só pergunte dados da lista "DADOS QUE AINDA FALTAM"
 
-Seja eficiente. Não repita perguntas. Foque nos dados faltantes.`;
+            📦 PRODUTOS DISPONÍVEIS:
+            ${produtosDisponiveis.map(p => `- ${p.replace(/_/g, ' ')}`).join('\n')}
+
+            📋 COMANDO PARA AGENDAR:
+            Quando tiver TODOS os dados, use EXATAMENTE este formato:
+
+            [AGENDAR]
+            NOME: ${nomeClienteSalvo || 'extrair da conversa ou perguntar'}
+            EMAIL: ${emailClienteSalvo || 'extrair ou perguntar'}
+            TELEFONE: ${telefoneSalvo || 'extrair ou perguntar'}
+            PRODUTO: ${produtoSalvo || 'extrair ou perguntar'}
+            DATA: ${dataSalva || 'extrair ou perguntar'}
+            HORARIO: ${horarioSalvo || 'extrair ou perguntar'}
+            [/AGENDAR]
+
+            🚨 MUITO IMPORTANTE:
+            - NÃO escreva NADA sobre "reunião agendada" ou "confirmado" junto com o comando [AGENDAR]
+            - Apenas use o comando e pare
+            - O sistema irá adicionar a mensagem de confirmação automaticamente
+            - Se você disser "agendado" antes do comando, o cliente verá a mensagem mas o agendamento pode não estar no sistema
+            `}
+
+            Seja eficiente. Não repita perguntas. ${temAgendamentoRecente ? 'LEMBRE-SE: agendamento já está confirmado, não force reagendamento!' : 'Foque nos dados faltantes.'}`;
 
             console.log('🔄 Enviando para IA...');
 
