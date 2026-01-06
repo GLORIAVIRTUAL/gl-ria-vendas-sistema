@@ -628,10 +628,8 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
-            // Adiciona transcrições ao prompt
-            const finalPrompt = audioTranscriptions 
-              ? `${fullPrompt}\n\n🎤 ÁUDIOS TRANSCRITOS:${audioTranscriptions}` 
-              : fullPrompt;
+            // As transcrições já estão no content das mensagens, não precisa adicionar separadamente
+            const finalPrompt = fullPrompt;
 
             // Chama a IA
             let responseText;
