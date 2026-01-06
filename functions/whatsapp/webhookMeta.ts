@@ -563,9 +563,9 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
-            // Transcreve áudios se houver
+            // Transcreve áudios e coleta outras mídias
             let audioTranscriptions = '';
-            const imageUrls = [];
+            const allMediaUrls = [];
 
             for (let i = 0; i < recentCustomerMessages.length; i++) {
               const msg = recentCustomerMessages[i];
@@ -583,8 +583,9 @@ async function processAIResponse(base44, contact, phone) {
                   console.error('❌ Erro ao transcrever áudio:', audioError);
                   audioTranscriptions += '\n[Áudio enviado - não foi possível transcrever]\n';
                 }
-              } else if (msg.type === 'image' && msg.media_url) {
-                imageUrls.push(msg.media_url);
+              } else if (msg.media_url && (msg.type === 'image' || msg.type === 'document' || msg.type === 'video')) {
+                allMediaUrls.push(msg.media_url);
+                console.log(`📎 ${msg.type.toUpperCase()} será enviado para IA:`, msg.media_url);
               }
             }
 
@@ -601,10 +602,10 @@ async function processAIResponse(base44, contact, phone) {
                 model: settings.ai_model || 'gpt-4o'
               };
 
-              // Adiciona imagens se houver
-              if (imageUrls.length > 0) {
-                llmParams.file_urls = imageUrls;
-                console.log('📎 Enviando imagens para IA:', imageUrls);
+              // Adiciona todos os arquivos se houver
+              if (allMediaUrls.length > 0) {
+                llmParams.file_urls = allMediaUrls;
+                console.log('📎 Enviando arquivos para IA:', allMediaUrls);
               }
 
               responseText = await base44.asServiceRole.integrations.Core.InvokeLLM(llmParams);
