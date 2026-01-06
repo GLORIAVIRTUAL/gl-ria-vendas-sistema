@@ -500,20 +500,20 @@ async function processAIResponse(base44, contact, phone) {
 
             console.log('🔄 Enviando para IA...');
 
-            // Busca mídias das mensagens acumuladas
+            // Busca mídias das mensagens acumuladas (incluindo áudios)
             let fileUrls = [];
             for (const msg of recentCustomerMessages) {
               if (msg.type !== 'text' && msg.media_url) {
                 // Se já é uma URL do base44, usa diretamente
                 if (msg.media_url.includes('supabase.co') || msg.media_url.includes('base44')) {
                   fileUrls.push(msg.media_url);
-                  console.log('✅ Mídia já processada:', msg.media_url);
+                  console.log(`✅ ${msg.type.toUpperCase()} já processado:`, msg.media_url);
                 } else {
                   // Precisa baixar do Meta
                   try {
-                    console.log('📥 Baixando mídia do Meta:', msg.media_url);
+                    console.log(`📥 Baixando ${msg.type} do Meta:`, msg.media_url);
                     const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
-                    
+
                     const mediaInfoResponse = await fetch(
                       `https://graph.facebook.com/v18.0/${msg.media_url}`,
                       {
@@ -522,37 +522,42 @@ async function processAIResponse(base44, contact, phone) {
                         }
                       }
                     );
-                    
+
                     if (mediaInfoResponse.ok) {
                       const mediaInfo = await mediaInfoResponse.json();
                       const mediaDownloadUrl = mediaInfo.url;
-                      
+
                       const mediaResponse = await fetch(mediaDownloadUrl, {
                         headers: {
                           'Authorization': `Bearer ${ACCESS_TOKEN}`
                         }
                       });
-                      
+
                       if (mediaResponse.ok) {
                         const mediaBlob = await mediaResponse.blob();
-                        const mediaFile = new File([mediaBlob], `media_${Date.now()}.${mediaInfo.mime_type?.split('/')[1] || 'bin'}`, {
+                        const extension = mediaInfo.mime_type?.split('/')[1] || 'bin';
+                        const fileName = msg.type === 'audio' 
+                          ? `audio_${Date.now()}.${extension === 'ogg' ? 'ogg' : 'mp3'}`
+                          : `${msg.type}_${Date.now()}.${extension}`;
+
+                        const mediaFile = new File([mediaBlob], fileName, {
                           type: mediaInfo.mime_type
                         });
-                        
+
                         const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({
                           file: mediaFile
                         });
-                        
+
                         fileUrls.push(file_url);
-                        console.log('✅ Mídia enviada para IA:', file_url);
-                        
+                        console.log(`✅ ${msg.type.toUpperCase()} enviado para IA:`, file_url);
+
                         await base44.asServiceRole.entities.Message.update(msg.id, {
                           media_url: file_url
                         });
                       }
                     }
                   } catch (mediaError) {
-                    console.error('⚠️ Erro ao processar mídia:', mediaError);
+                    console.error(`⚠️ Erro ao processar ${msg.type}:`, mediaError);
                   }
                 }
               }
