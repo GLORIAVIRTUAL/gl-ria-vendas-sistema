@@ -563,20 +563,50 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
+            // Transcreve áudios se houver
+            let audioTranscriptions = '';
+            const imageUrls = [];
+
+            for (let i = 0; i < recentCustomerMessages.length; i++) {
+              const msg = recentCustomerMessages[i];
+              if (msg.type === 'audio' && msg.media_url) {
+                try {
+                  console.log('🎤 Transcrevendo áudio:', msg.media_url);
+                  const transcription = await base44.asServiceRole.integrations.Core.InvokeLLM({
+                    prompt: 'Transcreva o áudio em português do Brasil.',
+                    file_urls: [msg.media_url],
+                    model: 'gpt-4o-audio-preview'
+                  });
+                  audioTranscriptions += `\n[Áudio transcrito]: ${transcription}\n`;
+                  console.log('✅ Áudio transcrito:', transcription);
+                } catch (audioError) {
+                  console.error('❌ Erro ao transcrever áudio:', audioError);
+                  audioTranscriptions += '\n[Áudio enviado - não foi possível transcrever]\n';
+                }
+              } else if (msg.type === 'image' && msg.media_url) {
+                imageUrls.push(msg.media_url);
+              }
+            }
+
+            // Adiciona transcrições ao prompt
+            const finalPrompt = audioTranscriptions 
+              ? `${fullPrompt}\n\n🎤 ÁUDIOS TRANSCRITOS:${audioTranscriptions}` 
+              : fullPrompt;
+
             // Chama a IA
             let responseText;
             try {
               const llmParams = {
-                prompt: fullPrompt,
+                prompt: finalPrompt,
                 model: settings.ai_model || 'gpt-4o'
               };
-              
-              // Adiciona arquivos se houver
-              if (fileUrls.length > 0) {
-                llmParams.file_urls = fileUrls;
-                console.log('📎 Enviando arquivos para IA:', fileUrls);
+
+              // Adiciona imagens se houver
+              if (imageUrls.length > 0) {
+                llmParams.file_urls = imageUrls;
+                console.log('📎 Enviando imagens para IA:', imageUrls);
               }
-              
+
               responseText = await base44.asServiceRole.integrations.Core.InvokeLLM(llmParams);
               
               console.log('✅ IA respondeu:', responseText);
