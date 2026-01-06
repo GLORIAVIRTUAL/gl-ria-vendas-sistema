@@ -539,12 +539,19 @@ async function processAIResponse(base44, contact, phone) {
                       console.log(`📦 Blob baixado, tamanho:`, mediaBlob.size, 'tipo:', mediaInfo.mime_type);
 
                       const extension = mediaInfo.mime_type?.split('/')[1] || 'bin';
-                      const fileName = msg.type === 'audio' 
-                        ? `audio_${Date.now()}.${extension === 'ogg' ? 'ogg' : 'mp3'}`
-                        : `${msg.type}_${Date.now()}.${extension}`;
+                      
+                      // Para áudios, sempre usar extensão compatível com InvokeLLM
+                      let fileName, fileType;
+                      if (msg.type === 'audio') {
+                        fileName = `audio_${Date.now()}.mp3`;
+                        fileType = 'audio/mpeg'; // Força tipo compatível
+                      } else {
+                        fileName = `${msg.type}_${Date.now()}.${extension}`;
+                        fileType = mediaInfo.mime_type;
+                      }
 
                       const mediaFile = new File([mediaBlob], fileName, {
-                        type: mediaInfo.mime_type
+                        type: fileType
                       });
 
                       console.log(`📤 Enviando para Base44:`, fileName);
