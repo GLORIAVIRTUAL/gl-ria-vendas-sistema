@@ -579,7 +579,7 @@ async function processAIResponse(base44, contact, phone) {
             for (const msg of recentCustomerMessages) {
               if (msg.type === 'audio' && msg.media_url) {
                 // Se já tem conteúdo transcrito, pula
-                if (msg.content && msg.content !== 'Áudio enviado' && msg.content.length > 20) {
+                if (msg.content && msg.content !== 'Áudio enviado' && !msg.content.includes('erro') && msg.content.length > 20) {
                   console.log('✅ Áudio já transcrito:', msg.content.substring(0, 50));
                   continue;
                 }
@@ -593,33 +593,52 @@ async function processAIResponse(base44, contact, phone) {
                 }
 
                 try {
-                  console.log('🎤 Transcrevendo áudio:', msg.media_url);
+                  console.log('🎤 [INÍCIO] Transcrevendo áudio');
+                  console.log('📍 URL:', msg.media_url);
+                  console.log('📍 Message ID:', msg.id);
                   
+                  // Testa se a URL é acessível
+                  const testResponse = await fetch(msg.media_url);
+                  console.log('📍 Status do arquivo:', testResponse.status);
+                  console.log('📍 Content-Type:', testResponse.headers.get('content-type'));
+                  
+                  if (!testResponse.ok) {
+                    throw new Error(`Arquivo não acessível: ${testResponse.status}`);
+                  }
+                  
+                  console.log('📍 Chamando InvokeLLM...');
                   const transcription = await base44.asServiceRole.integrations.Core.InvokeLLM({
-                    prompt: 'Transcreva tudo que foi falado neste áudio em português.',
+                    prompt: 'Ouça este áudio e transcreva em português tudo que foi falado.',
                     file_urls: [msg.media_url]
                   });
                   
+                  console.log('📍 Resposta recebida:', transcription);
+                  console.log('📍 Tipo:', typeof transcription);
+                  console.log('📍 Tamanho:', transcription?.length);
+                  
                   if (transcription && transcription.trim().length > 0) {
-                    console.log('✅ Áudio transcrito:', transcription);
+                    console.log('✅ Áudio transcrito com sucesso:', transcription);
                     
-                    // SALVA a transcrição diretamente no campo content da mensagem
                     await base44.asServiceRole.entities.Message.update(msg.id, {
                       content: `🎤 ${transcription}`
                     });
                     
-                    // Atualiza a mensagem local também
                     msg.content = `🎤 ${transcription}`;
                   } else {
-                    console.log('⚠️ Transcrição vazia');
+                    console.log('⚠️ Transcrição retornou vazia');
                     await base44.asServiceRole.entities.Message.update(msg.id, {
-                      content: '🎤 [áudio - não foi possível transcrever]'
+                      content: '🎤 [áudio recebido - transcrição vazia]'
                     });
                   }
                 } catch (audioError) {
-                  console.error('❌ Erro ao transcrever:', audioError.message);
+                  console.error('❌ [ERRO DETALHADO] Falha na transcrição');
+                  console.error('❌ Mensagem:', audioError.message);
+                  console.error('❌ Stack:', audioError.stack);
+                  console.error('❌ Nome:', audioError.name);
+                  console.error('❌ Dados completos:', JSON.stringify(audioError, null, 2));
+                  
                   await base44.asServiceRole.entities.Message.update(msg.id, {
-                    content: '🎤 [áudio - erro na transcrição]'
+                    content: `🎤 [erro: ${audioError.message}]`
                   });
                 }
               } else if (msg.media_url && (msg.type === 'image' || msg.type === 'document' || msg.type === 'video')) {
