@@ -573,30 +573,40 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
-            // Transcreve áudios e coleta outras mídias
+            // Transcreve áudios e coleta outras mídias  
             let audioTranscriptions = '';
             const allMediaUrls = [];
 
             for (const msg of recentCustomerMessages) {
               if (msg.type === 'audio' && msg.media_url) {
-                // Verifica se tem URL válida
-                if (!msg.media_url.includes('supabase.co') && !msg.media_url.includes('base44')) {
-                  console.log('⚠️ Áudio ainda não foi baixado, pulando transcrição');
-                  audioTranscriptions += '\n[Áudio recebido - processando...]\n';
+                // Verifica se tem URL válida do Base44
+                const isBase44Url = msg.media_url.includes('supabase.co') || msg.media_url.includes('base44');
+                
+                if (!isBase44Url) {
+                  console.log('⚠️ Áudio ainda não foi baixado, ID:', msg.media_url);
                   continue;
                 }
 
                 try {
-                  console.log('🎤 Transcrevendo áudio:', msg.media_url);
+                  console.log('🎤 Iniciando transcrição de áudio:', msg.media_url);
+                  
                   const transcription = await base44.asServiceRole.integrations.Core.InvokeLLM({
-                    prompt: 'Transcreva este áudio em português do Brasil.',
-                    file_urls: [msg.media_url]
+                    prompt: 'Você recebeu um arquivo de áudio. Ouça atentamente e transcreva EXATAMENTE tudo que foi falado em português do Brasil. Retorne APENAS a transcrição pura, sem comentários, sem introdução, sem "transcrição:" ou qualquer outra palavra adicional. Apenas o que foi falado no áudio.',
+                    file_urls: [msg.media_url],
+                    add_context_from_internet: false
                   });
-                  audioTranscriptions += `\n[Áudio transcrito]: ${transcription}\n`;
-                  console.log('✅ Áudio transcrito:', transcription);
+                  
+                  if (transcription && transcription.trim().length > 0) {
+                    audioTranscriptions += `\n\n📢 O CLIENTE ENVIOU ESTE ÁUDIO:\n"${transcription}"\n`;
+                    console.log('✅ Áudio transcrito com sucesso:', transcription);
+                  } else {
+                    console.log('⚠️ Transcrição vazia');
+                    audioTranscriptions += '\n[Áudio recebido mas transcrição ficou vazia]\n';
+                  }
                 } catch (audioError) {
-                  console.error('❌ Erro ao transcrever áudio:', audioError.message);
-                  audioTranscriptions += '\n[Áudio recebido mas não foi possível transcrever]\n';
+                  console.error('❌ Erro ao transcrever áudio:', audioError);
+                  console.error('Stack:', audioError.stack);
+                  audioTranscriptions += '\n[Áudio recebido mas erro na transcrição]\n';
                 }
               } else if (msg.media_url && (msg.type === 'image' || msg.type === 'document' || msg.type === 'video')) {
                 allMediaUrls.push(msg.media_url);
