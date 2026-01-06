@@ -574,9 +574,9 @@ async function processAIResponse(base44, contact, phone) {
                 try {
                   console.log('🎤 Transcrevendo áudio:', msg.media_url);
                   const transcription = await base44.asServiceRole.integrations.Core.InvokeLLM({
-                    prompt: 'Transcreva o áudio em português do Brasil.',
+                    prompt: 'Ouça o áudio e transcreva todo o conteúdo falado em português do Brasil. Retorne apenas a transcrição do que foi falado, sem comentários adicionais.',
                     file_urls: [msg.media_url],
-                    model: 'gpt-4o-audio-preview'
+                    model: 'gpt-4o'
                   });
                   audioTranscriptions += `\n[Áudio transcrito]: ${transcription}\n`;
                   console.log('✅ Áudio transcrito:', transcription);
