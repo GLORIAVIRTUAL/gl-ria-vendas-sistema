@@ -511,7 +511,7 @@ async function processAIResponse(base44, contact, phone) {
 
                 // Precisa baixar do Meta
                 try {
-                  console.log(`📥 Baixando ${msg.type} do Meta:`, msg.media_url);
+                  console.log(`📥 Baixando ${msg.type} do Meta ID:`, msg.media_url);
                   const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
 
                   const mediaInfoResponse = await fetch(
@@ -525,6 +525,7 @@ async function processAIResponse(base44, contact, phone) {
 
                   if (mediaInfoResponse.ok) {
                     const mediaInfo = await mediaInfoResponse.json();
+                    console.log(`📋 Info da mídia:`, mediaInfo);
                     const mediaDownloadUrl = mediaInfo.url;
 
                     const mediaResponse = await fetch(mediaDownloadUrl, {
@@ -535,6 +536,8 @@ async function processAIResponse(base44, contact, phone) {
 
                     if (mediaResponse.ok) {
                       const mediaBlob = await mediaResponse.blob();
+                      console.log(`📦 Blob baixado, tamanho:`, mediaBlob.size, 'tipo:', mediaInfo.mime_type);
+
                       const extension = mediaInfo.mime_type?.split('/')[1] || 'bin';
                       const fileName = msg.type === 'audio' 
                         ? `audio_${Date.now()}.${extension === 'ogg' ? 'ogg' : 'mp3'}`
@@ -544,11 +547,12 @@ async function processAIResponse(base44, contact, phone) {
                         type: mediaInfo.mime_type
                       });
 
+                      console.log(`📤 Enviando para Base44:`, fileName);
                       const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({
                         file: mediaFile
                       });
 
-                      console.log(`✅ ${msg.type.toUpperCase()} baixado:`, file_url);
+                      console.log(`✅ ${msg.type.toUpperCase()} salvo no Base44:`, file_url);
 
                       // Atualiza a mensagem com a URL do Base44
                       await base44.asServiceRole.entities.Message.update(msg.id, {
@@ -557,10 +561,14 @@ async function processAIResponse(base44, contact, phone) {
 
                       // Atualiza a referência local
                       msg.media_url = file_url;
+                    } else {
+                      console.error(`❌ Erro ao baixar mídia:`, mediaResponse.status, await mediaResponse.text());
                     }
+                  } else {
+                    console.error(`❌ Erro ao buscar info da mídia:`, mediaInfoResponse.status, await mediaInfoResponse.text());
                   }
                 } catch (mediaError) {
-                  console.error(`⚠️ Erro ao processar ${msg.type}:`, mediaError);
+                  console.error(`❌ Erro ao processar ${msg.type}:`, mediaError);
                 }
               }
             }
@@ -571,18 +579,24 @@ async function processAIResponse(base44, contact, phone) {
 
             for (const msg of recentCustomerMessages) {
               if (msg.type === 'audio' && msg.media_url) {
+                // Verifica se tem URL válida
+                if (!msg.media_url.includes('supabase.co') && !msg.media_url.includes('base44')) {
+                  console.log('⚠️ Áudio ainda não foi baixado, pulando transcrição');
+                  audioTranscriptions += '\n[Áudio recebido - processando...]\n';
+                  continue;
+                }
+
                 try {
                   console.log('🎤 Transcrevendo áudio:', msg.media_url);
                   const transcription = await base44.asServiceRole.integrations.Core.InvokeLLM({
-                    prompt: 'Ouça o áudio e transcreva todo o conteúdo falado em português do Brasil. Retorne apenas a transcrição do que foi falado, sem comentários adicionais.',
-                    file_urls: [msg.media_url],
-                    model: 'gpt-4o'
+                    prompt: 'Transcreva este áudio em português do Brasil.',
+                    file_urls: [msg.media_url]
                   });
                   audioTranscriptions += `\n[Áudio transcrito]: ${transcription}\n`;
                   console.log('✅ Áudio transcrito:', transcription);
                 } catch (audioError) {
-                  console.error('❌ Erro ao transcrever áudio:', audioError);
-                  audioTranscriptions += '\n[Áudio enviado - não foi possível transcrever]\n';
+                  console.error('❌ Erro ao transcrever áudio:', audioError.message);
+                  audioTranscriptions += '\n[Áudio recebido mas não foi possível transcrever]\n';
                 }
               } else if (msg.media_url && (msg.type === 'image' || msg.type === 'document' || msg.type === 'video')) {
                 allMediaUrls.push(msg.media_url);
