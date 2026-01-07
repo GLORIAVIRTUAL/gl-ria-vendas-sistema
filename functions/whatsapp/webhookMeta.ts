@@ -191,14 +191,6 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
-            // Acumula conteúdo das mensagens do cliente
-            const currentMessage = recentCustomerMessages
-              .map(m => m.content)
-              .join('\n');
-
-            console.log(`📦 Acumuladas ${recentCustomerMessages.length} mensagens do cliente`);
-            console.log(`📝 Conteúdo acumulado: ${currentMessage.substring(0, 100)}...`);
-
             // Monta histórico formatado (mensagens antigas, exceto as sendo processadas agora)
             const olderMessages = allMessages
               .filter(m => !recentCustomerMessages.some(rcm => rcm.id === m.id))
@@ -633,7 +625,14 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
-            // As transcrições já estão no content das mensagens, não precisa adicionar separadamente
+            // Monta conteúdo acumulado DEPOIS das transcrições
+            const currentMessage = recentCustomerMessages
+              .map(m => m.content)
+              .join('\n');
+
+            console.log(`📦 Acumuladas ${recentCustomerMessages.length} mensagens do cliente`);
+            console.log(`📝 Conteúdo acumulado (COM transcrições): ${currentMessage.substring(0, 200)}...`);
+
             const finalPrompt = fullPrompt;
 
             // Chama a IA
