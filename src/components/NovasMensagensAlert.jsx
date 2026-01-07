@@ -102,7 +102,10 @@ export default function NovasMensagensAlert() {
         }
       } else {
         console.log('❌ Permissão negada:', permission);
-        toast.error('Permissão de notificação negada');
+        // Se negou, pelo menos habilita áudio e explica como ativar push
+        toast.error('Para receber notificações push, ative nas configurações do navegador (ícone 🔒 na barra de endereço)', {
+          duration: 8000
+        });
       }
     } catch (error) {
       console.error('❌ Erro ao inicializar push:', error);
@@ -168,7 +171,11 @@ export default function NovasMensagensAlert() {
           <Bell className="w-6 h-6" />
           <div>
             <p className="font-bold text-lg mb-1">🔔 Ative as Notificações</p>
-            <p className="text-sm opacity-90">Receba alertas mesmo com o app fechado</p>
+            <p className="text-sm opacity-90">
+              {audioEnabled && !pushEnabled 
+                ? '✅ Áudio ativo. Para notificações push, clique no 🔒 na barra de endereço' 
+                : 'Receba alertas mesmo com o app fechado'}
+            </p>
           </div>
         </div>
         <button 
@@ -183,7 +190,7 @@ export default function NovasMensagensAlert() {
           className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         >
-          {isLoading ? 'Ativando...' : 'Ativar Notificações Push'}
+          {isLoading ? 'Ativando...' : audioEnabled && !pushEnabled ? 'Tentar Novamente' : 'Ativar Notificações'}
         </button>
       </div>
     );
