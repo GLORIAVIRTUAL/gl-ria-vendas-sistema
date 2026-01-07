@@ -55,7 +55,7 @@ export default function NovasMensagensAlert() {
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
       if (audioContextRef.current.state === 'suspended') {
-        audioContextRef.current.resume();
+        await audioContextRef.current.resume();
       }
       setAudioEnabled(true);
       console.log('✅ Áudio habilitado');
@@ -64,19 +64,23 @@ export default function NovasMensagensAlert() {
       console.log('🔔 Solicitando permissão...');
       const permission = await Notification.requestPermission();
       console.log('📋 Permissão:', permission);
-      
+
       if (permission === 'granted') {
         console.log('📝 Registrando Service Worker...');
         const swUrl = window.location.origin + '/api/firebase-messaging-sw';
-        const registration = await navigator.serviceWorker.register(swUrl);
-        console.log('✅ Service Worker registrado');
+        const registration = await navigator.serviceWorker.register(swUrl, { scope: '/' });
+        await navigator.serviceWorker.ready;
+        console.log('✅ Service Worker registrado e pronto');
 
         console.log('🔥 Carregando Firebase...');
         const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
         const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js');
 
         const app = initializeApp({
+          apiKey: "AIzaSyCGvwC5JqDvYqLp4Kxg7X8mRzN6YtEuHnM",
+          authDomain: "gloria-vendas.firebaseapp.com",
           projectId: "gloria-vendas",
+          storageBucket: "gloria-vendas.firebasestorage.app",
           messagingSenderId: "19066612248",
           appId: "1:19066612248:web:1206105e95972329db316d"
         });
@@ -86,24 +90,27 @@ export default function NovasMensagensAlert() {
 
         console.log('🎫 Obtendo token FCM...');
         const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
-        
+
         if (token) {
-          console.log('✅ Token FCM recebido');
+          console.log('✅ Token FCM recebido:', token.substring(0, 20) + '...');
           const user = await base44.auth.me();
           await base44.auth.updateMe({
             custom_fields: { ...user.custom_fields, fcm_token: token }
           });
+          console.log('💾 Token salvo no usuário');
           setPushEnabled(true);
           toast.success('✅ Push notifications ativadas!');
         } else {
-          console.error('❌ Não conseguiu gerar token FCM');
-          toast.error('Erro ao gerar token FCM');
+          console.error('❌ Token FCM vazio');
+          toast.error('Erro: token FCM não gerado');
         }
       } else {
+        console.warn('⚠️ Permissão negada:', permission);
         toast.warning('⚠️ Permissão negada - apenas som ativo');
       }
     } catch (error) {
-      console.error('❌ Erro ao inicializar push:', error);
+      console.error('❌ Erro completo:', error);
+      console.error('Stack:', error.stack);
       toast.error('Erro: ' + error.message);
     } finally {
       console.log('🏁 Finalizando...');
