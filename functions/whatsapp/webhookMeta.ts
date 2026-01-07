@@ -193,20 +193,66 @@ async function processAIResponse(base44, contact, phone) {
 
             console.log(`📦 Acumuladas ${recentCustomerMessages.length} mensagens do cliente para processar`);
 
-            // Map para armazenar transcrições
-            const transcricoes = new Map();
-
-            // PRIMEIRO: Transcreve TODOS os áudios
+            // PRIMEIRO: Baixa TODAS as mídias do Meta (incluindo áudios)
             for (const msg of recentCustomerMessages) {
-              if (msg.type === 'audio' && msg.media_url) {
-                const isBase44Url = msg.media_url.includes('supabase.co') || msg.media_url.includes('base44');
-
-                if (!isBase44Url) {
-                  console.log('⚠️ Áudio ainda não baixado, ID Meta:', msg.media_url);
-                  transcricoes.set(msg.id, '[Áudio ainda sendo processado...]');
+              if (msg.type !== 'text' && msg.media_url) {
+                // Se já é URL do Base44, pula
+                if (msg.media_url.includes('supabase.co') || msg.media_url.includes('base44')) {
+                  console.log(`✅ ${msg.type.toUpperCase()} já baixado:`, msg.media_url.substring(0, 80));
                   continue;
                 }
 
+                // Precisa baixar do Meta
+                try {
+                  console.log(`📥 Baixando ${msg.type} do Meta ID:`, msg.media_url);
+                  const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
+
+                  const mediaInfoResponse = await fetch(
+                    `https://graph.facebook.com/v18.0/${msg.media_url}`,
+                    { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } }
+                  );
+
+                  if (mediaInfoResponse.ok) {
+                    const mediaInfo = await mediaInfoResponse.json();
+                    const mediaDownloadUrl = mediaInfo.url;
+
+                    const mediaResponse = await fetch(mediaDownloadUrl, {
+                      headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
+                    });
+
+                    if (mediaResponse.ok) {
+                      const mediaBlob = await mediaResponse.blob();
+                      console.log(`📦 Blob baixado, tamanho:`, mediaBlob.size);
+
+                      const extension = mediaInfo.mime_type?.split('/')[1] || 'bin';
+                      const fileName = `${msg.type}_${Date.now()}.${extension}`;
+                      const mediaFile = new File([mediaBlob], fileName, {
+                        type: mediaInfo.mime_type
+                      });
+
+                      const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({
+                        file: mediaFile
+                      });
+
+                      console.log(`✅ ${msg.type.toUpperCase()} salvo:`, file_url.substring(0, 80));
+
+                      await base44.asServiceRole.entities.Message.update(msg.id, {
+                        media_url: file_url
+                      });
+
+                      msg.media_url = file_url;
+                    }
+                  }
+                } catch (mediaError) {
+                  console.error(`❌ Erro ao baixar ${msg.type}:`, mediaError.message);
+                }
+              }
+            }
+
+            // SEGUNDO: Transcreve os áudios
+            const transcricoes = new Map();
+            for (const msg of recentCustomerMessages) {
+              if (msg.type === 'audio' && msg.media_url) {
                 try {
                   console.log('🎤 Transcrevendo áudio:', msg.media_url.substring(0, 80));
 
@@ -219,22 +265,21 @@ async function processAIResponse(base44, contact, phone) {
                     console.log('✅ TRANSCRIÇÃO:', transcription);
                     transcricoes.set(msg.id, transcription);
 
-                    // Salva no banco em background (não espera)
                     base44.asServiceRole.entities.Message.update(msg.id, {
                       content: `🎤 ${transcription}`
-                    }).catch(e => console.error('Erro ao salvar transcrição:', e));
+                    }).catch(e => console.error('Erro ao salvar:', e));
                   } else {
                     console.log('⚠️ Falhou:', result.data);
-                    transcricoes.set(msg.id, '[Não foi possível transcrever o áudio]');
+                    transcricoes.set(msg.id, '[Não transcrito]');
                   }
                 } catch (error) {
                   console.error('❌ Erro:', error.message);
-                  transcricoes.set(msg.id, '[Erro ao transcrever áudio]');
+                  transcricoes.set(msg.id, '[Erro]');
                 }
               }
             }
 
-            // DEPOIS: Monta conteúdo usando transcrições
+            // TERCEIRO: Monta prompt com transcrições
             const currentMessage = recentCustomerMessages
               .map(msg => {
                 if (msg.type === 'audio' && transcricoes.has(msg.id)) {
@@ -244,7 +289,7 @@ async function processAIResponse(base44, contact, phone) {
               })
               .join('\n\n');
 
-            console.log(`📝 CONTEÚDO FINAL PARA IA:\n${currentMessage}`);
+            console.log(`📝 PROMPT FINAL:\n${currentMessage}`);
 
             // Monta histórico formatado (mensagens antigas, exceto as sendo processadas agora)
             const olderMessages = allMessages
@@ -547,85 +592,7 @@ async function processAIResponse(base44, contact, phone) {
 
             console.log('🔄 Enviando para IA...');
 
-            // Baixa e processa TODAS as mídias das mensagens acumuladas
-            for (const msg of recentCustomerMessages) {
-              if (msg.type !== 'text' && msg.media_url) {
-                // Se já é uma URL do base44, pula
-                if (msg.media_url.includes('supabase.co') || msg.media_url.includes('base44')) {
-                  console.log(`✅ ${msg.type.toUpperCase()} já processado:`, msg.media_url);
-                  continue;
-                }
 
-                // Precisa baixar do Meta
-                try {
-                  console.log(`📥 Baixando ${msg.type} do Meta ID:`, msg.media_url);
-                  const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
-
-                  const mediaInfoResponse = await fetch(
-                    `https://graph.facebook.com/v18.0/${msg.media_url}`,
-                    {
-                      headers: {
-                        'Authorization': `Bearer ${ACCESS_TOKEN}`
-                      }
-                    }
-                  );
-
-                  if (mediaInfoResponse.ok) {
-                    const mediaInfo = await mediaInfoResponse.json();
-                    console.log(`📋 Info da mídia:`, mediaInfo);
-                    const mediaDownloadUrl = mediaInfo.url;
-
-                    const mediaResponse = await fetch(mediaDownloadUrl, {
-                      headers: {
-                        'Authorization': `Bearer ${ACCESS_TOKEN}`
-                      }
-                    });
-
-                    if (mediaResponse.ok) {
-                      const mediaBlob = await mediaResponse.blob();
-                      console.log(`📦 Blob baixado, tamanho:`, mediaBlob.size, 'tipo:', mediaInfo.mime_type);
-
-                      const extension = mediaInfo.mime_type?.split('/')[1] || 'bin';
-                      
-                      // Para áudios, sempre usar extensão compatível com InvokeLLM
-                      let fileName, fileType;
-                      if (msg.type === 'audio') {
-                        fileName = `audio_${Date.now()}.mp3`;
-                        fileType = 'audio/mpeg'; // Força tipo compatível
-                      } else {
-                        fileName = `${msg.type}_${Date.now()}.${extension}`;
-                        fileType = mediaInfo.mime_type;
-                      }
-
-                      const mediaFile = new File([mediaBlob], fileName, {
-                        type: fileType
-                      });
-
-                      console.log(`📤 Enviando para Base44:`, fileName);
-                      const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({
-                        file: mediaFile
-                      });
-
-                      console.log(`✅ ${msg.type.toUpperCase()} salvo no Base44:`, file_url);
-
-                      // Atualiza a mensagem com a URL do Base44
-                      await base44.asServiceRole.entities.Message.update(msg.id, {
-                        media_url: file_url
-                      });
-
-                      // Atualiza a referência local
-                      msg.media_url = file_url;
-                    } else {
-                      console.error(`❌ Erro ao baixar mídia:`, mediaResponse.status, await mediaResponse.text());
-                    }
-                  } else {
-                    console.error(`❌ Erro ao buscar info da mídia:`, mediaInfoResponse.status, await mediaInfoResponse.text());
-                  }
-                } catch (mediaError) {
-                  console.error(`❌ Erro ao processar ${msg.type}:`, mediaError);
-                }
-              }
-            }
 
             // Coleta mídias não-áudio (áudios já foram transcritos)
             const allMediaUrls = [];
