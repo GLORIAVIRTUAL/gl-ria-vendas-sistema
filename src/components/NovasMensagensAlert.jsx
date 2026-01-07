@@ -168,12 +168,7 @@ export default function NovasMensagensAlert() {
   if (!audioEnabled && !dismissed) {
     return (
       <div 
-        className="fixed top-20 right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 rounded-xl shadow-2xl max-w-sm"
-        style={{ 
-          zIndex: 999999, 
-          pointerEvents: 'auto',
-          position: 'fixed'
-        }}
+        className="fixed top-20 right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 rounded-xl shadow-2xl max-w-sm z-[99999]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -186,29 +181,28 @@ export default function NovasMensagensAlert() {
         {isBlocked ? (
           <div>
             <div className="flex items-start gap-3 mb-3">
-              <Bell className="w-6 h-6" />
+              <Bell className="w-6 h-6 text-red-300" />
               <div>
-                <p className="font-bold text-lg mb-1">🔊 Alertas Sonoros Ativos</p>
+                <p className="font-bold text-lg mb-1">🚫 Push Bloqueado</p>
                 <p className="text-sm opacity-90 mb-2">
-                  ✅ Você ouvirá um som quando chegar mensagem
-                </p>
-                <p className="text-xs opacity-75 mb-2">
-                  Push bloqueado - para desbloquear:
+                  (Som funcionará normalmente)
                 </p>
               </div>
             </div>
-            <div className="bg-white/10 rounded-lg p-2 text-xs space-y-1">
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Clique no <strong>🔒</strong> ao lado da URL</li>
-                <li>Mude "Notificações" para "Permitir"</li>
-                <li>Pressione F5 para recarregar</li>
+            <div className="bg-red-500/20 rounded-lg p-3 mb-3">
+              <p className="text-sm font-semibold mb-2">📍 Como desbloquear:</p>
+              <ol className="list-decimal list-inside space-y-1.5 text-xs">
+                <li>Clique no <strong className="bg-white/20 px-1 rounded">🔒 cadeado</strong> ao lado da URL</li>
+                <li>Procure <strong>"Notificações"</strong></li>
+                <li>Mude para <strong className="bg-green-500/30 px-1 rounded">"Permitir"</strong></li>
+                <li>Clique no botão abaixo ↓</li>
               </ol>
             </div>
             <button 
               onClick={() => window.location.reload()}
-              className="w-full mt-2 bg-white text-blue-600 hover:bg-gray-100 font-semibold px-3 py-2 rounded-lg text-sm"
+              className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold px-4 py-2.5 rounded-lg text-sm shadow-lg"
             >
-              ↻ Recarregar Página
+              ↻ Recarregar e Ativar Push
             </button>
           </div>
         ) : (
