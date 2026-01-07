@@ -40,6 +40,7 @@ export default function NovasMensagensAlert() {
 
     try {
       // Áudio
+      console.log('🔊 Iniciando áudio...');
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
@@ -47,20 +48,24 @@ export default function NovasMensagensAlert() {
         audioContextRef.current.resume();
       }
       setAudioEnabled(true);
+      console.log('✅ Áudio habilitado');
 
       // Push Notifications
+      console.log('🔔 Solicitando permissão...');
       const permission = await Notification.requestPermission();
+      console.log('📋 Permissão:', permission);
       
       if (permission === 'granted') {
-        // Registra service worker (via backend function)
+        console.log('📝 Registrando Service Worker...');
         const swUrl = window.location.origin + '/api/firebase-messaging-sw';
         const registration = await navigator.serviceWorker.register(swUrl);
         console.log('✅ Service Worker registrado:', registration);
 
-        // Inicializa Firebase Messaging
+        console.log('🔥 Carregando Firebase...');
         const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
         const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js');
 
+        console.log('🔥 Inicializando app Firebase...');
         const app = initializeApp({
           apiKey: "AIzaSyDummyKey",
           projectId: "gloria-vendas",
@@ -68,15 +73,18 @@ export default function NovasMensagensAlert() {
           appId: "1:19066612248:web:1206105e95972329db316d"
         });
 
+        console.log('💬 Obtendo messaging...');
         const messaging = getMessaging(app);
         const vapidKey = 'BKSc-8HFhxU8ing4XxyGoUqtN8r5v5JQLP1OJ1mPmYTev_Yo1Nw2yZWCnKQaoGLZUhpYWvjCg4C7JjYlG41BRR4';
 
+        console.log('🎫 Obtendo token FCM...');
         const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
+        console.log('🎫 Token recebido:', token ? 'SIM' : 'NÃO');
         
         if (token) {
-          console.log('✅ FCM Token:', token);
+          console.log('✅ FCM Token:', token.substring(0, 50) + '...');
           
-          // Salva token no usuário
+          console.log('💾 Salvando token no usuário...');
           const user = await base44.auth.me();
           await base44.auth.updateMe({
             custom_fields: {
@@ -84,17 +92,23 @@ export default function NovasMensagensAlert() {
               fcm_token: token
             }
           });
+          console.log('✅ Token salvo!');
 
           setPushEnabled(true);
           toast.success('🔔 Notificações push ativadas!');
+        } else {
+          console.warn('⚠️ Token não foi gerado');
+          toast.warning('Token não foi gerado, tente novamente');
         }
       } else {
+        console.log('❌ Permissão negada:', permission);
         toast.error('Permissão de notificação negada');
       }
     } catch (error) {
       console.error('❌ Erro ao inicializar push:', error);
-      toast.error('Erro ao ativar notificações push');
+      toast.error('Erro: ' + error.message);
     } finally {
+      console.log('🏁 Finalizando...');
       setIsLoading(false);
     }
   };
