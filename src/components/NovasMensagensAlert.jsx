@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { X, MessageSquare } from 'lucide-react';
+import { X, MessageSquare, Bell } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
+import { toast } from 'sonner';
 
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
 
@@ -12,6 +13,7 @@ export default function NovasMensagensAlert() {
   const [alert, setAlert] = useState(null);
   const [displayedAlerts, setDisplayedAlerts] = useState(new Set());
   const [audioEnabled, setAudioEnabled] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
   const audioContextRef = useRef(null);
   const lastMessageIdRef = useRef(null);
 
@@ -29,8 +31,9 @@ export default function NovasMensagensAlert() {
     queryFn: () => base44.entities.Contact.list(),
   });
 
-  // Inicializa áudio context
-  const initAudio = () => {
+  // Inicializa áudio context e push notifications
+  const initNotifications = async () => {
+    // Áudio
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -38,6 +41,54 @@ export default function NovasMensagensAlert() {
       audioContextRef.current.resume();
     }
     setAudioEnabled(true);
+
+    // Push Notifications
+    try {
+      const permission = await Notification.requestPermission();
+      
+      if (permission === 'granted') {
+        // Registra service worker
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        console.log('✅ Service Worker registrado:', registration);
+
+        // Inicializa Firebase Messaging
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
+        const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js');
+
+        const app = initializeApp({
+          apiKey: "AIzaSyDummyKey",
+          projectId: "gloria-vendas",
+          messagingSenderId: "19066612248",
+          appId: "1:19066612248:web:1206105e95972329db316d"
+        });
+
+        const messaging = getMessaging(app);
+        const vapidKey = 'BKSc-8HFhxU8ing4XxyGoUqtN8r5v5JQLP1OJ1mPmYTev_Yo1Nw2yZWCnKQaoGLZUhpYWvjCg4C7JjYlG41BRR4';
+
+        const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
+        
+        if (token) {
+          console.log('✅ FCM Token:', token);
+          
+          // Salva token no usuário
+          const user = await base44.auth.me();
+          await base44.auth.updateMe({
+            custom_fields: {
+              ...user.custom_fields,
+              fcm_token: token
+            }
+          });
+
+          setPushEnabled(true);
+          toast.success('🔔 Notificações push ativadas!');
+        }
+      } else {
+        toast.error('Permissão de notificação negada');
+      }
+    } catch (error) {
+      console.error('❌ Erro ao inicializar push:', error);
+      toast.error('Erro ao ativar notificações push');
+    }
   };
 
   // Detecta novas mensagens (apenas PRIMEIRA mensagem do contato)
@@ -80,15 +131,21 @@ export default function NovasMensagensAlert() {
     setAlert(null);
   };
 
-  if (!audioEnabled) {
+  if (!audioEnabled || !pushEnabled) {
     return (
-      <div className="fixed top-4 right-4 z-[100] bg-blue-600 text-white p-4 rounded-lg shadow-2xl max-w-sm animate-bounce">
-        <p className="text-sm font-medium mb-3">🔔 Ative as notificações de mensagens</p>
+      <div className="fixed top-4 right-4 z-[100] bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 rounded-xl shadow-2xl max-w-sm animate-bounce">
+        <div className="flex items-start gap-3 mb-3">
+          <Bell className="w-6 h-6 animate-pulse" />
+          <div>
+            <p className="font-bold text-lg mb-1">🔔 Ative as Notificações</p>
+            <p className="text-sm opacity-90">Receba alertas mesmo com o app fechado</p>
+          </div>
+        </div>
         <Button 
-          onClick={initAudio}
-          className="w-full bg-white text-blue-600 hover:bg-gray-100"
+          onClick={initNotifications}
+          className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold"
         >
-          Ativar Notificações
+          Ativar Notificações Push
         </Button>
       </div>
     );

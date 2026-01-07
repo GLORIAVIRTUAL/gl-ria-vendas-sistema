@@ -115,6 +115,19 @@ Deno.serve(async (req) => {
           status: 'delivered'
         });
 
+        // Envia push notification
+        try {
+          await base44.asServiceRole.functions.invoke('sendPushNotification', {
+            title: `💬 ${contactName || phone}`,
+            body: content.substring(0, 100),
+            contact_id: contact.id,
+            data: { contact_id: contact.id, phone }
+          });
+          console.log('✅ Push notification enviada');
+        } catch (pushError) {
+          console.error('⚠️ Erro ao enviar push:', pushError);
+        }
+
         // Se IA estiver habilitada, agenda processamento com delay
         if (contact.ai_enabled) {
           console.log('⏰ Agendando processamento em 8 segundos...');
