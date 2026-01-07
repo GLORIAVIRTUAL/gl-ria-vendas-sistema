@@ -191,11 +191,70 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
+            console.log(`📦 Acumuladas ${recentCustomerMessages.length} mensagens do cliente para processar`);
+
+            // PRIMEIRO: Processa mídias e transcreve áudios
+            for (const msg of recentCustomerMessages) {
+              if (msg.type === 'audio' && msg.media_url) {
+                // Se já tem conteúdo transcrito, pula
+                if (msg.content && msg.content !== 'Áudio enviado' && !msg.content.includes('erro') && msg.content.length > 20) {
+                  console.log('✅ Áudio já transcrito:', msg.content.substring(0, 50));
+                  continue;
+                }
+
+                // Verifica se tem URL válida do Base44
+                const isBase44Url = msg.media_url.includes('supabase.co') || msg.media_url.includes('base44');
+
+                if (!isBase44Url) {
+                  console.log('⚠️ Áudio ainda não baixado, ID Meta:', msg.media_url);
+                  continue;
+                }
+
+                try {
+                  console.log('🎤 Transcrevendo áudio via Whisper:', msg.media_url);
+
+                  const result = await base44.asServiceRole.functions.invoke('transcribeAudio', {
+                    audio_url: msg.media_url
+                  });
+
+                  if (result.status === 200 && result.data?.success && result.data?.transcription) {
+                    const transcription = result.data.transcription;
+                    console.log('✅ Áudio transcrito:', transcription);
+
+                    await base44.asServiceRole.entities.Message.update(msg.id, {
+                      content: `🎤 ${transcription}`
+                    });
+
+                    msg.content = `🎤 ${transcription}`;
+                  } else {
+                    console.log('⚠️ Transcrição falhou:', result.data);
+                    await base44.asServiceRole.entities.Message.update(msg.id, {
+                      content: '🎤 [áudio - não foi possível transcrever]'
+                    });
+                    msg.content = '🎤 [áudio - não foi possível transcrever]';
+                  }
+                } catch (audioError) {
+                  console.error('❌ Erro ao transcrever:', audioError.message);
+                  await base44.asServiceRole.entities.Message.update(msg.id, {
+                    content: `🎤 [erro: ${audioError.message}]`
+                  });
+                  msg.content = `🎤 [erro: ${audioError.message}]`;
+                }
+              }
+            }
+
+            // DEPOIS: Monta conteúdo acumulado (agora com transcrições)
+            const currentMessage = recentCustomerMessages
+              .map(m => m.content)
+              .join('\n');
+
+            console.log(`📝 Conteúdo acumulado para IA: ${currentMessage.substring(0, 200)}...`);
+
             // Monta histórico formatado (mensagens antigas, exceto as sendo processadas agora)
             const olderMessages = allMessages
               .filter(m => !recentCustomerMessages.some(rcm => rcm.id === m.id))
               .reverse(); // Inverte para ordem cronológica
-            
+
             const conversationContext = olderMessages
               .map(m => {
                 let msg = `${m.sender === 'customer' ? 'Cliente' : 'GLÓRIA'}: ${m.content}`;
@@ -572,66 +631,14 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
-            // Transcreve áudios usando Whisper
+            // Coleta mídias não-áudio (áudios já foram transcritos)
             const allMediaUrls = [];
-
             for (const msg of recentCustomerMessages) {
-              if (msg.type === 'audio' && msg.media_url) {
-                // Se já tem conteúdo transcrito, pula
-                if (msg.content && msg.content !== 'Áudio enviado' && !msg.content.includes('erro') && msg.content.length > 20) {
-                  console.log('✅ Áudio já transcrito:', msg.content.substring(0, 50));
-                  continue;
-                }
-
-                // Verifica se tem URL válida do Base44
-                const isBase44Url = msg.media_url.includes('supabase.co') || msg.media_url.includes('base44');
-                
-                if (!isBase44Url) {
-                  console.log('⚠️ Áudio ainda não baixado, ID Meta:', msg.media_url);
-                  continue;
-                }
-
-                try {
-                  console.log('🎤 Transcrevendo áudio via Whisper:', msg.media_url);
-                  
-                  const result = await base44.asServiceRole.functions.invoke('transcribeAudio', {
-                    audio_url: msg.media_url
-                  });
-
-                  if (result.status === 200 && result.data?.success && result.data?.transcription) {
-                    const transcription = result.data.transcription;
-                    console.log('✅ Áudio transcrito:', transcription);
-                    
-                    await base44.asServiceRole.entities.Message.update(msg.id, {
-                      content: `🎤 ${transcription}`
-                    });
-                    
-                    msg.content = `🎤 ${transcription}`;
-                  } else {
-                    console.log('⚠️ Transcrição falhou:', result.data);
-                    await base44.asServiceRole.entities.Message.update(msg.id, {
-                      content: '🎤 [áudio - não foi possível transcrever]'
-                    });
-                  }
-                } catch (audioError) {
-                  console.error('❌ Erro ao transcrever:', audioError.message);
-                  await base44.asServiceRole.entities.Message.update(msg.id, {
-                    content: `🎤 [erro: ${audioError.message}]`
-                  });
-                }
-              } else if (msg.media_url && (msg.type === 'image' || msg.type === 'document' || msg.type === 'video')) {
+              if (msg.media_url && (msg.type === 'image' || msg.type === 'document' || msg.type === 'video')) {
                 allMediaUrls.push(msg.media_url);
                 console.log(`📎 ${msg.type.toUpperCase()} será enviado para IA:`, msg.media_url);
               }
             }
-
-            // Monta conteúdo acumulado DEPOIS das transcrições
-            const currentMessage = recentCustomerMessages
-              .map(m => m.content)
-              .join('\n');
-
-            console.log(`📦 Acumuladas ${recentCustomerMessages.length} mensagens do cliente`);
-            console.log(`📝 Conteúdo acumulado (COM transcrições): ${currentMessage.substring(0, 200)}...`);
 
             const finalPrompt = fullPrompt;
 
