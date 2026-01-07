@@ -580,13 +580,53 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
-            // Coleta mídias (exceto áudios - InvokeLLM não suporta transcrição)
+            // Transcreve áudios usando Whisper
             const allMediaUrls = [];
 
             for (const msg of recentCustomerMessages) {
               if (msg.type === 'audio' && msg.media_url) {
-                // Áudios não são transcritos (InvokeLLM não suporta)
-                console.log('🎤 Áudio detectado (transcrição não disponível):', msg.media_url);
+                // Se já tem conteúdo transcrito, pula
+                if (msg.content && msg.content !== 'Áudio enviado' && !msg.content.includes('erro') && msg.content.length > 20) {
+                  console.log('✅ Áudio já transcrito:', msg.content.substring(0, 50));
+                  continue;
+                }
+
+                // Verifica se tem URL válida do Base44
+                const isBase44Url = msg.media_url.includes('supabase.co') || msg.media_url.includes('base44');
+                
+                if (!isBase44Url) {
+                  console.log('⚠️ Áudio ainda não baixado, ID Meta:', msg.media_url);
+                  continue;
+                }
+
+                try {
+                  console.log('🎤 Transcrevendo áudio via Whisper:', msg.media_url);
+                  
+                  const result = await base44.asServiceRole.functions.invoke('transcribeAudio', {
+                    audio_url: msg.media_url
+                  });
+
+                  if (result.status === 200 && result.data?.success && result.data?.transcription) {
+                    const transcription = result.data.transcription;
+                    console.log('✅ Áudio transcrito:', transcription);
+                    
+                    await base44.asServiceRole.entities.Message.update(msg.id, {
+                      content: `🎤 ${transcription}`
+                    });
+                    
+                    msg.content = `🎤 ${transcription}`;
+                  } else {
+                    console.log('⚠️ Transcrição falhou:', result.data);
+                    await base44.asServiceRole.entities.Message.update(msg.id, {
+                      content: '🎤 [áudio - não foi possível transcrever]'
+                    });
+                  }
+                } catch (audioError) {
+                  console.error('❌ Erro ao transcrever:', audioError.message);
+                  await base44.asServiceRole.entities.Message.update(msg.id, {
+                    content: `🎤 [erro: ${audioError.message}]`
+                  });
+                }
               } else if (msg.media_url && (msg.type === 'image' || msg.type === 'document' || msg.type === 'video')) {
                 allMediaUrls.push(msg.media_url);
                 console.log(`📎 ${msg.type.toUpperCase()} será enviado para IA:`, msg.media_url);
