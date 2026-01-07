@@ -97,11 +97,12 @@ export default function NovasMensagensAlert() {
       
       // Verifica se é a primeira mensagem deste contato (contato criado recentemente)
       const contactCreatedRecently = contact && 
-        new Date(contact.created_date).getTime() > (Date.now() - 60000); // Criado nos últimos 60 segundos
+        new Date(contact.created_date).getTime() > (Date.now() - 60000);
       
       if (contactCreatedRecently) {
         setAlert({
           id: latestMessage.id,
+          type: 'message',
           contact: contact,
           message: latestMessage,
           timestamp: new Date()
@@ -132,6 +133,55 @@ export default function NovasMensagensAlert() {
       lastMessageIdRef.current = latestMessage.id;
     }
   }, [messages, contacts, audioEnabled, displayedAlerts]);
+
+  // Detecta novos agendamentos
+  useEffect(() => {
+    if (agendamentos.length === 0) return;
+
+    const latestAgendamento = agendamentos[0];
+    
+    if (!lastAgendamentoIdRef.current) {
+      lastAgendamentoIdRef.current = latestAgendamento.id;
+      return;
+    }
+
+    if (latestAgendamento.id !== lastAgendamentoIdRef.current && !displayedAlerts.has('agendamento-' + latestAgendamento.id)) {
+      // Verifica se foi criado recentemente (últimos 30 segundos)
+      const createdRecently = new Date(latestAgendamento.created_date).getTime() > (Date.now() - 30000);
+      
+      if (createdRecently) {
+        setAlert({
+          id: 'agendamento-' + latestAgendamento.id,
+          type: 'agendamento',
+          agendamento: latestAgendamento,
+          timestamp: new Date()
+        });
+
+        // Toca som
+        if (audioEnabled) {
+          notificationSound.play().catch(() => {});
+        }
+
+        // Mostra notificação nativa
+        if (Notification.permission === 'granted') {
+          try {
+            new Notification('📅 Novo Agendamento!', {
+              body: `${latestAgendamento.nome_cliente} - ${latestAgendamento.produto}\n${latestAgendamento.data} às ${latestAgendamento.horario}`,
+              icon: '/logo.png',
+              tag: 'agendamento-' + latestAgendamento.id,
+              requireInteraction: true,
+              vibrate: [200, 100, 200]
+            });
+          } catch (e) {
+            console.error('Erro ao mostrar notificação:', e);
+          }
+        }
+      }
+
+      setDisplayedAlerts(prev => new Set([...prev, 'agendamento-' + latestAgendamento.id]));
+      lastAgendamentoIdRef.current = latestAgendamento.id;
+    }
+  }, [agendamentos, audioEnabled, displayedAlerts]);
 
   const handleClose = () => {
     setAlert(null);
