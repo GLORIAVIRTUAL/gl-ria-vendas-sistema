@@ -14,6 +14,7 @@ export default function NovasMensagensAlert() {
   const [displayedAlerts, setDisplayedAlerts] = useState(new Set());
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const audioContextRef = useRef(null);
   const lastMessageIdRef = useRef(null);
 
@@ -33,17 +34,21 @@ export default function NovasMensagensAlert() {
 
   // Inicializa áudio context e push notifications
   const initNotifications = async () => {
-    // Áudio
-    if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioContextRef.current.state === 'suspended') {
-      audioContextRef.current.resume();
-    }
-    setAudioEnabled(true);
+    if (isLoading) return;
+    setIsLoading(true);
+    console.log('🚀 Iniciando notificações...');
 
-    // Push Notifications
     try {
+      // Áudio
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume();
+      }
+      setAudioEnabled(true);
+
+      // Push Notifications
       const permission = await Notification.requestPermission();
       
       if (permission === 'granted') {
@@ -89,6 +94,8 @@ export default function NovasMensagensAlert() {
     } catch (error) {
       console.error('❌ Erro ao inicializar push:', error);
       toast.error('Erro ao ativar notificações push');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -136,7 +143,12 @@ export default function NovasMensagensAlert() {
     return (
       <div 
         className="fixed top-20 right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 rounded-xl shadow-2xl max-w-sm"
-        style={{ zIndex: 999999, pointerEvents: 'auto' }}
+        style={{ 
+          zIndex: 999999, 
+          pointerEvents: 'auto',
+          position: 'fixed'
+        }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-3 mb-3">
           <Bell className="w-6 h-6" />
@@ -146,13 +158,18 @@ export default function NovasMensagensAlert() {
           </div>
         </div>
         <button 
-          onClick={() => {
-            console.log('Botão clicado!');
+          type="button"
+          disabled={isLoading}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🔔 Botão clicado!');
             initNotifications();
           }}
-          className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold px-4 py-2 rounded-lg"
+          className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         >
-          Ativar Notificações Push
+          {isLoading ? 'Ativando...' : 'Ativar Notificações Push'}
         </button>
       </div>
     );
