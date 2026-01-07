@@ -611,6 +611,11 @@ async function processAIResponse(base44, contact, phone) {
             📦 PRODUTOS DISPONÍVEIS:
             ${produtosDisponiveis.map(p => `- ${p.replace(/_/g, ' ')}`).join('\n')}
 
+            💰 REGRA DE PREÇOS:
+            - Se o cliente perguntar sobre preços, responda APENAS do(s) produto(s) que ele mencionou
+            - NÃO liste preços de todos os produtos sem ser solicitado
+            - Seja específico e objetivo
+
             📋 COMANDO PARA AGENDAR:
             Quando tiver TODOS os dados, use EXATAMENTE este formato:
 
