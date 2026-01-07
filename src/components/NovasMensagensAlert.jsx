@@ -134,7 +134,7 @@ export default function NovasMensagensAlert() {
 
   if (!audioEnabled || !pushEnabled) {
     return (
-      <div className="fixed top-4 right-4 z-[100] bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 rounded-xl shadow-2xl max-w-sm animate-bounce">
+      <div className="fixed top-4 right-4 z-[9999] bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 rounded-xl shadow-2xl max-w-sm pointer-events-auto" style={{ zIndex: 9999 }}>
         <div className="flex items-start gap-3 mb-3">
           <Bell className="w-6 h-6 animate-pulse" />
           <div>
@@ -144,7 +144,7 @@ export default function NovasMensagensAlert() {
         </div>
         <Button 
           onClick={initNotifications}
-          className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold"
+          className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold cursor-pointer"
         >
           Ativar Notificações Push
         </Button>
