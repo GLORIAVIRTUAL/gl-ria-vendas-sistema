@@ -580,74 +580,13 @@ async function processAIResponse(base44, contact, phone) {
               }
             }
 
-            // Transcreve áudios e ATUALIZA o conteúdo da mensagem
+            // Coleta mídias (exceto áudios - InvokeLLM não suporta transcrição)
             const allMediaUrls = [];
 
             for (const msg of recentCustomerMessages) {
               if (msg.type === 'audio' && msg.media_url) {
-                // Se já tem conteúdo transcrito, pula
-                if (msg.content && msg.content !== 'Áudio enviado' && !msg.content.includes('erro') && msg.content.length > 20) {
-                  console.log('✅ Áudio já transcrito:', msg.content.substring(0, 50));
-                  continue;
-                }
-
-                // Verifica se tem URL válida do Base44
-                const isBase44Url = msg.media_url.includes('supabase.co') || msg.media_url.includes('base44');
-                
-                if (!isBase44Url) {
-                  console.log('⚠️ Áudio ainda não baixado, ID Meta:', msg.media_url);
-                  continue;
-                }
-
-                try {
-                  console.log('🎤 [INÍCIO] Transcrevendo áudio');
-                  console.log('📍 URL:', msg.media_url);
-                  console.log('📍 Message ID:', msg.id);
-                  
-                  // Testa se a URL é acessível
-                  const testResponse = await fetch(msg.media_url);
-                  console.log('📍 Status do arquivo:', testResponse.status);
-                  console.log('📍 Content-Type:', testResponse.headers.get('content-type'));
-                  
-                  if (!testResponse.ok) {
-                    throw new Error(`Arquivo não acessível: ${testResponse.status}`);
-                  }
-                  
-                  console.log('📍 Chamando InvokeLLM...');
-                  const transcription = await base44.asServiceRole.integrations.Core.InvokeLLM({
-                    prompt: 'Ouça este áudio e transcreva em português tudo que foi falado.',
-                    file_urls: [msg.media_url]
-                  });
-                  
-                  console.log('📍 Resposta recebida:', transcription);
-                  console.log('📍 Tipo:', typeof transcription);
-                  console.log('📍 Tamanho:', transcription?.length);
-                  
-                  if (transcription && transcription.trim().length > 0) {
-                    console.log('✅ Áudio transcrito com sucesso:', transcription);
-                    
-                    await base44.asServiceRole.entities.Message.update(msg.id, {
-                      content: `🎤 ${transcription}`
-                    });
-                    
-                    msg.content = `🎤 ${transcription}`;
-                  } else {
-                    console.log('⚠️ Transcrição retornou vazia');
-                    await base44.asServiceRole.entities.Message.update(msg.id, {
-                      content: '🎤 [áudio recebido - transcrição vazia]'
-                    });
-                  }
-                } catch (audioError) {
-                  console.error('❌ [ERRO DETALHADO] Falha na transcrição');
-                  console.error('❌ Mensagem:', audioError.message);
-                  console.error('❌ Stack:', audioError.stack);
-                  console.error('❌ Nome:', audioError.name);
-                  console.error('❌ Dados completos:', JSON.stringify(audioError, null, 2));
-                  
-                  await base44.asServiceRole.entities.Message.update(msg.id, {
-                    content: `🎤 [erro: ${audioError.message}]`
-                  });
-                }
+                // Áudios não são transcritos (InvokeLLM não suporta)
+                console.log('🎤 Áudio detectado (transcrição não disponível):', msg.media_url);
               } else if (msg.media_url && (msg.type === 'image' || msg.type === 'document' || msg.type === 'video')) {
                 allMediaUrls.push(msg.media_url);
                 console.log(`📎 ${msg.type.toUpperCase()} será enviado para IA:`, msg.media_url);
