@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { X, MessageSquare, Bell } from 'lucide-react';
+import { X, MessageSquare, Bell, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
