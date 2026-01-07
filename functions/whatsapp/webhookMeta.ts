@@ -327,6 +327,15 @@ async function processAIResponse(base44, contact, phone) {
             // Busca campos personalizados já capturados e extrai dados da conversa ANTES de enviar para IA
             const customFields = contact.custom_fields || {};
             const updateFields = { ...customFields };
+
+            // Detecta se cliente recusou agendamento
+            const recusouAgendamento = /n[ãa]o quero agendar|n[ãa]o desejo agendar|n[ãa]o quero marcar|n[ãa]o quero reunião|n[ãa]o preciso de reuni[ãa]o|só queria saber|só quero informa[çc][ãa]o|apenas informa[çc][ãa]o/i.test(currentMessage);
+
+            if (recusouAgendamento) {
+              updateFields.recusou_agendamento = true;
+              updateFields.data_recusa = new Date().toISOString();
+              console.log('🚫 Cliente recusou agendamento');
+            }
             
             // Extrai produto
             if (!updateFields.produto) {
@@ -547,7 +556,19 @@ async function processAIResponse(base44, contact, phone) {
 
             ${shouldTransfer ? '⚠️ ATENÇÃO: Cliente solicitou falar com humano. Informe que está transferindo para atendente.' : ''}
 
-            ${temAgendamentoRecente ? `
+            ${updateFields.recusou_agendamento ? `
+            🚫 CLIENTE RECUSOU AGENDAMENTO
+            ⚠️ Este cliente JÁ DISSE que NÃO quer agendar reunião
+
+            🚨 REGRA OBRIGATÓRIA:
+            - NÃO pergunte sobre agendar novamente
+            - NÃO insista em marcar reunião
+            - NÃO peça dados para agendamento (nome, email, data, horário)
+            - Seja prestativo respondendo dúvidas sobre os produtos
+            - Forneça informações que ele solicitar
+            - Aceite despedidas naturalmente
+            - Se ele MUDAR DE IDEIA e quiser agendar, aí sim pode perguntar os dados
+            ` : temAgendamentoRecente ? `
             🎉 AGENDAMENTO JÁ REALIZADO!
             ✅ Este cliente já tem uma reunião confirmada no sistema
 
