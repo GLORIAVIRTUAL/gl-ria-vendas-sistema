@@ -119,21 +119,6 @@ export default function NovasMensagensAlert() {
         if (audioEnabled) {
           notificationSound.play().catch(() => {});
         }
-
-        // Mostra notificação nativa
-        if (Notification.permission === 'granted') {
-          try {
-            new Notification('📅 Novo Agendamento!', {
-              body: `${latestAgendamento.nome_cliente} - ${latestAgendamento.produto}\n${latestAgendamento.data} às ${latestAgendamento.horario}`,
-              icon: '/logo.png',
-              tag: 'agendamento-' + latestAgendamento.id,
-              requireInteraction: true,
-              vibrate: [200, 100, 200]
-            });
-          } catch (e) {
-            console.error('Erro ao mostrar notificação:', e);
-          }
-        }
       }
 
       setDisplayedAlerts(prev => new Set([...prev, 'agendamento-' + latestAgendamento.id]));
