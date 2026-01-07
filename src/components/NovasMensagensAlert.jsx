@@ -18,6 +18,7 @@ export default function NovasMensagensAlert() {
   const [dismissed, setDismissed] = useState(false);
   const audioContextRef = useRef(null);
   const lastMessageIdRef = useRef(null);
+  const lastAgendamentoIdRef = useRef(null);
 
   const { data: messages = [] } = useQuery({
     queryKey: ['latest-messages'],
