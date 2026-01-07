@@ -60,69 +60,21 @@ export default function NovasMensagensAlert() {
       setAudioEnabled(true);
       console.log('✅ Áudio habilitado');
 
-      // Push Notifications
-      console.log('🔔 Verificando permissão...');
-      let permission = Notification.permission;
-      console.log('📋 Permissão atual:', permission);
-      
-      // Só solicita se ainda não foi decidido
-      if (permission === 'default') {
-        console.log('⏳ Solicitando permissão ao usuário...');
-        permission = await Notification.requestPermission();
-        console.log('📋 Nova permissão:', permission);
-      }
+      // Notificações Web simples (SEM Firebase - só Web API nativa)
+      console.log('🔔 Solicitando permissão...');
+      const permission = await Notification.requestPermission();
+      console.log('📋 Permissão:', permission);
       
       if (permission === 'granted') {
-        console.log('📝 Registrando Service Worker...');
-        const swUrl = window.location.origin + '/api/firebase-messaging-sw';
-        const registration = await navigator.serviceWorker.register(swUrl);
-        console.log('✅ Service Worker registrado:', registration);
-
-        console.log('🔥 Carregando Firebase...');
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
-        const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js');
-
-        console.log('🔥 Inicializando app Firebase...');
-        const app = initializeApp({
-          apiKey: "AIzaSyDummyKey",
-          projectId: "gloria-vendas",
-          messagingSenderId: "19066612248",
-          appId: "1:19066612248:web:1206105e95972329db316d"
-        });
-
-        console.log('💬 Obtendo messaging...');
-        const messaging = getMessaging(app);
-        const vapidKey = 'BKSc-8HFhxU8ing4XxyGoUqtN8r5v5JQLP1OJ1mPmYTev_Yo1Nw2yZWCnKQaoGLZUhpYWvjCg4C7JjYlG41BRR4';
-
-        console.log('🎫 Obtendo token FCM...');
-        const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
-        console.log('🎫 Token recebido:', token ? 'SIM' : 'NÃO');
-        
-        if (token) {
-          console.log('✅ FCM Token:', token.substring(0, 50) + '...');
-          
-          console.log('💾 Salvando token no usuário...');
-          const user = await base44.auth.me();
-          await base44.auth.updateMe({
-            custom_fields: {
-              ...user.custom_fields,
-              fcm_token: token
-            }
-          });
-          console.log('✅ Token salvo!');
-
-          setPushEnabled(true);
-          toast.success('🔔 Notificações push ativadas!');
-        } else {
-          console.warn('⚠️ Token não foi gerado');
-          toast.warning('Token não foi gerado, tente novamente');
-        }
+        console.log('✅ Notificações permitidas!');
+        setPushEnabled(true);
+        toast.success('✅ Alertas ativados! Som + Notificações');
+      } else if (permission === 'denied') {
+        console.warn('⚠️ Notificações bloqueadas pelo navegador');
+        toast.warning('⚠️ Notificações bloqueadas - apenas som ativo');
       } else {
-        console.log('❌ Permissão negada:', permission);
-        // Se negou, pelo menos habilita áudio e explica como ativar push
-        toast.error('Para receber notificações push, ative nas configurações do navegador (ícone 🔒 na barra de endereço)', {
-          duration: 8000
-        });
+        console.log('ℹ️ Permissão não concedida');
+        toast.info('Apenas alertas sonoros ativos');
       }
     } catch (error) {
       console.error('❌ Erro ao inicializar push:', error);
