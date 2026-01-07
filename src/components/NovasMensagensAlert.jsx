@@ -60,21 +60,47 @@ export default function NovasMensagensAlert() {
       setAudioEnabled(true);
       console.log('✅ Áudio habilitado');
 
-      // Notificações Web simples (SEM Firebase - só Web API nativa)
+      // Push Notifications com Firebase
       console.log('🔔 Solicitando permissão...');
       const permission = await Notification.requestPermission();
       console.log('📋 Permissão:', permission);
       
       if (permission === 'granted') {
-        console.log('✅ Notificações permitidas!');
-        setPushEnabled(true);
-        toast.success('✅ Alertas ativados! Som + Notificações');
-      } else if (permission === 'denied') {
-        console.warn('⚠️ Notificações bloqueadas pelo navegador');
-        toast.warning('⚠️ Notificações bloqueadas - apenas som ativo');
+        console.log('📝 Registrando Service Worker...');
+        const swUrl = window.location.origin + '/api/firebase-messaging-sw';
+        const registration = await navigator.serviceWorker.register(swUrl);
+        console.log('✅ Service Worker registrado');
+
+        console.log('🔥 Carregando Firebase...');
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
+        const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js');
+
+        const app = initializeApp({
+          projectId: "gloria-vendas",
+          messagingSenderId: "19066612248",
+          appId: "1:19066612248:web:1206105e95972329db316d"
+        });
+
+        const messaging = getMessaging(app);
+        const vapidKey = 'BKSc-8HFhxU8ing4XxyGoUqtN8r5v5JQLP1OJ1mPmYTev_Yo1Nw2yZWCnKQaoGLZUhpYWvjCg4C7JjYlG41BRR4';
+
+        console.log('🎫 Obtendo token FCM...');
+        const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
+        
+        if (token) {
+          console.log('✅ Token FCM recebido');
+          const user = await base44.auth.me();
+          await base44.auth.updateMe({
+            custom_fields: { ...user.custom_fields, fcm_token: token }
+          });
+          setPushEnabled(true);
+          toast.success('✅ Push notifications ativadas!');
+        } else {
+          console.error('❌ Não conseguiu gerar token FCM');
+          toast.error('Erro ao gerar token FCM');
+        }
       } else {
-        console.log('ℹ️ Permissão não concedida');
-        toast.info('Apenas alertas sonoros ativos');
+        toast.warning('⚠️ Permissão negada - apenas som ativo');
       }
     } catch (error) {
       console.error('❌ Erro ao inicializar push:', error);
