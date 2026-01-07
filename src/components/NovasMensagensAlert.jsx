@@ -13,9 +13,6 @@ export default function NovasMensagensAlert() {
   const [alert, setAlert] = useState(null);
   const [displayedAlerts, setDisplayedAlerts] = useState(new Set());
   const [audioEnabled, setAudioEnabled] = useState(false);
-  const [pushEnabled, setPushEnabled] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
   const audioContextRef = useRef(null);
   const lastMessageIdRef = useRef(null);
   const lastAgendamentoIdRef = useRef(null);
@@ -40,22 +37,9 @@ export default function NovasMensagensAlert() {
     refetchInterval: 15000,
   });
 
-  // Inicia áudio automaticamente se tiver permissão
+  // Ativa áudio automaticamente no primeiro clique
   useEffect(() => {
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      console.log('✅ Notificações permitidas, ativando áudio');
-      setAudioEnabled(true);
-      setPushEnabled(true);
-    }
-  }, []);
-
-  // Inicializa áudio e notificações
-  const initNotifications = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-
-    try {
-      // Áudio
+    const handleFirstClick = async () => {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
       }
@@ -63,23 +47,12 @@ export default function NovasMensagensAlert() {
         await audioContextRef.current.resume();
       }
       setAudioEnabled(true);
+      document.removeEventListener('click', handleFirstClick);
+    };
 
-      // Push
-      const permission = await Notification.requestPermission();
-
-      if (permission === 'granted') {
-        setPushEnabled(true);
-        toast.success('✅ Notificações ativadas!');
-      } else {
-        toast.warning('⚠️ Push bloqueado - som ativo');
-      }
-    } catch (error) {
-      console.error('Erro:', error);
-      toast.error('Erro: ' + error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    document.addEventListener('click', handleFirstClick);
+    return () => document.removeEventListener('click', handleFirstClick);
+  }, []);
 
   // Detecta novas mensagens (apenas PRIMEIRA mensagem do contato)
   useEffect(() => {
