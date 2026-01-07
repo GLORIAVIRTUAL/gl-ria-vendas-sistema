@@ -33,6 +33,14 @@ export default function NovasMensagensAlert() {
     queryFn: () => base44.entities.Contact.list(),
   });
 
+  // Verifica se notificações já estão permitidas ao carregar
+  useEffect(() => {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      console.log('✅ Permissão já concedida, inicializando automaticamente...');
+      initNotifications();
+    }
+  }, []);
+
   // Inicializa áudio context e push notifications
   const initNotifications = async () => {
     if (isLoading) return;
