@@ -193,25 +193,22 @@ async function processAIResponse(base44, contact, phone) {
 
             console.log(`📦 Acumuladas ${recentCustomerMessages.length} mensagens do cliente para processar`);
 
-            // PRIMEIRO: Processa mídias e transcreve áudios
+            // Map para armazenar transcrições
+            const transcricoes = new Map();
+
+            // PRIMEIRO: Transcreve TODOS os áudios
             for (const msg of recentCustomerMessages) {
               if (msg.type === 'audio' && msg.media_url) {
-                // Se já tem conteúdo transcrito, pula
-                if (msg.content && msg.content !== 'Áudio enviado' && !msg.content.includes('erro') && msg.content.length > 20) {
-                  console.log('✅ Áudio já transcrito:', msg.content.substring(0, 50));
-                  continue;
-                }
-
-                // Verifica se tem URL válida do Base44
                 const isBase44Url = msg.media_url.includes('supabase.co') || msg.media_url.includes('base44');
 
                 if (!isBase44Url) {
                   console.log('⚠️ Áudio ainda não baixado, ID Meta:', msg.media_url);
+                  transcricoes.set(msg.id, '[Áudio ainda sendo processado...]');
                   continue;
                 }
 
                 try {
-                  console.log('🎤 Transcrevendo áudio via Whisper:', msg.media_url);
+                  console.log('🎤 Transcrevendo áudio:', msg.media_url.substring(0, 80));
 
                   const result = await base44.asServiceRole.functions.invoke('transcribeAudio', {
                     audio_url: msg.media_url
@@ -219,36 +216,35 @@ async function processAIResponse(base44, contact, phone) {
 
                   if (result.status === 200 && result.data?.success && result.data?.transcription) {
                     const transcription = result.data.transcription;
-                    console.log('✅ Áudio transcrito:', transcription);
+                    console.log('✅ TRANSCRIÇÃO:', transcription);
+                    transcricoes.set(msg.id, transcription);
 
-                    await base44.asServiceRole.entities.Message.update(msg.id, {
+                    // Salva no banco em background (não espera)
+                    base44.asServiceRole.entities.Message.update(msg.id, {
                       content: `🎤 ${transcription}`
-                    });
-
-                    msg.content = `🎤 ${transcription}`;
+                    }).catch(e => console.error('Erro ao salvar transcrição:', e));
                   } else {
-                    console.log('⚠️ Transcrição falhou:', result.data);
-                    await base44.asServiceRole.entities.Message.update(msg.id, {
-                      content: '🎤 [áudio - não foi possível transcrever]'
-                    });
-                    msg.content = '🎤 [áudio - não foi possível transcrever]';
+                    console.log('⚠️ Falhou:', result.data);
+                    transcricoes.set(msg.id, '[Não foi possível transcrever o áudio]');
                   }
-                } catch (audioError) {
-                  console.error('❌ Erro ao transcrever:', audioError.message);
-                  await base44.asServiceRole.entities.Message.update(msg.id, {
-                    content: `🎤 [erro: ${audioError.message}]`
-                  });
-                  msg.content = `🎤 [erro: ${audioError.message}]`;
+                } catch (error) {
+                  console.error('❌ Erro:', error.message);
+                  transcricoes.set(msg.id, '[Erro ao transcrever áudio]');
                 }
               }
             }
 
-            // DEPOIS: Monta conteúdo acumulado (agora com transcrições)
+            // DEPOIS: Monta conteúdo usando transcrições
             const currentMessage = recentCustomerMessages
-              .map(m => m.content)
-              .join('\n');
+              .map(msg => {
+                if (msg.type === 'audio' && transcricoes.has(msg.id)) {
+                  return `🎤 ÁUDIO: ${transcricoes.get(msg.id)}`;
+                }
+                return msg.content;
+              })
+              .join('\n\n');
 
-            console.log(`📝 Conteúdo acumulado para IA: ${currentMessage.substring(0, 200)}...`);
+            console.log(`📝 CONTEÚDO FINAL PARA IA:\n${currentMessage}`);
 
             // Monta histórico formatado (mensagens antigas, exceto as sendo processadas agora)
             const olderMessages = allMessages
