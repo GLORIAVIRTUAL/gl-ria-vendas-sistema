@@ -85,21 +85,6 @@ export default function NovasMensagensAlert() {
         if (audioEnabled) {
           notificationSound.play().catch(() => {});
         }
-
-        // Mostra notificação nativa
-        if (Notification.permission === 'granted') {
-          try {
-            new Notification('💬 Nova Mensagem WhatsApp', {
-              body: `${contact?.name || contact?.phone}: ${latestMessage.content.substring(0, 100)}`,
-              icon: '/logo.png',
-              tag: 'nova-mensagem-' + latestMessage.id,
-              requireInteraction: true,
-              vibrate: [200, 100, 200]
-            });
-          } catch (e) {
-            console.error('Erro ao mostrar notificação:', e);
-          }
-        }
       }
 
       setDisplayedAlerts(prev => new Set([...prev, latestMessage.id]));
