@@ -209,6 +209,9 @@ export default function NovasMensagensAlert() {
     setAlert(null);
   };
 
+  // Verifica se notificações estão bloqueadas
+  const isBlocked = typeof Notification !== 'undefined' && Notification.permission === 'denied';
+
   if ((!audioEnabled || !pushEnabled) && !dismissed) {
     return (
       <div 
@@ -227,31 +230,54 @@ export default function NovasMensagensAlert() {
           <X className="w-5 h-5" />
         </button>
         
-        <div className="flex items-start gap-3 mb-3">
-          <Bell className="w-6 h-6" />
+        {isBlocked ? (
           <div>
-            <p className="font-bold text-lg mb-1">🔔 Ative as Notificações</p>
-            <p className="text-sm opacity-90">
-              {audioEnabled && !pushEnabled 
-                ? '✅ Áudio ativo. Para push, desblqueie nas configurações do navegador (ícone 🔒)' 
-                : 'Receba alertas de novas mensagens'}
-            </p>
+            <div className="flex items-start gap-3 mb-3">
+              <Bell className="w-6 h-6" />
+              <div>
+                <p className="font-bold text-lg mb-1">🚫 Notificações Bloqueadas</p>
+                <p className="text-sm opacity-90 mb-2">
+                  Você bloqueou as notificações antes. Para receber alertas:
+                </p>
+              </div>
+            </div>
+            <div className="bg-white/10 rounded-lg p-3 text-sm space-y-2">
+              <p className="font-semibold">📍 Como desbloquear:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Clique no ícone <strong>🔒</strong> na barra de endereço</li>
+                <li>Encontre <strong>"Notificações"</strong></li>
+                <li>Mude para <strong>"Permitir"</strong></li>
+                <li>Recarregue a página (F5)</li>
+              </ol>
+            </div>
           </div>
-        </div>
-        <button 
-          type="button"
-          disabled={isLoading}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('🔔 Botão clicado!');
-            initNotifications();
-          }}
-          className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ pointerEvents: 'auto', cursor: 'pointer' }}
-        >
-          {isLoading ? 'Ativando...' : audioEnabled && !pushEnabled ? 'Tentar Novamente' : 'Ativar Notificações'}
-        </button>
+        ) : (
+          <>
+            <div className="flex items-start gap-3 mb-3">
+              <Bell className="w-6 h-6" />
+              <div>
+                <p className="font-bold text-lg mb-1">🔔 Ative as Notificações</p>
+                <p className="text-sm opacity-90">
+                  Receba alertas de novas mensagens
+                </p>
+              </div>
+            </div>
+            <button 
+              type="button"
+              disabled={isLoading}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🔔 Botão clicado!');
+                initNotifications();
+              }}
+              className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+            >
+              {isLoading ? 'Ativando...' : 'Ativar Notificações'}
+            </button>
+          </>
+        )}
       </div>
     );
   }
