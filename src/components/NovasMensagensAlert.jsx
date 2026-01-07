@@ -134,20 +134,26 @@ export default function NovasMensagensAlert() {
 
   if (!audioEnabled || !pushEnabled) {
     return (
-      <div className="fixed top-4 right-4 z-[9999] bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 rounded-xl shadow-2xl max-w-sm pointer-events-auto" style={{ zIndex: 9999 }}>
+      <div 
+        className="fixed top-20 right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 rounded-xl shadow-2xl max-w-sm"
+        style={{ zIndex: 999999, pointerEvents: 'auto' }}
+      >
         <div className="flex items-start gap-3 mb-3">
-          <Bell className="w-6 h-6 animate-pulse" />
+          <Bell className="w-6 h-6" />
           <div>
             <p className="font-bold text-lg mb-1">🔔 Ative as Notificações</p>
             <p className="text-sm opacity-90">Receba alertas mesmo com o app fechado</p>
           </div>
         </div>
-        <Button 
-          onClick={initNotifications}
-          className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold cursor-pointer"
+        <button 
+          onClick={() => {
+            console.log('Botão clicado!');
+            initNotifications();
+          }}
+          className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold px-4 py-2 rounded-lg"
         >
           Ativar Notificações Push
-        </Button>
+        </button>
       </div>
     );
   }
