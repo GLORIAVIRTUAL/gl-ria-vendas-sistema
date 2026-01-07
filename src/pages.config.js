@@ -35,6 +35,7 @@ import PipelineIA from './pages/PipelineIA';
 import TesteStripe from './pages/TesteStripe';
 import TesteWebhook from './pages/TesteWebhook';
 import TesteWhatsApp from './pages/TesteWhatsApp';
+import ExportarChatbot from './pages/ExportarChatbot';
 import __Layout from './Layout.jsx';
 
 
@@ -76,6 +77,7 @@ export const PAGES = {
     "TesteStripe": TesteStripe,
     "TesteWebhook": TesteWebhook,
     "TesteWhatsApp": TesteWhatsApp,
+    "ExportarChatbot": ExportarChatbot,
 }
 
 export const pagesConfig = {
