@@ -33,12 +33,49 @@ export default function NovasMensagensAlert() {
     queryFn: () => base44.entities.Contact.list(),
   });
 
-  // Verifica se notificações já estão permitidas ao carregar
+  // Verifica permissão ao carregar e inicia automaticamente
   useEffect(() => {
-    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-      console.log('✅ Permissão já concedida, inicializando automaticamente...');
-      initNotifications();
-    }
+    const checkPermission = async () => {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        console.log('✅ Permissão já concedida, inicializando...');
+        setAudioEnabled(true);
+        
+        // Já marca como habilitado para esconder o alerta
+        setPushEnabled(true);
+        
+        // Registra o token em background
+        try {
+          const swUrl = window.location.origin + '/api/firebase-messaging-sw';
+          const registration = await navigator.serviceWorker.register(swUrl);
+          
+          const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
+          const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js');
+
+          const app = initializeApp({
+            apiKey: "AIzaSyDummyKey",
+            projectId: "gloria-vendas",
+            messagingSenderId: "19066612248",
+            appId: "1:19066612248:web:1206105e95972329db316d"
+          });
+
+          const messaging = getMessaging(app);
+          const vapidKey = 'BKSc-8HFhxU8ing4XxyGoUqtN8r5v5JQLP1OJ1mPmYTev_Yo1Nw2yZWCnKQaoGLZUhpYWvjCg4C7JjYlG41BRR4';
+          const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: registration });
+          
+          if (token) {
+            const user = await base44.auth.me();
+            await base44.auth.updateMe({
+              custom_fields: { ...user.custom_fields, fcm_token: token }
+            });
+            console.log('✅ Push configurado em background');
+          }
+        } catch (error) {
+          console.error('⚠️ Erro ao configurar push:', error);
+        }
+      }
+    };
+    
+    checkPermission();
   }, []);
 
   // Inicializa áudio context e push notifications
