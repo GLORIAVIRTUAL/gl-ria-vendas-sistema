@@ -97,9 +97,16 @@ export default function NovasMensagensAlert() {
       console.log('✅ Áudio habilitado');
 
       // Push Notifications
-      console.log('🔔 Solicitando permissão...');
-      const permission = await Notification.requestPermission();
-      console.log('📋 Permissão:', permission);
+      console.log('🔔 Verificando permissão...');
+      let permission = Notification.permission;
+      console.log('📋 Permissão atual:', permission);
+      
+      // Só solicita se ainda não foi decidido
+      if (permission === 'default') {
+        console.log('⏳ Solicitando permissão ao usuário...');
+        permission = await Notification.requestPermission();
+        console.log('📋 Nova permissão:', permission);
+      }
       
       if (permission === 'granted') {
         console.log('📝 Registrando Service Worker...');
