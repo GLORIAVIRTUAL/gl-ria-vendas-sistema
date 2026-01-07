@@ -33,6 +33,12 @@ export default function NovasMensagensAlert() {
     queryFn: () => base44.entities.Contact.list(),
   });
 
+  const { data: agendamentos = [] } = useQuery({
+    queryKey: ['latest-agendamentos'],
+    queryFn: () => base44.entities.Agendamento.list('-created_date', 10),
+    refetchInterval: 15000,
+  });
+
   // Inicia áudio automaticamente se tiver permissão
   useEffect(() => {
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
