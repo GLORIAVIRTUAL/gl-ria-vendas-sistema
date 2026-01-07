@@ -261,6 +261,45 @@ export default function NovasMensagensAlert() {
 
   if (!alert) return null;
 
+  if (alert.type === 'agendamento') {
+    return (
+      <div className="fixed top-4 right-4 z-[100] bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-5 rounded-xl shadow-2xl max-w-md animate-in slide-in-from-right duration-500">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="bg-white/20 rounded-full p-3">
+              <Calendar className="w-6 h-6 animate-pulse" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg mb-1">📅 Novo Agendamento!</h3>
+              <p className="text-sm opacity-90 mb-1">
+                <span className="font-semibold">{alert.agendamento.nome_cliente}</span>
+              </p>
+              <p className="text-sm bg-white/10 rounded p-2">
+                <strong>{alert.agendamento.produto.replace(/_/g, ' ')}</strong><br/>
+                📅 {new Date(alert.agendamento.data + 'T00:00:00').toLocaleDateString('pt-BR')}<br/>
+                🕐 {alert.agendamento.horario}
+              </p>
+              <Link to={createPageUrl("Agendamentos")}>
+                <Button 
+                  className="mt-3 w-full bg-white text-blue-600 hover:bg-gray-100"
+                  size="sm"
+                >
+                  Ver Agendamentos →
+                </Button>
+              </Link>
+            </div>
+          </div>
+          <button
+            onClick={handleClose}
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed top-4 right-4 z-[100] bg-gradient-to-r from-green-500 to-emerald-600 text-white p-5 rounded-xl shadow-2xl max-w-md animate-in slide-in-from-right duration-500">
       <div className="flex items-start justify-between gap-3">
