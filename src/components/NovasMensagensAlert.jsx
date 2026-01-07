@@ -15,6 +15,7 @@ export default function NovasMensagensAlert() {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [pushEnabled, setPushEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const audioContextRef = useRef(null);
   const lastMessageIdRef = useRef(null);
 
@@ -156,7 +157,7 @@ export default function NovasMensagensAlert() {
     setAlert(null);
   };
 
-  if (!audioEnabled || !pushEnabled) {
+  if ((!audioEnabled || !pushEnabled) && !dismissed) {
     return (
       <div 
         className="fixed top-20 right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 rounded-xl shadow-2xl max-w-sm"
@@ -167,14 +168,21 @@ export default function NovasMensagensAlert() {
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        <button
+          onClick={() => setDismissed(true)}
+          className="absolute top-2 right-2 text-white/80 hover:text-white transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        
         <div className="flex items-start gap-3 mb-3">
           <Bell className="w-6 h-6" />
           <div>
             <p className="font-bold text-lg mb-1">🔔 Ative as Notificações</p>
             <p className="text-sm opacity-90">
               {audioEnabled && !pushEnabled 
-                ? '✅ Áudio ativo. Para notificações push, clique no 🔒 na barra de endereço' 
-                : 'Receba alertas mesmo com o app fechado'}
+                ? '✅ Áudio ativo. Para push, desblqueie nas configurações do navegador (ícone 🔒)' 
+                : 'Receba alertas de novas mensagens'}
             </p>
           </div>
         </div>
