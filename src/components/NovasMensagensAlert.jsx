@@ -212,7 +212,7 @@ export default function NovasMensagensAlert() {
   // Verifica se notificações estão bloqueadas
   const isBlocked = typeof Notification !== 'undefined' && Notification.permission === 'denied';
 
-  if ((!audioEnabled || !pushEnabled) && !dismissed) {
+  if (!audioEnabled && !dismissed) {
     return (
       <div 
         className="fixed top-20 right-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 rounded-xl shadow-2xl max-w-sm"
@@ -235,30 +235,37 @@ export default function NovasMensagensAlert() {
             <div className="flex items-start gap-3 mb-3">
               <Bell className="w-6 h-6" />
               <div>
-                <p className="font-bold text-lg mb-1">🚫 Notificações Bloqueadas</p>
+                <p className="font-bold text-lg mb-1">🔊 Alertas Sonoros Ativos</p>
                 <p className="text-sm opacity-90 mb-2">
-                  Você bloqueou as notificações antes. Para receber alertas:
+                  ✅ Você ouvirá um som quando chegar mensagem
+                </p>
+                <p className="text-xs opacity-75 mb-2">
+                  Push bloqueado - para desbloquear:
                 </p>
               </div>
             </div>
-            <div className="bg-white/10 rounded-lg p-3 text-sm space-y-2">
-              <p className="font-semibold">📍 Como desbloquear:</p>
+            <div className="bg-white/10 rounded-lg p-2 text-xs space-y-1">
               <ol className="list-decimal list-inside space-y-1">
-                <li>Clique no ícone <strong>🔒</strong> na barra de endereço</li>
-                <li>Encontre <strong>"Notificações"</strong></li>
-                <li>Mude para <strong>"Permitir"</strong></li>
-                <li>Recarregue a página (F5)</li>
+                <li>Clique no <strong>🔒</strong> ao lado da URL</li>
+                <li>Mude "Notificações" para "Permitir"</li>
+                <li>Pressione F5 para recarregar</li>
               </ol>
             </div>
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full mt-2 bg-white text-blue-600 hover:bg-gray-100 font-semibold px-3 py-2 rounded-lg text-sm"
+            >
+              ↻ Recarregar Página
+            </button>
           </div>
         ) : (
           <>
             <div className="flex items-start gap-3 mb-3">
               <Bell className="w-6 h-6" />
               <div>
-                <p className="font-bold text-lg mb-1">🔔 Ative as Notificações</p>
+                <p className="font-bold text-lg mb-1">🔔 Ativar Alertas</p>
                 <p className="text-sm opacity-90">
-                  Receba alertas de novas mensagens
+                  Som + Notificações Push
                 </p>
               </div>
             </div>
@@ -268,13 +275,11 @@ export default function NovasMensagensAlert() {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('🔔 Botão clicado!');
                 initNotifications();
               }}
-              className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ pointerEvents: 'auto', cursor: 'pointer' }}
+              className="w-full bg-white text-blue-600 hover:bg-gray-100 font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
             >
-              {isLoading ? 'Ativando...' : 'Ativar Notificações'}
+              {isLoading ? '⏳ Ativando...' : '▶ Ativar Agora'}
             </button>
           </>
         )}
