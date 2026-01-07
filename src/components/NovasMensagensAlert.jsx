@@ -47,8 +47,9 @@ export default function NovasMensagensAlert() {
       const permission = await Notification.requestPermission();
       
       if (permission === 'granted') {
-        // Registra service worker
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        // Registra service worker (via backend function)
+        const swUrl = window.location.origin + '/api/firebase-messaging-sw';
+        const registration = await navigator.serviceWorker.register(swUrl);
         console.log('✅ Service Worker registrado:', registration);
 
         // Inicializa Firebase Messaging
