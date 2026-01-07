@@ -40,9 +40,6 @@ export default function NovasMensagensAlert() {
         console.log('✅ Permissão já concedida, inicializando...');
         setAudioEnabled(true);
         
-        // Já marca como habilitado para esconder o alerta
-        setPushEnabled(true);
-        
         // Registra o token em background
         try {
           const swUrl = window.location.origin + '/api/firebase-messaging-sw';
@@ -68,9 +65,12 @@ export default function NovasMensagensAlert() {
               custom_fields: { ...user.custom_fields, fcm_token: token }
             });
             console.log('✅ Push configurado em background');
+            // SÓ marca como habilitado DEPOIS de tudo funcionar
+            setPushEnabled(true);
           }
         } catch (error) {
           console.error('⚠️ Erro ao configurar push:', error);
+          // Se der erro, NÃO marca como habilitado
         }
       }
     };
