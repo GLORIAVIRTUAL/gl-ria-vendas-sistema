@@ -476,7 +476,28 @@ async function processAIResponse(base44, contact, phone) {
                 .filter(a => a.status === 'Agendada' || a.status === 'Confirmada')
                 .map(a => a.horario);
 
-              const horariosLivres = horariosComerciais.filter(h => !horariosOcupados.includes(h));
+              // Filtra horários ocupados
+              let horariosLivres = horariosComerciais.filter(h => !horariosOcupados.includes(h));
+
+              // Se for hoje, remove horários que já passaram
+              const hoje = new Date();
+              const dataSelecionada = new Date(dataSalva + 'T00:00:00');
+              const ehHoje = dataSelecionada.toDateString() === hoje.toDateString();
+
+              if (ehHoje) {
+                const horaAtual = hoje.getHours();
+                const minutoAtual = hoje.getMinutes();
+
+                horariosLivres = horariosLivres.filter(h => {
+                  const [hora, minuto] = h.split(':').map(Number);
+                  // Só permite horários que são APÓS a hora atual (não igual)
+                  if (hora > horaAtual) return true;
+                  if (hora === horaAtual && minuto > minutoAtual) return true;
+                  return false;
+                });
+
+                console.log(`⏰ Hoje às ${horaAtual}:${String(minutoAtual).padStart(2, '0')} - Horários futuros:`, horariosLivres);
+              }
 
               if (horariosLivres.length > 0) {
                 horariosInfo = `\n\n🕐 HORÁRIOS DISPONÍVEIS EM ${dataSalva}:\n${horariosLivres.join(', ')}\n\n🚨 REGRA CRÍTICA - LEIA ISTO:\n- APENAS sugira horários desta lista acima\n- NUNCA sugira horários fora desta lista\n- Se o cliente pedir um horário que não está na lista, diga que está OCUPADO e sugira outro\n- NÃO INVENTE HORÁRIOS`;
