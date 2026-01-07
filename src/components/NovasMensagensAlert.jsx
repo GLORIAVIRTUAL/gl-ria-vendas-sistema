@@ -111,8 +111,19 @@ export default function NovasMensagensAlert() {
           timestamp: new Date()
         });
 
+        // Toca som
         if (audioEnabled) {
           notificationSound.play().catch(() => {});
+        }
+
+        // Mostra notificação nativa do navegador
+        if (pushEnabled && Notification.permission === 'granted') {
+          new Notification('💬 Nova Mensagem WhatsApp', {
+            body: `${contact?.name || contact?.phone}: ${latestMessage.content.substring(0, 100)}`,
+            icon: '/logo.png',
+            tag: 'nova-mensagem',
+            requireInteraction: true
+          });
         }
       }
 
