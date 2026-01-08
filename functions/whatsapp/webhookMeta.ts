@@ -36,6 +36,10 @@ Deno.serve(async (req) => {
       const value = changes?.value;
       const messages = value?.messages || [];
       const contacts = value?.contacts || [];
+      
+      // Identifica qual número recebeu a mensagem
+      const recipientPhoneId = value?.metadata?.phone_number_id;
+      console.log('📞 Mensagem recebida no número ID:', recipientPhoneId);
 
       if (messages.length === 0) {
         console.log('⚠️ Nenhuma mensagem no webhook, ignorando...');
@@ -80,6 +84,17 @@ Deno.serve(async (req) => {
 
         const contactProfile = contacts.find(c => c.wa_id === phone);
         const contactName = contactProfile?.profile?.name || '';
+
+        // Busca configuração do Gateway para este número
+        let gatewayConfig = null;
+        if (recipientPhoneId) {
+          const gateways = await base44.asServiceRole.entities.WhatsAppGateway.filter({ 
+            phone_number_id: recipientPhoneId,
+            ativo: true 
+          });
+          gatewayConfig = gateways[0];
+          console.log('🔧 Gateway encontrado:', gatewayConfig?.nome_identificacao || 'Não encontrado');
+        }
 
         // Busca ou cria o contato
         let existingContacts = await base44.asServiceRole.entities.Contact.filter({ phone });
@@ -143,7 +158,7 @@ Deno.serve(async (req) => {
             processingTimeouts.delete(contact.id);
             
             // Processa todas as mensagens acumuladas
-            await processAIResponse(base44, contact, phone);
+            await processAIResponse(base44, contact, phone, gatewayConfig);
           }, DELAY_MS);
           
           processingTimeouts.set(contact.id, timeoutId);
@@ -163,7 +178,7 @@ Deno.serve(async (req) => {
 });
 
 // Função para processar resposta da IA
-async function processAIResponse(base44, contact, phone) {
+async function processAIResponse(base44, contact, phone, gatewayConfig = null) {
   try {
             // Busca configurações da IA
             const aiSettings = await base44.asServiceRole.entities.AISettings.list();
@@ -218,7 +233,7 @@ async function processAIResponse(base44, contact, phone) {
                 // Precisa baixar do Meta
                 try {
                   console.log(`📥 Baixando ${msg.type} do Meta ID:`, msg.media_url);
-                  const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
+                  const ACCESS_TOKEN = gatewayConfig?.access_token || Deno.env.get('META_ACCESS_TOKEN');
 
                   const mediaInfoResponse = await fetch(
                     `https://graph.facebook.com/v18.0/${msg.media_url}`,
@@ -906,8 +921,11 @@ async function processAIResponse(base44, contact, phone) {
             const blocosMensagem = dividirEmBlocos(responseText);
             console.log(`📦 Mensagem dividida em ${blocosMensagem.length} blocos`);
 
-            const PHONE_NUMBER_ID = Deno.env.get('META_PHONE_NUMBER_ID');
-            const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
+            // Usa configurações do Gateway ou fallback para secrets globais
+            const PHONE_NUMBER_ID = gatewayConfig?.phone_number_id || Deno.env.get('META_PHONE_NUMBER_ID');
+            const ACCESS_TOKEN = gatewayConfig?.access_token || Deno.env.get('META_ACCESS_TOKEN');
+            
+            console.log('🔧 Usando:', gatewayConfig ? `Gateway: ${gatewayConfig.nome_identificacao}` : 'Secrets Globais');
 
             if (PHONE_NUMBER_ID && ACCESS_TOKEN) {
               // Envia cada bloco com delay
