@@ -420,10 +420,13 @@ export default function GerenciarWhatsApp() {
             <div>
               <Label>URL do Webhook</Label>
               <Input
+                placeholder="https://seu-dominio.com/api/functions/whatsapp/webhookMeta"
                 value={formData.webhook_url}
                 onChange={(e) => setFormData({...formData, webhook_url: e.target.value})}
-                disabled
               />
+              <p className="text-xs text-slate-500 mt-1">
+                Configure esta URL no Meta Business Manager
+              </p>
             </div>
 
             <div>
