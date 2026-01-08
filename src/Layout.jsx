@@ -105,6 +105,7 @@ export default function Layout({ children, currentPageName }) {
   const configNavigationAdmin = [
     { title: "🤖 Configurar IA", url: createPageUrl("ConfiguracoesIA") },
     { title: "📦 Importar Produtos", url: createPageUrl("ImportarProdutos") },
+    { title: "💬 Gateway WhatsApp", url: createPageUrl("GerenciarWhatsApp") },
     { title: "📧 Disparos Email", url: createPageUrl("DisparosEmail") },
     { title: "📱 Disparos WhatsApp", url: createPageUrl("DisparosWhatsApp") },
     { title: "🧪 Testar WhatsApp", url: createPageUrl("TesteWhatsApp") },

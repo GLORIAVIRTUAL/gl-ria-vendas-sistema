@@ -23,6 +23,7 @@ import DashboardIA from './pages/DashboardIA';
 import DisparosEmail from './pages/DisparosEmail';
 import DisparosWhatsApp from './pages/DisparosWhatsApp';
 import Emails from './pages/Emails';
+import ExportarChatbot from './pages/ExportarChatbot';
 import FormularioStart from './pages/FormularioStart';
 import Home from './pages/Home';
 import ImportarProdutos from './pages/ImportarProdutos';
@@ -35,7 +36,7 @@ import PipelineIA from './pages/PipelineIA';
 import TesteStripe from './pages/TesteStripe';
 import TesteWebhook from './pages/TesteWebhook';
 import TesteWhatsApp from './pages/TesteWhatsApp';
-import ExportarChatbot from './pages/ExportarChatbot';
+import GerenciarWhatsApp from './pages/GerenciarWhatsApp';
 import __Layout from './Layout.jsx';
 
 
@@ -65,6 +66,7 @@ export const PAGES = {
     "DisparosEmail": DisparosEmail,
     "DisparosWhatsApp": DisparosWhatsApp,
     "Emails": Emails,
+    "ExportarChatbot": ExportarChatbot,
     "FormularioStart": FormularioStart,
     "Home": Home,
     "ImportarProdutos": ImportarProdutos,
@@ -77,7 +79,7 @@ export const PAGES = {
     "TesteStripe": TesteStripe,
     "TesteWebhook": TesteWebhook,
     "TesteWhatsApp": TesteWhatsApp,
-    "ExportarChatbot": ExportarChatbot,
+    "GerenciarWhatsApp": GerenciarWhatsApp,
 }
 
 export const pagesConfig = {
