@@ -17,6 +17,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import MessageBubble from './MessageBubble';
+import TemplateSelector from './TemplateSelector';
 import { base44 } from '@/api/base44Client';
 
 const pipelineStages = [
