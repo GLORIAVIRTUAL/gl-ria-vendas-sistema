@@ -41,13 +41,6 @@ Deno.serve(async (req) => {
       const recipientPhoneId = value?.metadata?.phone_number_id;
       console.log('📞 Mensagem recebida no número ID:', recipientPhoneId);
 
-      // Bloqueia números específicos (lista em BLOCKED_PHONE_IDS)
-      const blockedIds = (Deno.env.get('BLOCKED_PHONE_IDS') || '').split(',').map(id => id.trim()).filter(Boolean);
-      if (blockedIds.includes(recipientPhoneId)) {
-        console.log('🚫 Número bloqueado, ignorando mensagem:', recipientPhoneId);
-        return Response.json({ success: true, message: 'Phone number blocked' });
-      }
-
       if (messages.length === 0) {
         console.log('⚠️ Nenhuma mensagem no webhook, ignorando...');
         return Response.json({ success: true });
