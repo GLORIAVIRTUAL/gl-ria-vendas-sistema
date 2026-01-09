@@ -302,46 +302,82 @@ Deno.serve(async (req) => {
     }
 
     // Constrói objeto com toda documentação e estrutura para export
+    // Este objeto é devolvido como JSON completo para referência
     const exportData = {
+      // Metadados do export
       system: 'Glória Vendas IA System',
       version: '1.0',
       exportDate: new Date().toISOString(),
       generatedBy: user.email,
       
+      // Documentação principal
       documentation: {
         title: 'EXPORT SISTEMA IA - GLÓRIA VENDAS',
         description: 'Sistema completo de IA para WhatsApp com pipeline, dashboard e configurações',
         
+        // Lista de 8 entidades necessárias
         entities: [
-          'Contact', 'Message', 'AISettings', 'Keyword', 'CustomField', 'WebhookConfig', 'CustomAPI', 'MetaTemplate'
+          'Contact',              // Contatos/leads com dados pessoais
+          'Message',              // Histórico de mensagens
+          'AISettings',           // Configurações da IA (prompts, modelos, etc)
+          'Keyword',              // Palavras-chave para auto-tagging de contatos
+          'CustomField',          // Campos personalizados dinâmicos
+          'WebhookConfig',        // Webhooks de entrada/saída
+          'CustomAPI',            // Integrações com APIs externas
+          'MetaTemplate'          // Templates aprovados do WhatsApp Business
         ],
         
+        // Lista de 4 páginas principais
         pages: [
-          'ChatIA.js', 'PipelineIA.js', 'DashboardIA.js', 'ConfiguracoesIA.js'
+          'ChatIA.js',            // Chat principal (conversas em tempo real)
+          'PipelineIA.js',        // Pipeline de vendas (kanban board)
+          'DashboardIA.js',       // Dashboard analítico (métricas e gráficos)
+          'ConfiguracoesIA.js'    // Painel de configurações (5 abas)
         ],
         
+        // Componentes React reutilizáveis (9 no total)
         components: {
-          chat: ['ChatWindow.jsx', 'ContactList.jsx', 'ContactDetails.jsx', 'MessageBubble.jsx', 'TemplateSelector.jsx'],
-          crm: ['PipelineBoard.jsx'],
-          dashboard: ['StatsCard.jsx', 'ConversationChart.jsx'],
-          settings: ['AIPromptEditor', 'KeywordManager', 'CustomFieldsManager', 'WebhookManager', 'CustomAPIManager']
+          chat: [
+            'ChatWindow.jsx',         // Janela de chat com área de input
+            'ContactList.jsx',        // Sidebar esquerda com lista de contatos
+            'ContactDetails.jsx',     // Sidebar direita com detalhes do contato
+            'MessageBubble.jsx',      // Componente visual individual de mensagem
+            'TemplateSelector.jsx'    // Seletor de templates Meta aprovados
+          ],
+          crm: [
+            'PipelineBoard.jsx'       // Kanban com 6 estágios de pipeline
+          ],
+          dashboard: [
+            'StatsCard.jsx',          // Card de estatística com ícone e tendência
+            'ConversationChart.jsx'   // 3 gráficos (área, barras, pizza)
+          ],
+          settings: [
+            'AIPromptEditor',         // Editor de prompt de sistema da IA
+            'KeywordManager',         // Gerenciador de palavras-chave
+            'CustomFieldsManager',    // Gerenciador de campos personalizados
+            'WebhookManager',         // Gerenciador de webhooks
+            'CustomAPIManager'        // Gerenciador de APIs customizadas
+          ]
         },
         
+        // Funções backend (4 no total)
         functions: [
-          'sendTemplateMessage.js',
-          'sendWhatsAppMessage.js',
-          'transcribeAudio.js',
-          'whatsapp/webhookMeta.js'
+          'sendTemplateMessage.js',     // Envia templates Meta via Graph API
+          'sendWhatsAppMessage.js',     // Envia mensagens de texto normais
+          'transcribeAudio.js',         // Transcreve áudio com OpenAI Whisper
+          'whatsapp/webhookMeta.js'     // Webhook principal de entrada Meta
         ],
         
+        // Secrets/variáveis de ambiente obrigatórias
         requiredSecrets: [
-          'META_PHONE_NUMBER_ID',
-          'META_ACCESS_TOKEN',
-          'META_VERIFY_TOKEN',
-          'OPENAI_API_KEY'
+          'META_PHONE_NUMBER_ID',       // ID do número WhatsApp na Meta
+          'META_ACCESS_TOKEN',          // Token de acesso Meta Graph API
+          'META_VERIFY_TOKEN',          // Token para validar webhook
+          'OPENAI_API_KEY'              // Chave OpenAI para IA e Whisper
         ]
       },
       
+      // Instruções passo a passo para implementação
       setupInstructions: {
         step1: 'Criar Entidades - Copie todos os arquivos JSON para entities/',
         step2: 'Instalar Páginas - Copie as 4 páginas para pages/',
@@ -352,74 +388,83 @@ Deno.serve(async (req) => {
         step7: 'Testar Webhooks - Valide configuração de webhooks da Meta'
       },
       
+      // Funcionalidades principais do sistema
       features: [
-        'Chat IA com WebSocket em tempo real',
-        'Templates aprovados da Meta',
-        'Processamento inteligente de mensagens com delay',
-        'Transcrição automática de áudio',
-        'Pipeline de vendas com drag-and-drop',
-        'Dashboard com análise em tempo real',
-        'Gerenciamento de palavras-chave',
-        'Campos personalizados por contato',
-        'Webhooks customizáveis',
-        'Integração com Google Calendar'
+        'Chat IA com processamento em tempo real',
+        'Suporte a templates aprovados do WhatsApp Business',
+        'Processamento inteligente com delay de 8 segundos',
+        'Transcrição automática de mensagens de áudio',
+        'Pipeline de vendas visual com drag-and-drop',
+        'Dashboard analítico com métricas em tempo real',
+        'Sistema inteligente de palavras-chave e auto-tagging',
+        'Campos personalizados por contato/cliente',
+        'Webhooks customizáveis para processos externos',
+        'Integração com Google Calendar para agendamentos'
       ],
       
+      // Estrutura de arquivos e descrição de cada um
       fileStructure: {
         entities: {
-          'Contact.json': 'Estrutura de contatos/leads',
-          'Message.json': 'Estrutura de mensagens',
-          'AISettings.json': 'Configurações da IA',
-          'Keyword.json': 'Palavras-chave para auto-tagging',
-          'CustomField.json': 'Campos personalizados',
-          'WebhookConfig.json': 'Configuração de webhooks',
-          'CustomAPI.json': 'APIs HTTP customizadas',
-          'MetaTemplate.json': 'Templates aprovados Meta'
+          'Contact.json': 'Define estrutura base de contatos com pipeline stages',
+          'Message.json': 'Define estrutura de mensagens (inbound/outbound)',
+          'AISettings.json': 'Define configurações globais da IA (prompt, modelo, etc)',
+          'Keyword.json': 'Define palavras-chave para auto-tagging de contatos',
+          'CustomField.json': 'Define campos personalizados que podem ser adicionados',
+          'WebhookConfig.json': 'Define webhooks que o sistema pode dispara/receber',
+          'CustomAPI.json': 'Define APIs externas que o sistema pode chamar',
+          'MetaTemplate.json': 'Define templates aprovados do WhatsApp Business'
         },
         
         pages: {
-          'ChatIA.js': 'Interface principal de chat com IA',
-          'PipelineIA.js': 'Pipeline de vendas com drag-and-drop',
-          'DashboardIA.js': 'Dashboard com análise de dados',
-          'ConfiguracoesIA.js': 'Página de configurações'
+          'ChatIA.js': 'Página principal com interface de chat em 3 painéis',
+          'PipelineIA.js': 'Página com kanban board para arrastar contatos',
+          'DashboardIA.js': 'Página com análise de dados e métricas',
+          'ConfiguracoesIA.js': 'Página com 5 abas de configurações'
         },
         
         components: {
-          'components/chat/ChatWindow.jsx': 'Janela de chat com input',
-          'components/chat/ContactList.jsx': 'Lista de contatos',
-          'components/chat/ContactDetails.jsx': 'Detalhes do contato',
-          'components/chat/MessageBubble.jsx': 'Buble de mensagem',
-          'components/chat/TemplateSelector.jsx': 'Seletor de templates Meta',
-          'components/crm/PipelineBoard.jsx': 'Board do pipeline',
-          'components/dashboard/StatsCard.jsx': 'Card de estatísticas',
-          'components/dashboard/ConversationChart.jsx': 'Gráficos de conversa'
+          'components/chat/ChatWindow.jsx': 'Componente da janela de chat (centro)',
+          'components/chat/ContactList.jsx': 'Componente lista de contatos (esquerda)',
+          'components/chat/ContactDetails.jsx': 'Componente detalhes (direita)',
+          'components/chat/MessageBubble.jsx': 'Componente visual de buble de msg',
+          'components/chat/TemplateSelector.jsx': 'Componente seletor de templates',
+          'components/crm/PipelineBoard.jsx': 'Componente kanban do pipeline',
+          'components/dashboard/StatsCard.jsx': 'Componente card de estatísticas',
+          'components/dashboard/ConversationChart.jsx': 'Componente com 3 gráficos'
         },
         
         functions: {
-          'functions/sendTemplateMessage.js': 'Enviar template Meta',
-          'functions/sendWhatsAppMessage.js': 'Enviar mensagem WhatsApp',
-          'functions/transcribeAudio.js': 'Transcrever áudio com Whisper',
-          'functions/whatsapp/webhookMeta.js': 'Webhook de entrada Meta'
+          'functions/sendTemplateMessage.js': 'Envia mensagem de template via Meta Graph API',
+          'functions/sendWhatsAppMessage.js': 'Envia mensagem de texto simples',
+          'functions/transcribeAudio.js': 'Transcreve áudio usando OpenAI Whisper',
+          'functions/whatsapp/webhookMeta.js': 'Recebe e processa webhooks da Meta'
         }
       },
       
+      // Notas importantes para implementação
       importantNotes: [
-        'Este é um sistema completo e integrado',
-        'Todas as alterações até 09/01/2026 foram incluídas',
-        'Requer OPENAI_API_KEY para transcrição e IA',
-        'Meta Business Manager deve estar configurado corretamente',
-        'Templates devem estar aprovados na Meta',
-        'Minimum 5 minutos de delay é recomendado para processamento'
+        'Este é um sistema COMPLETO e INTEGRADO - todos os componentes trabalham juntos',
+        'Todas as alterações até 09/01/2026 foram incluídas (incluindo templates Meta)',
+        'OBRIGATÓRIO: Chave OPENAI_API_KEY para transcrição de áudio e processamento IA',
+        'Meta Business Manager deve estar configurado corretamente com webhook',
+        'Templates DEVEM estar APROVADOS na Meta Business antes de usar',
+        'Delay de 8 segundos é importante para acumular mensagens antes de processar',
+        'Sistema usa @tanstack/react-query para sincronização de dados',
+        'Drag-and-drop do pipeline usa @hello-pangea/dnd',
+        'Gráficos do dashboard usam recharts library',
+        'Requer Node 18+ e deno para funções backend'
       ],
       
-      exportMessage: 'Sistema exportado com sucesso! Use este arquivo como referência para implementação em outro sistema.'
+      exportMessage: 'Sistema exportado com sucesso! Use esta documentação como guia completo para implementação em outro sistema Base44.'
     };
 
+    // Retorna resposta com sucesso
     return Response.json({
       success: true,
       data: exportData,
-      exportFormat: 'JSON documentado',
-      nextStep: 'Acesse https://github.com/base44/sistema-ia-gloria-vendas para documentação completa'
+      exportFormat: 'JSON documentado completo',
+      generatedAt: new Date().toISOString(),
+      nextStep: 'Use a estrutura acima como referência para copiar arquivos no novo sistema'
     });
 
   } catch (error) {
