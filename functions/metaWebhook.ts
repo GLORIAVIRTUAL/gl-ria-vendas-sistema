@@ -35,13 +35,30 @@ Deno.serve(async (req) => {
       const body = await req.json();
       console.log('📩 Payload recebido:', JSON.stringify(body, null, 2));
 
-      // Extrai dados do payload
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const value = changes?.value;
-      const messages = value?.messages || [];
-      const contacts = value?.contacts || [];
-      const phoneNumberId = value?.metadata?.phone_number_id;
+      // Extrai dados do payload - suporta ambos os formatos
+      let value;
+      let messages;
+      let contacts;
+      let phoneNumberId;
+
+      // Formato 1: Payload completo do Meta (com entry/changes)
+      if (body.entry) {
+        const entry = body.entry?.[0];
+        const changes = entry?.changes?.[0];
+        value = changes?.value;
+      } 
+      // Formato 2: Payload direto (só o value)
+      else if (body.value) {
+        value = body.value;
+      }
+      // Formato 3: Payload é o próprio value
+      else if (body.messages || body.metadata) {
+        value = body;
+      }
+
+      messages = value?.messages || [];
+      contacts = value?.contacts || [];
+      phoneNumberId = value?.metadata?.phone_number_id;
 
       console.log('📱 Phone Number ID:', phoneNumberId);
       console.log('📨 Total de mensagens:', messages.length);
