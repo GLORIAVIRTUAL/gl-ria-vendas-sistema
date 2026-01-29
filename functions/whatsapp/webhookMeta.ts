@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
     const token = url.searchParams.get('hub.verify_token');
     const challenge = url.searchParams.get('hub.challenge');
 
-    const VERIFY_TOKEN = Deno.env.get('META_VERIFY_TOKEN') || 'gloria_webhook_token_2025';
+    const VERIFY_TOKEN = Deno.env.get('META_VERIFY_TOKEN')?.trim() || 'gloria_webhook_token_2025';
 
     if (mode === 'subscribe' && token === VERIFY_TOKEN) {
       console.log('✅ Webhook verificado pelo Meta');
@@ -180,811 +180,119 @@ Deno.serve(async (req) => {
 // Função para processar resposta da IA
 async function processAIResponse(base44, contact, phone, gatewayConfig = null) {
   try {
-            // Busca configurações da IA
-            const aiSettings = await base44.asServiceRole.entities.AISettings.list();
-            const settings = aiSettings.find(s => s.is_active) || aiSettings[0];
-
-            if (!settings) {
-              console.log('⚠️ Nenhuma configuração de IA encontrada');
-              return;
-            }
-
-            console.log('⚙️ Usando configuração:', settings.name);
-
-            // Horário de Brasília
-            const now = new Date();
-            const brasiliaTime = new Intl.DateTimeFormat('pt-BR', {
-              timeZone: 'America/Sao_Paulo',
-              dateStyle: 'full',
-              timeStyle: 'long'
-            }).format(now);
-
-            // Busca histórico completo em ordem decrescente (mais recente primeiro)
-            const allMessages = await base44.asServiceRole.entities.Message.filter(
-              { contact_id: contact.id },
-              '-created_date',
-              30
-            );
-
-            // Separa mensagens do cliente que ainda não foram respondidas pela IA
-            // Pega mensagens do cliente até encontrar uma resposta da IA
-            const recentCustomerMessages = [];
-            for (const msg of allMessages) {
-              if (msg.sender === 'ai') {
-                // Encontrou resposta da IA, para de acumular
-                break;
-              }
-              if (msg.sender === 'customer') {
-                recentCustomerMessages.unshift(msg); // Adiciona no início para manter ordem cronológica
-              }
-            }
-
-            console.log(`📦 Acumuladas ${recentCustomerMessages.length} mensagens do cliente para processar`);
-
-            // PRIMEIRO: Baixa TODAS as mídias do Meta (incluindo áudios)
-            for (const msg of recentCustomerMessages) {
-              if (msg.type !== 'text' && msg.media_url) {
-                // Se já é URL do Base44, pula
-                if (msg.media_url.includes('supabase.co') || msg.media_url.includes('base44')) {
-                  console.log(`✅ ${msg.type.toUpperCase()} já baixado:`, msg.media_url.substring(0, 80));
-                  continue;
-                }
-
-                // Precisa baixar do Meta
-                try {
-                  console.log(`📥 Baixando ${msg.type} do Meta ID:`, msg.media_url);
-                  const ACCESS_TOKEN = gatewayConfig?.access_token || Deno.env.get('META_ACCESS_TOKEN');
-
-                  const mediaInfoResponse = await fetch(
-                    `https://graph.facebook.com/v18.0/${msg.media_url}`,
-                    { headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` } }
-                  );
-
-                  if (mediaInfoResponse.ok) {
-                    const mediaInfo = await mediaInfoResponse.json();
-                    const mediaDownloadUrl = mediaInfo.url;
-
-                    const mediaResponse = await fetch(mediaDownloadUrl, {
-                      headers: { 'Authorization': `Bearer ${ACCESS_TOKEN}` }
-                    });
-
-                    if (mediaResponse.ok) {
-                      const mediaBlob = await mediaResponse.blob();
-                      console.log(`📦 Blob baixado, tamanho:`, mediaBlob.size);
-
-                      const extension = mediaInfo.mime_type?.split('/')[1] || 'bin';
-                      const fileName = `${msg.type}_${Date.now()}.${extension}`;
-                      const mediaFile = new File([mediaBlob], fileName, {
-                        type: mediaInfo.mime_type
-                      });
-
-                      const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({
-                        file: mediaFile
-                      });
-
-                      console.log(`✅ ${msg.type.toUpperCase()} salvo:`, file_url.substring(0, 80));
-
-                      await base44.asServiceRole.entities.Message.update(msg.id, {
-                        media_url: file_url
-                      });
-
-                      msg.media_url = file_url;
-                    }
-                  }
-                } catch (mediaError) {
-                  console.error(`❌ Erro ao baixar ${msg.type}:`, mediaError.message);
-                }
-              }
-            }
-
-            // SEGUNDO: Transcreve os áudios
-            const transcricoes = new Map();
-            for (const msg of recentCustomerMessages) {
-              if (msg.type === 'audio' && msg.media_url) {
-                try {
-                  console.log('🎤 Transcrevendo áudio:', msg.media_url.substring(0, 80));
-
-                  const result = await base44.asServiceRole.functions.invoke('transcribeAudio', {
-                    audio_url: msg.media_url
-                  });
-
-                  if (result.status === 200 && result.data?.success && result.data?.transcription) {
-                    const transcription = result.data.transcription;
-                    console.log('✅ TRANSCRIÇÃO:', transcription);
-                    transcricoes.set(msg.id, transcription);
-
-                    base44.asServiceRole.entities.Message.update(msg.id, {
-                      content: `🎤 ${transcription}`
-                    }).catch(e => console.error('Erro ao salvar:', e));
-                  } else {
-                    console.log('⚠️ Falhou:', result.data);
-                    transcricoes.set(msg.id, '[Não transcrito]');
-                  }
-                } catch (error) {
-                  console.error('❌ Erro:', error.message);
-                  transcricoes.set(msg.id, '[Erro]');
-                }
-              }
-            }
-
-            // TERCEIRO: Monta prompt com transcrições
-            const currentMessage = recentCustomerMessages
-              .map(msg => {
-                if (msg.type === 'audio' && transcricoes.has(msg.id)) {
-                  return `🎤 ÁUDIO: ${transcricoes.get(msg.id)}`;
-                }
-                return msg.content;
-              })
-              .join('\n\n');
-
-            console.log(`📝 PROMPT FINAL:\n${currentMessage}`);
-
-            // Monta histórico formatado (mensagens antigas, exceto as sendo processadas agora)
-            const olderMessages = allMessages
-              .filter(m => !recentCustomerMessages.some(rcm => rcm.id === m.id))
-              .reverse(); // Inverte para ordem cronológica
-
-            const conversationContext = olderMessages
-              .map(m => {
-                let msg = `${m.sender === 'customer' ? 'Cliente' : 'GLÓRIA'}: ${m.content}`;
-                if (m.type !== 'text' && m.media_url) {
-                  msg += ` [${m.type.toUpperCase()}]`;
-                }
-                return msg;
-              })
-              .join('\n');
-
-            // Verifica palavras de transferência
-            const shouldTransfer = (settings.transfer_keywords || []).some(keyword =>
-              currentMessage.toLowerCase().includes(keyword.toLowerCase())
-            );
-
-            // Produtos disponíveis
-            const produtosDisponiveis = [
-              'Atendimento_IA_24_7',
-              'Maquina_de_Videos', 
-              'Gloria_Clinica',
-              'Gloria_Vendas',
-              'Especialistas_Virtuais',
-              'Sites_em_24_Horas'
-            ];
-
-            // Horários comerciais
-            const horariosComerciais = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
-
-            // Busca campos personalizados já capturados e extrai dados da conversa ANTES de enviar para IA
-            const customFields = contact.custom_fields || {};
-            const updateFields = { ...customFields };
-
-            // Detecta se cliente recusou agendamento
-            const recusouAgendamento = /n[ãa]o quero agendar|n[ãa]o desejo agendar|n[ãa]o quero marcar|n[ãa]o quero reunião|n[ãa]o preciso de reuni[ãa]o|só queria saber|só quero informa[çc][ãa]o|apenas informa[çc][ãa]o/i.test(currentMessage);
-
-            if (recusouAgendamento) {
-              updateFields.recusou_agendamento = true;
-              updateFields.data_recusa = new Date().toISOString();
-              console.log('🚫 Cliente recusou agendamento');
-            }
-            
-            // Extrai produto
-            if (!updateFields.produto) {
-              const produtoMatch = currentMessage.match(/(atendimento|videos|clinica|vendas|sites|especialistas|avatar)/i);
-              if (produtoMatch) {
-                const produtoMap = {
-                  'atendimento': 'Atendimento_IA_24_7',
-                  'videos': 'Maquina_de_Videos',
-                  'clinica': 'Gloria_Clinica',
-                  'vendas': 'Gloria_Vendas',
-                  'sites': 'Sites_em_24_Horas',
-                  'especialistas': 'Especialistas_Virtuais',
-                  'avatar': 'Especialistas_Virtuais'
-                };
-                updateFields.produto = produtoMap[produtoMatch[1].toLowerCase()];
-              }
-            }
-            
-            // Extrai nome
-            if (!updateFields.nome_cliente && !contact.name) {
-              const nomeMatch = currentMessage.match(/(?:me chamo|meu nome é|meu nome e|sou o|sou a|meu nome:|nome:)\s*([A-Za-zÀ-ÿ\s]+?)(?:\.|,|$|\n)/i);
-              if (nomeMatch) updateFields.nome_cliente = nomeMatch[1].trim();
-            }
-            
-            // Extrai email
-            if (!updateFields.email_cliente && !contact.email) {
-              const emailMatch = currentMessage.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/);
-              if (emailMatch) updateFields.email_cliente = emailMatch[1];
-            }
-            
-            // Extrai telefone
-            if (!updateFields.telefone_cliente && contact.phone) {
-              updateFields.telefone_cliente = contact.phone;
-            }
-            
-            // Extrai data
-            if (!updateFields.data) {
-              const msgLower = currentMessage.toLowerCase();
-              
-              // Dias da semana (segunda, terça, etc.)
-              const diasSemana = {
-                'domingo': 0, 'segunda': 1, 'terca': 2, 'terça': 2,
-                'quarta': 3, 'quinta': 4, 'sexta': 5, 'sabado': 6, 'sábado': 6
-              };
-              
-              // Verifica se mencionou dia da semana
-              let diaDaSemanaEncontrado = false;
-              for (const [nome, diaSemana] of Object.entries(diasSemana)) {
-                if (new RegExp(`\\b${nome}\\b`, 'i').test(msgLower)) {
-                  const hoje = new Date();
-                  const diaAtual = hoje.getDay();
-                  
-                  // Calcula quantos dias faltam para o próximo dia da semana mencionado
-                  let diasParaAdicionar = diaSemana - diaAtual;
-                  
-                  // Se o dia já passou nesta semana ou é hoje, pega a próxima semana
-                  if (diasParaAdicionar <= 0) {
-                    diasParaAdicionar += 7;
-                  }
-                  
-                  // Se tem "que vem" ou "proxim", garante que é próxima semana
-                  if (/que vem|proxi|pr[oó]xim/i.test(msgLower) && diasParaAdicionar < 7) {
-                    diasParaAdicionar += 7;
-                  }
-                  
-                  const dataCalculada = new Date();
-                  dataCalculada.setDate(dataCalculada.getDate() + diasParaAdicionar);
-                  updateFields.data = dataCalculada.toISOString().split('T')[0];
-                  console.log(`📅 Cliente disse "${nome}", data calculada:`, updateFields.data);
-                  diaDaSemanaEncontrado = true;
-                  break;
-                }
-              }
-              
-              // Se não encontrou dia da semana, tenta outras expressões
-              if (!diaDaSemanaEncontrado) {
-                if (/amanh[ãa]|amanha/i.test(msgLower)) {
-                  const amanha = new Date();
-                  amanha.setDate(amanha.getDate() + 1);
-                  updateFields.data = amanha.toISOString().split('T')[0];
-                  console.log('📅 Cliente disse "amanhã", data calculada:', updateFields.data);
-                } else if (/depois de amanh[ãa]|depois de amanha|daqui a 2 dias|2 dias/i.test(msgLower)) {
-                  const depoisAmanha = new Date();
-                  depoisAmanha.setDate(depoisAmanha.getDate() + 2);
-                  updateFields.data = depoisAmanha.toISOString().split('T')[0];
-                  console.log('📅 Cliente disse "depois de amanhã", data calculada:', updateFields.data);
-                } else if (/hoje/i.test(msgLower)) {
-                  const hoje = new Date();
-                  updateFields.data = hoje.toISOString().split('T')[0];
-                  console.log('📅 Cliente disse "hoje", data calculada:', updateFields.data);
-                } else if (/daqui a (\d+) dias?/i.test(msgLower)) {
-                  const match = msgLower.match(/daqui a (\d+) dias?/i);
-                  const dias = parseInt(match[1]);
-                  const data = new Date();
-                  data.setDate(data.getDate() + dias);
-                  updateFields.data = data.toISOString().split('T')[0];
-                  console.log(`📅 Cliente disse "daqui a ${dias} dias", data calculada:`, updateFields.data);
-                } else {
-                  // Tenta extrair data no formato dd/mm ou dd-mm
-                  const dataMatch = msgLower.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-                  if (dataMatch) {
-                    const dia = dataMatch[1].padStart(2, '0');
-                    const mes = dataMatch[2].padStart(2, '0');
-                    const ano = dataMatch[3] ? (dataMatch[3].length === 2 ? '20' + dataMatch[3] : dataMatch[3]) : new Date().getFullYear();
-                    updateFields.data = `${ano}-${mes}-${dia}`;
-                  }
-                }
-              }
-            }
-            
-            // Extrai horário (aceita vários formatos)
-            if (!updateFields.horario) {
-              const horarioMatch = currentMessage.match(/(\d{1,2}):(\d{2})|(\d{1,2})h|(\d{1,2})\s*horas?|as\s*(\d{1,2})/i);
-              if (horarioMatch) {
-                const hora = horarioMatch[1] || horarioMatch[3] || horarioMatch[4] || horarioMatch[5];
-                const minuto = horarioMatch[2] || '00';
-                updateFields.horario = `${hora.padStart(2, '0')}:${minuto}`;
-              }
-            }
-            
-            // Salva dados extraídos ANTES de chamar a IA
-            if (JSON.stringify(updateFields) !== JSON.stringify(customFields)) {
-              console.log('💾 Salvando dados extraídos ANTES da IA:', updateFields);
-              await base44.asServiceRole.entities.Contact.update(contact.id, {
-                custom_fields: updateFields
-              });
-            }
-            
-            const produtoSalvo = updateFields.produto;
-            const dataSalva = updateFields.data;
-            const horarioSalvo = updateFields.horario;
-            const nomeClienteSalvo = updateFields.nome_cliente || contact.name;
-            const emailClienteSalvo = updateFields.email_cliente || contact.email;
-            const telefoneSalvo = updateFields.telefone_cliente || contact.phone;
-
-            // SEMPRE verifica horários disponíveis se tiver data
-            let horariosInfo = '';
-            if (dataSalva) {
-              console.log('📅 Consultando horários para:', dataSalva);
-
-              // Busca agendamentos do dia
-              const agendamentosDoDia = await base44.asServiceRole.entities.Agendamento.filter({
-                data: dataSalva
-              });
-
-              const horariosOcupados = agendamentosDoDia
-                .filter(a => a.status === 'Agendada' || a.status === 'Confirmada')
-                .map(a => a.horario);
-
-              // Filtra horários ocupados
-              let horariosLivres = horariosComerciais.filter(h => !horariosOcupados.includes(h));
-
-              // Se for hoje, remove horários que já passaram
-              const hoje = new Date();
-              const dataSelecionada = new Date(dataSalva + 'T00:00:00');
-              const ehHoje = dataSelecionada.toDateString() === hoje.toDateString();
-
-              if (ehHoje) {
-                const horaAtual = hoje.getHours();
-                const minutoAtual = hoje.getMinutes();
-
-                horariosLivres = horariosLivres.filter(h => {
-                  const [hora, minuto] = h.split(':').map(Number);
-                  // Só permite horários que são APÓS a hora atual (não igual)
-                  if (hora > horaAtual) return true;
-                  if (hora === horaAtual && minuto > minutoAtual) return true;
-                  return false;
-                });
-
-                console.log(`⏰ Hoje às ${horaAtual}:${String(minutoAtual).padStart(2, '0')} - Horários futuros:`, horariosLivres);
-              }
-
-              if (horariosLivres.length > 0) {
-                horariosInfo = `\n\n🕐 HORÁRIOS DISPONÍVEIS EM ${dataSalva}:\n${horariosLivres.join(', ')}\n\n🚨 REGRA CRÍTICA - LEIA ISTO:\n- APENAS sugira horários desta lista acima\n- NUNCA sugira horários fora desta lista\n- Se o cliente pedir um horário que não está na lista, diga que está OCUPADO e sugira outro\n- NÃO INVENTE HORÁRIOS`;
-              } else {
-                horariosInfo = `\n\n❌ NENHUM HORÁRIO DISPONÍVEL em ${dataSalva}.\n\n🚨 AÇÃO OBRIGATÓRIA:\n- Pergunte ao cliente por OUTRA DATA\n- NÃO sugira nenhum horário para esta data`;
-              }
-            }
-
-            // Identifica quais dados ainda faltam
-            const dadosFaltantes = [];
-            if (!produtoSalvo) dadosFaltantes.push('produto de interesse');
-            if (!nomeClienteSalvo) dadosFaltantes.push('nome completo');
-            if (!emailClienteSalvo) dadosFaltantes.push('email');
-            if (!telefoneSalvo) dadosFaltantes.push('telefone');
-            if (!dataSalva) dadosFaltantes.push('data desejada');
-            if (!horarioSalvo) dadosFaltantes.push('horário preferido');
-
-            // Monta resumo dos dados já coletados
-            let dadosColetados = '';
-            if (produtoSalvo) dadosColetados += `\n✅ Produto: ${produtoSalvo}`;
-            if (nomeClienteSalvo) dadosColetados += `\n✅ Nome: ${nomeClienteSalvo}`;
-            if (emailClienteSalvo) dadosColetados += `\n✅ Email: ${emailClienteSalvo}`;
-            if (telefoneSalvo) dadosColetados += `\n✅ Telefone: ${telefoneSalvo}`;
-            if (dataSalva) dadosColetados += `\n✅ Data: ${dataSalva}`;
-            if (horarioSalvo) dadosColetados += `\n✅ Horário: ${horarioSalvo}`;
-
-            // Verifica se já tem agendamento confirmado recentemente
-            const temAgendamentoRecente = updateFields.agendamento_confirmado === true;
-
-            // Monta prompt completo
-            const systemPrompt = settings.system_prompt || 'Você é GLÓRIA, uma assistente virtual inteligente e prestativa.';
-
-            const fullPrompt = `${systemPrompt}
-
-            📅 INFORMAÇÕES ATUAIS:
-            - Data/Hora em Brasília: ${brasiliaTime}
-            - Cliente: ${contact.name || 'Não informado'}
-            - Telefone: ${contact.phone}
-            ${temAgendamentoRecente ? '\n🎉 STATUS: AGENDAMENTO JÁ CONFIRMADO! Cliente já tem reunião marcada.' : ''}
-
-            💬 HISTÓRICO DA CONVERSA:
-            ${conversationContext || 'Esta é a primeira mensagem.'}
-
-            📨 MENSAGENS ATUAIS DO CLIENTE (acumuladas):
-            ${currentMessage}
-            ${!temAgendamentoRecente ? horariosInfo : ''}
-
-            ${shouldTransfer ? '⚠️ ATENÇÃO: Cliente solicitou falar com humano. Informe que está transferindo para atendente.' : ''}
-
-            ${updateFields.recusou_agendamento ? `
-            🚫 CLIENTE RECUSOU AGENDAMENTO
-            ⚠️ Este cliente JÁ DISSE que NÃO quer agendar reunião
-
-            🚨 REGRA OBRIGATÓRIA:
-            - NÃO pergunte sobre agendar novamente
-            - NÃO insista em marcar reunião
-            - NÃO peça dados para agendamento (nome, email, data, horário)
-            - Seja prestativo respondendo dúvidas sobre os produtos
-            - Forneça informações que ele solicitar
-            - Aceite despedidas naturalmente
-            - Se ele MUDAR DE IDEIA e quiser agendar, aí sim pode perguntar os dados
-            ` : temAgendamentoRecente ? `
-            🎉 AGENDAMENTO JÁ REALIZADO!
-            ✅ Este cliente já tem uma reunião confirmada no sistema
-
-            🚨 REGRA CRÍTICA:
-            - NÃO pergunte sobre reagendar
-            - NÃO peça mais dados
-            - NÃO use o comando [AGENDAR] novamente
-            - Seja prestativo e responda perguntas
-            - Se cliente quiser marcar OUTRA reunião (adicional), aí sim pode coletar novos dados
-            - Aceite despedidas naturalmente (obrigado, tchau, até logo)
-            - Ofereça ajuda com dúvidas sobre o produto ou outros assuntos
-            ` : `
-            📊 DADOS JÁ COLETADOS DO CLIENTE:${dadosColetados || '\n❌ Nenhum dado coletado ainda'}
-
-            ${dadosFaltantes.length > 0 ? `⚠️ DADOS QUE AINDA FALTAM: ${dadosFaltantes.join(', ')}` : '✅ TODOS OS DADOS COLETADOS! Pronto para agendar.'}
-
-            🎯 REGRAS OBRIGATÓRIAS - SIGA RIGOROSAMENTE:
-
-            1. ⛔ NUNCA REPITA PERGUNTAS
-            - Verifique "DADOS JÁ COLETADOS" antes de perguntar qualquer coisa
-            - Se o dado já está lá, NÃO PERGUNTE novamente
-
-            2. 🚨 HORÁRIOS - REGRA CRÍTICA (MUITO IMPORTANTE!)
-            - Se aparecer "HORÁRIOS DISPONÍVEIS", você DEVE sugerir APENAS horários dessa lista
-            - É PROIBIDO sugerir horários que não estão na lista
-            - Se cliente pedir horário não disponível, informe que está OCUPADO
-            - Se não houver lista de horários, pergunte a data primeiro
-            - NUNCA, EM HIPÓTESE ALGUMA, sugira um horário que não está na lista de disponíveis
-
-            3. ✅ QUANDO AGENDAR
-            - Se "DADOS QUE AINDA FALTAM" está vazio, use [AGENDAR] IMEDIATAMENTE
-            - Não pergunte confirmação, apenas agende
-            - IMPORTANTE: NÃO diga "reunião agendada" antes de usar o comando [AGENDAR]
-            - Apenas informe sucesso APÓS o sistema confirmar
-
-            4. 📝 PERGUNTAS
-            - Pergunte apenas 1 dado por vez
-            - Só pergunte dados da lista "DADOS QUE AINDA FALTAM"
-
-            📦 PRODUTOS DISPONÍVEIS:
-            ${produtosDisponiveis.map(p => `- ${p.replace(/_/g, ' ')}`).join('\n')}
-
-            💰 REGRA DE PREÇOS:
-            - Se o cliente perguntar sobre preços, responda APENAS do(s) produto(s) que ele mencionou
-            - NÃO liste preços de todos os produtos sem ser solicitado
-            - Seja específico e objetivo
-
-            📋 COMANDO PARA AGENDAR:
-            Quando tiver TODOS os dados, use EXATAMENTE este formato:
-
-            [AGENDAR]
-            NOME: ${nomeClienteSalvo || 'extrair da conversa ou perguntar'}
-            EMAIL: ${emailClienteSalvo || 'extrair ou perguntar'}
-            TELEFONE: ${telefoneSalvo || 'extrair ou perguntar'}
-            PRODUTO: ${produtoSalvo || 'extrair ou perguntar'}
-            DATA: ${dataSalva || 'extrair ou perguntar'}
-            HORARIO: ${horarioSalvo || 'extrair ou perguntar'}
-            [/AGENDAR]
-
-            🚨 MUITO IMPORTANTE:
-            - NÃO escreva NADA sobre "reunião agendada" ou "confirmado" junto com o comando [AGENDAR]
-            - Apenas use o comando e pare
-            - O sistema irá adicionar a mensagem de confirmação automaticamente
-            - Se você disser "agendado" antes do comando, o cliente verá a mensagem mas o agendamento pode não estar no sistema
-            `}
-
-            Seja eficiente. Não repita perguntas. ${temAgendamentoRecente ? 'LEMBRE-SE: agendamento já está confirmado, não force reagendamento!' : 'Foque nos dados faltantes.'}`;
-
-            console.log('🔄 Enviando para IA...');
-
-
-
-            // Coleta mídias não-áudio (áudios já foram transcritos)
-            const allMediaUrls = [];
-            for (const msg of recentCustomerMessages) {
-              if (msg.media_url && (msg.type === 'image' || msg.type === 'document' || msg.type === 'video')) {
-                allMediaUrls.push(msg.media_url);
-                console.log(`📎 ${msg.type.toUpperCase()} será enviado para IA:`, msg.media_url);
-              }
-            }
-
-            const finalPrompt = fullPrompt;
-
-            // Chama a IA
-            let responseText;
-            try {
-              const llmParams = {
-                prompt: finalPrompt,
-                model: settings.ai_model || 'gpt-4o'
-              };
-
-              // Adiciona todos os arquivos se houver
-              if (allMediaUrls.length > 0) {
-                llmParams.file_urls = allMediaUrls;
-                console.log('📎 Enviando arquivos para IA:', allMediaUrls);
-              }
-
-              responseText = await base44.asServiceRole.integrations.Core.InvokeLLM(llmParams);
-              
-              console.log('✅ IA respondeu:', responseText);
-
-              // Verifica se a IA quer agendar
-              if (responseText.includes('[AGENDAR]')) {
-                console.log('📅 IA solicitou agendamento, processando...');
-                
-                const match = responseText.match(/\[AGENDAR\]([\s\S]*?)\[\/AGENDAR\]/);
-                if (match) {
-                  const dados = match[1];
-                  const nome = dados.match(/NOME:\s*(.+)/)?.[1]?.trim();
-                  const email = dados.match(/EMAIL:\s*(.+)/)?.[1]?.trim();
-                  const telefone = dados.match(/TELEFONE:\s*(.+)/)?.[1]?.trim();
-                  const produto = dados.match(/PRODUTO:\s*(.+)/)?.[1]?.trim();
-                  const data = dados.match(/DATA:\s*(.+)/)?.[1]?.trim();
-                  const horario = dados.match(/HORARIO:\s*(.+)/)?.[1]?.trim();
-
-                  console.log('📋 Extraído:', { nome, email, telefone, produto, data, horario });
-
-                  if (nome && email && telefone && produto && data && horario) {
-                   // VALIDAÇÃO RIGOROSA: Verifica se o horário está realmente disponível
-                   const todosAgendamentos = await base44.asServiceRole.entities.Agendamento.filter({
-                     data,
-                     horario
-                   });
-
-                   const ocupado = todosAgendamentos.some(a => 
-                     a.status === 'Agendada' || a.status === 'Confirmada'
-                   );
-
-                   if (ocupado) {
-                     console.error('❌ HORÁRIO OCUPADO! IA tentou agendar horário já ocupado:', horario);
-                     responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
-
-                     // Busca horários disponíveis para sugerir
-                     const horariosOcupados = await base44.asServiceRole.entities.Agendamento.filter({ data })
-                       .then(agendamentos => agendamentos
-                         .filter(a => a.status === 'Agendada' || a.status === 'Confirmada')
-                         .map(a => a.horario)
-                       );
-                     const horariosDisponiveis = horariosComerciais.filter(h => !horariosOcupados.includes(h));
-
-                     if (horariosDisponiveis.length > 0) {
-                       responseText += `\n\n❌ Desculpe! O horário ${horario} está OCUPADO.\n\n✅ Horários disponíveis para ${data}:\n${horariosDisponiveis.join(', ')}\n\nQual horário você prefere?`;
-                     } else {
-                       responseText += `\n\n❌ Desculpe! Não há mais horários disponíveis em ${data}.\n\nPor favor, escolha outra data.`;
-                     }
-                   } else {
-                      // Normaliza o nome do produto
-                      const produtoMap = {
-                        'Atendimento_IA_24_7': 'Atendimento_IA_24_7',
-                        'Maquina_de_Videos': 'Maquina_de_Videos',
-                        'Gloria_Clinica': 'Gloria_Clinica',
-                        'Gloria_Vendas': 'Gloria_Vendas',
-                        'Especialistas_Virtuais': 'Especialistas_Virtuais',
-                        'Sites_em_24_Horas': 'Sites_em_24_Horas',
-                        'gloria_sites': 'Sites_em_24_Horas',
-                        'sites': 'Sites_em_24_Horas'
-                      };
-                      
-                      const produtoNormalizado = produtoMap[produto] || produto;
-                      
-                      const produtoNomes = {
-                        'Atendimento_IA_24_7': 'Glória Atendimento IA 24/7',
-                        'Maquina_de_Videos': 'Máquina de Vídeos',
-                        'Gloria_Clinica': 'Glória Clínica',
-                        'Gloria_Vendas': 'Glória Vendas',
-                        'Especialistas_Virtuais': 'Especialistas Virtuais',
-                        'Sites_em_24_Horas': 'Sites em 24 Horas'
-                      };
-
-                      // Cria evento no Google Calendar (link real do Meet)
-                      console.log('📅 Criando evento no Google Calendar...');
-                      const startDateTime = `${data}T${horario}:00`;
-                      const [hora, minuto] = horario.split(':');
-                      const endHora = String(parseInt(hora) + 1).padStart(2, '0');
-                      const endDateTime = `${data}T${endHora}:${minuto}:00`;
-
-                      let linkReuniao = '';
-                      try {
-                        const calendarResponse = await base44.asServiceRole.functions.invoke('createGoogleCalendarEvent', {
-                          summary: `Reunião - ${produtoNomes[produtoNormalizado] || produtoNormalizado} - ${nome}`,
-                          description: `Reunião sobre ${produtoNomes[produtoNormalizado] || produtoNormalizado}\n\nCliente: ${nome}\nEmail: ${email}\nTelefone: ${telefone}\n\nAgendamento via IA WhatsApp`,
-                          startDateTime,
-                          endDateTime,
-                          attendeeEmail: email,
-                          attendeeName: nome
-                        });
-
-                        if (calendarResponse.status === 200 && calendarResponse.data?.meetLink) {
-                          linkReuniao = calendarResponse.data.meetLink;
-                          console.log('✅ Link do Meet criado:', linkReuniao);
-                        } else {
-                          console.error('⚠️ Erro ao criar evento:', calendarResponse.data);
-                          linkReuniao = 'Link será enviado por email';
-                        }
-                      } catch (calError) {
-                        console.error('❌ Erro ao criar evento no Google Calendar:', calError);
-                        linkReuniao = 'Link será enviado por email';
-                      }
-                      
-                      try {
-                        console.log('💾 Criando agendamento no banco de dados...');
-                        
-                        const agendamento = await base44.asServiceRole.entities.Agendamento.create({
-                          nome_cliente: nome,
-                          email_cliente: email,
-                          telefone_cliente: telefone,
-                          produto: produtoNormalizado,
-                          data: data,
-                          horario: horario,
-                          link_reuniao: linkReuniao,
-                          status: 'Agendada',
-                          origem: 'Chatbot',
-                          observacoes: 'Agendamento via IA WhatsApp - GLÓRIA'
-                        });
-
-                        if (!agendamento || !agendamento.id) {
-                          throw new Error('Falha ao criar agendamento - ID não retornado');
-                        }
-
-                        console.log('✅ AGENDAMENTO CRIADO COM SUCESSO! ID:', agendamento.id);
-
-                        // Cria Lead no CRM
-                        console.log('💾 Criando Lead no CRM...');
-                        const lead = await base44.asServiceRole.entities.Lead.create({
-                          nome_cliente: nome,
-                          email_cliente: email,
-                          telefone_cliente: telefone,
-                          produto_interesse: produtoNormalizado,
-                          data_reuniao: data,
-                          observacoes: 'Lead via IA WhatsApp',
-                          agendamento_id: agendamento.id,
-                          estagio: 'Reuniao_Marcada',
-                          prioridade: 'Media'
-                        });
-
-                        console.log('✅ LEAD CRIADO! ID:', lead.id);
-
-                        // Atualiza contato
-                        console.log('💾 Atualizando contato...');
-                        await base44.asServiceRole.entities.Contact.update(contact.id, {
-                          name: nome,
-                          email: email,
-                          pipeline_stage: 'qualificado',
-                          custom_fields: {
-                            ...contact.custom_fields,
-                            ultimo_agendamento_id: agendamento.id,
-                            agendamento_confirmado: true
-                          }
-                        });
-
-                        console.log('✅ CONTATO ATUALIZADO!');
-
-                        // TUDO DEU CERTO - CONFIRMA PARA O CLIENTE
-                        responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
-                        
-                        const dataFormatada = new Date(data + 'T00:00:00').toLocaleDateString('pt-BR');
-                        responseText += `\n\n✅ *Reunião agendada com sucesso!*\n\n📅 Data: ${dataFormatada}\n🕐 Horário: ${horario}\n💼 Produto: ${produtoNomes[produtoNormalizado] || produtoNormalizado}\n🔗 Link: ${linkReuniao}\n\n🎉 Seu agendamento foi registrado no sistema!\nVocê receberá um email de confirmação em breve.`;
-                        
-                      } catch (agendamentoError) {
-                        console.error('❌ ERRO AO CRIAR AGENDAMENTO:', agendamentoError);
-                        
-                        // Remove comando e informa erro
-                        responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
-                        responseText += `\n\n❌ Desculpe, houve um erro ao criar o agendamento no sistema. Por favor, tente novamente ou entre em contato com nosso suporte.\n\nDetalhes do erro: ${agendamentoError.message}`;
-                      }
-                    }
-                  } else {
-                    responseText = responseText.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
-                    responseText += '\n\n⚠️ Preciso de todas as informações para agendar. Me informe: nome, email, telefone, produto e horário desejado.';
-                  }
-                }
-              }
-              
-            } catch (llmError) {
-              console.error('❌ Erro na LLM:', llmError);
-              responseText = 'Desculpe, estou com dificuldades técnicas. Um atendente humano irá ajudá-lo em breve.';
-            }
-
-            // Garante que sempre tem resposta
-            if (!responseText || responseText.trim() === '') {
-              responseText = 'Desculpe, não consegui processar sua mensagem. Pode repetir?';
-            }
-
-            // Se deve transferir para humano, desabilita IA
-            if (shouldTransfer) {
-              await base44.asServiceRole.entities.Contact.update(contact.id, {
-                ai_enabled: false
-              });
-              console.log('👤 Conversa transferida para atendente humano');
-            }
-
-            // Divide a resposta em blocos menores (quebra por \n\n ou a cada 300 caracteres)
-            const dividirEmBlocos = (texto) => {
-              const blocos = [];
-              const paragrafos = texto.split('\n\n');
-              
-              for (const paragrafo of paragrafos) {
-                if (paragrafo.trim().length === 0) continue;
-                
-                if (paragrafo.length <= 400) {
-                  blocos.push(paragrafo.trim());
-                } else {
-                  // Se o parágrafo é muito grande, divide em frases
-                  const frases = paragrafo.match(/[^.!?]+[.!?]+/g) || [paragrafo];
-                  let blocoAtual = '';
-                  
-                  for (const frase of frases) {
-                    if ((blocoAtual + frase).length <= 400) {
-                      blocoAtual += frase;
-                    } else {
-                      if (blocoAtual) blocos.push(blocoAtual.trim());
-                      blocoAtual = frase;
-                    }
-                  }
-                  if (blocoAtual) blocos.push(blocoAtual.trim());
-                }
-              }
-              
-              return blocos.length > 0 ? blocos : [texto];
-            };
-
-            const blocosMensagem = dividirEmBlocos(responseText);
-            console.log(`📦 Mensagem dividida em ${blocosMensagem.length} blocos`);
-
-            // Usa configurações do Gateway ou fallback para secrets globais
-            const PHONE_NUMBER_ID = gatewayConfig?.phone_number_id || Deno.env.get('META_PHONE_NUMBER_ID');
-            const ACCESS_TOKEN = gatewayConfig?.access_token || Deno.env.get('META_ACCESS_TOKEN');
-            
-            console.log('🔧 Usando:', gatewayConfig ? `Gateway: ${gatewayConfig.nome_identificacao}` : 'Secrets Globais');
-
-            if (PHONE_NUMBER_ID && ACCESS_TOKEN) {
-              // Envia cada bloco com delay
-              for (let i = 0; i < blocosMensagem.length; i++) {
-                const blocoTexto = blocosMensagem[i];
-                
-                // Delay entre mensagens (exceto a primeira)
-                if (i > 0) {
-                  await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
-                }
-
-                console.log(`📤 Enviando bloco ${i + 1}/${blocosMensagem.length}...`);
-                
-                // Salva no banco
-                const mensagemSalva = await base44.asServiceRole.entities.Message.create({
-                  contact_id: contact.id,
-                  direction: 'outbound',
-                  sender: 'ai',
-                  content: blocoTexto,
-                  type: 'text',
-                  status: 'sent',
-                  extracted_data: {}
-                });
-                
-                // Envia via WhatsApp
-                const sendResponse = await fetch(
-                  `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,
-                  {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `Bearer ${ACCESS_TOKEN}`,
-                      'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                      messaging_product: 'whatsapp',
-                      to: phone,
-                      type: 'text',
-                      text: { body: blocoTexto }
-                    })
-                  }
-                );
-
-                if (sendResponse.ok) {
-                  console.log(`✅ Bloco ${i + 1} enviado`);
-                  await base44.asServiceRole.entities.Message.update(mensagemSalva.id, {
-                    status: 'delivered'
-                  });
-                } else {
-                  const errorText = await sendResponse.text();
-                  console.error(`❌ Erro no bloco ${i + 1}:`, errorText);
-                  await base44.asServiceRole.entities.Message.update(mensagemSalva.id, {
-                    status: 'failed',
-                    error_message: errorText
-                  });
-                }
-              }
-            } else {
-              console.error('❌ Credenciais Meta não configuradas (META_PHONE_NUMBER_ID ou META_ACCESS_TOKEN)');
-            }
+    // Usa configurações do Gateway ou fallback para secrets globais
+    const PHONE_NUMBER_ID = (gatewayConfig?.phone_number_id || Deno.env.get('META_PHONE_NUMBER_ID'))?.trim();
+    const ACCESS_TOKEN = (gatewayConfig?.access_token || Deno.env.get('META_ACCESS_TOKEN'))?.trim();
+    
+    console.log('🔧 Usando:', gatewayConfig ? `Gateway: ${gatewayConfig.nome_identificacao}` : 'Secrets Globais');
+    console.log('📞 PHONE_NUMBER_ID:', PHONE_NUMBER_ID ? PHONE_NUMBER_ID.substring(0, 10) + '***' : 'NÃO DEFINIDO');
+
+    if (!PHONE_NUMBER_ID || !ACCESS_TOKEN) {
+      console.error('❌ Credenciais Meta não configuradas');
+      return;
+    }
+
+    // Busca configurações da IA
+    const aiSettings = await base44.asServiceRole.entities.AISettings.list();
+    const settings = aiSettings.find(s => s.is_active) || aiSettings[0];
+
+    if (!settings) {
+      console.log('⚠️ Nenhuma configuração de IA encontrada');
+      return;
+    }
+
+    console.log('⚙️ Usando configuração:', settings.name);
+
+    // Busca mensagens recentes do cliente
+    const allMessages = await base44.asServiceRole.entities.Message.filter(
+      { contact_id: contact.id },
+      '-created_date',
+      30
+    );
+
+    const recentCustomerMessages = [];
+    for (const msg of allMessages) {
+      if (msg.sender === 'ai') break;
+      if (msg.sender === 'customer') {
+        recentCustomerMessages.unshift(msg);
+      }
+    }
+
+    console.log(`📦 Acumuladas ${recentCustomerMessages.length} mensagens do cliente para processar`);
+
+    const currentMessage = recentCustomerMessages.map(m => m.content).join('\n\n');
+    console.log(`📝 MENSAGEM:\n${currentMessage}`);
+
+    // Monta prompt simples
+    const systemPrompt = settings.system_prompt || 'Você é GLÓRIA, uma assistente virtual inteligente.';
+    const fullPrompt = `${systemPrompt}\n\nCliente escreveu: ${currentMessage}`;
+
+    console.log('🔄 Enviando para IA...');
+
+    // Chama a IA
+    const responseText = await base44.asServiceRole.integrations.Core.InvokeLLM({
+      prompt: fullPrompt,
+      model: settings.ai_model || 'gpt-4o'
+    });
+    
+    console.log('✅ IA respondeu:', responseText);
+
+    // Divide resposta em blocos
+    const blocos = responseText.split('\n\n').filter(b => b.trim());
+    console.log(`📦 Mensagem dividida em ${blocos.length} blocos`);
+
+    // Envia cada bloco
+    for (let i = 0; i < blocos.length; i++) {
+      const blocoTexto = blocos[i];
+      
+      if (i > 0) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+
+      console.log(`📤 Enviando bloco ${i + 1}/${blocos.length}...`);
+      
+      // Salva no banco
+      const mensagemSalva = await base44.asServiceRole.entities.Message.create({
+        contact_id: contact.id,
+        direction: 'outbound',
+        sender: 'ai',
+        content: blocoTexto,
+        type: 'text',
+        status: 'sent'
+      });
+      
+      // Envia via WhatsApp
+      const sendResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${PHONE_NUMBER_ID}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${ACCESS_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            messaging_product: 'whatsapp',
+            to: phone,
+            type: 'text',
+            text: { body: blocoTexto }
+          })
+        }
+      );
+
+      if (sendResponse.ok) {
+        console.log(`✅ Bloco ${i + 1} enviado`);
+        await base44.asServiceRole.entities.Message.update(mensagemSalva.id, {
+          status: 'delivered'
+        });
+      } else {
+        const errorText = await sendResponse.text();
+        console.error(`❌ Erro no bloco ${i + 1}:`, errorText);
+        await base44.asServiceRole.entities.Message.update(mensagemSalva.id, {
+          status: 'failed',
+          error_message: errorText
+        });
+      }
+    }
 
   } catch (error) {
     console.error('❌ Erro ao processar resposta da IA:', error);
