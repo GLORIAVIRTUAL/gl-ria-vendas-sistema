@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
 // Função para processar resposta da IA
 async function processAIResponse(base44, contact, phone, gatewayConfig = null) {
   try {
-    // Usa configurações do Gateway ou fallback para secrets globais
+    // 🔥 CORREÇÃO: Adiciona .trim() para remover espaços em branco
     const PHONE_NUMBER_ID = (gatewayConfig?.phone_number_id || Deno.env.get('META_PHONE_NUMBER_ID'))?.trim();
     const ACCESS_TOKEN = (gatewayConfig?.access_token || Deno.env.get('META_ACCESS_TOKEN'))?.trim();
     
