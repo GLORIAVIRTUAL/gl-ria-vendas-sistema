@@ -104,41 +104,40 @@ export default function AcessoFacebook() {
     }
   };
 
-  // Lança o flow de Cadastro Incorporado do WhatsApp
+  // Lança o flow de Cadastro Incorporado do WhatsApp (formato exato da documentação)
   const launchWhatsAppSignup = () => {
     setLoading(true);
     window.FB.login(fbLoginCallback, {
-      config_id: '1174321964854822', // Configuration ID do Embedded Signup
-      response_type: 'code', // Necessário para System User access token
+      config_id: '1174321964854822',
+      response_type: 'code',
       override_default_response_type: true,
       extras: {
-        feature: 'whatsapp_embedded_signup',
-        version: 'v3',
-        setup: {
-          business: {
-            id: null,
-            name: null,
-            email: null,
-            phone: { code: null, number: null },
-            website: null,
-            address: {
-              streetAddress1: null,
-              streetAddress2: null,
-              city: null,
-              state: null,
-              zipPostal: null,
-              country: null
+        "version": "v3",
+        "setup": {
+          "business": {
+            "id": null,
+            "name": null,
+            "email": null,
+            "phone": { "code": null, "number": null },
+            "website": null,
+            "address": {
+              "streetAddress1": null,
+              "streetAddress2": null,
+              "city": null,
+              "state": null,
+              "zipPostal": null,
+              "country": null
             },
-            timezone: null
+            "timezone": null
           },
-          phone: {
-            displayName: null,
-            category: null,
-            description: null
+          "phone": {
+            "displayName": null,
+            "category": null,
+            "description": null
           },
-          preVerifiedPhone: { ids: null },
-          solutionID: null,
-          whatsAppBusinessAccount: { ids: null }
+          "preVerifiedPhone": { "ids": null },
+          "solutionID": null,
+          "whatsAppBusinessAccount": { "ids": null }
         }
       }
     });
