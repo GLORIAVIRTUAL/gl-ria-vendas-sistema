@@ -1,3 +1,52 @@
+/**
+ * pages.config.js - Page routing configuration
+ * 
+ * This file is AUTO-GENERATED. Do not add imports or modify PAGES manually.
+ * Pages are auto-registered when you create files in the ./pages/ folder.
+ * 
+ * THE ONLY EDITABLE VALUE: mainPage
+ * This controls which page is the landing page (shown when users visit the app).
+ * 
+ * Example file structure:
+ * 
+ *   import HomePage from './pages/HomePage';
+ *   import Dashboard from './pages/Dashboard';
+ *   import Settings from './pages/Settings';
+ *   
+ *   export const PAGES = {
+ *       "HomePage": HomePage,
+ *       "Dashboard": Dashboard,
+ *       "Settings": Settings,
+ *   }
+ *   
+ *   export const pagesConfig = {
+ *       mainPage: "HomePage",
+ *       Pages: PAGES,
+ *   };
+ * 
+ * Example with Layout (wraps all pages):
+ *
+ *   import Home from './pages/Home';
+ *   import Settings from './pages/Settings';
+ *   import __Layout from './Layout.jsx';
+ *
+ *   export const PAGES = {
+ *       "Home": Home,
+ *       "Settings": Settings,
+ *   }
+ *
+ *   export const pagesConfig = {
+ *       mainPage: "Home",
+ *       Pages: PAGES,
+ *       Layout: __Layout,
+ *   };
+ *
+ * To change the main page from HomePage to Dashboard, use find_replace:
+ *   Old: mainPage: "HomePage",
+ *   New: mainPage: "Dashboard",
+ *
+ * The mainPage value must match a key in the PAGES object exactly.
+ */
 import APIDocumentacao from './pages/APIDocumentacao';
 import Afiliados from './pages/Afiliados';
 import Agenda from './pages/Agenda';
@@ -25,6 +74,7 @@ import DisparosWhatsApp from './pages/DisparosWhatsApp';
 import Emails from './pages/Emails';
 import ExportarChatbot from './pages/ExportarChatbot';
 import FormularioStart from './pages/FormularioStart';
+import GerenciarWhatsApp from './pages/GerenciarWhatsApp';
 import Home from './pages/Home';
 import ImportarProdutos from './pages/ImportarProdutos';
 import Negocios from './pages/Negocios';
@@ -36,7 +86,7 @@ import PipelineIA from './pages/PipelineIA';
 import TesteStripe from './pages/TesteStripe';
 import TesteWebhook from './pages/TesteWebhook';
 import TesteWhatsApp from './pages/TesteWhatsApp';
-import GerenciarWhatsApp from './pages/GerenciarWhatsApp';
+import AcessoFacebook from './pages/AcessoFacebook';
 import __Layout from './Layout.jsx';
 
 
@@ -68,6 +118,7 @@ export const PAGES = {
     "Emails": Emails,
     "ExportarChatbot": ExportarChatbot,
     "FormularioStart": FormularioStart,
+    "GerenciarWhatsApp": GerenciarWhatsApp,
     "Home": Home,
     "ImportarProdutos": ImportarProdutos,
     "Negocios": Negocios,
@@ -79,7 +130,7 @@ export const PAGES = {
     "TesteStripe": TesteStripe,
     "TesteWebhook": TesteWebhook,
     "TesteWhatsApp": TesteWhatsApp,
-    "GerenciarWhatsApp": GerenciarWhatsApp,
+    "AcessoFacebook": AcessoFacebook,
 }
 
 export const pagesConfig = {
