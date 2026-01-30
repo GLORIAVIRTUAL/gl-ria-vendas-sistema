@@ -8,6 +8,7 @@ export default function AcessoFacebook() {
   const [loginStatus, setLoginStatus] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [sessionInfo, setSessionInfo] = useState(null);
 
   useEffect(() => {
     // Carrega o SDK do Facebook
@@ -39,6 +40,28 @@ export default function AcessoFacebook() {
       script.crossOrigin = 'anonymous';
       document.body.appendChild(script);
     }
+
+    // Listener para Embedded Signup do WhatsApp
+    const handleMessage = (event) => {
+      if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") return;
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+          console.log('📱 WhatsApp Embedded Signup:', data);
+          setSessionInfo(data);
+          
+          // data pode conter:
+          // - data.data.phone_number_id
+          // - data.data.waba_id (WhatsApp Business Account ID)
+          // - data.event (ex: 'FINISH', 'CANCEL', 'ERROR')
+        }
+      } catch (e) {
+        // Ignora mensagens que não são JSON
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
   const fetchUserInfo = () => {
