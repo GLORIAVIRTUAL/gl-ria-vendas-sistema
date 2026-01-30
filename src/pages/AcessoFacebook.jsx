@@ -12,6 +12,7 @@ export default function AcessoFacebook() {
   const [userInfo, setUserInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [sessionInfo, setSessionInfo] = useState(null);
+  const [authCode, setAuthCode] = useState(null);
 
   useEffect(() => {
     // Carrega o SDK do Facebook
