@@ -15,6 +15,43 @@ export default function AcessoFacebook() {
   const [authCode, setAuthCode] = useState(null);
 
   useEffect(() => {
+    // Listener para Embedded Signup do WhatsApp (DEVE vir antes do SDK)
+    const handleMessage = (event) => {
+      if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") {
+        return;
+      }
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+          console.log('📱 WA_EMBEDDED_SIGNUP event:', data);
+          setSessionInfo(data);
+          
+          // Se o usuário finalizar o flow
+          if (data.event === 'FINISH') {
+            const { phone_number_id, waba_id } = data.data;
+            console.log("✅ Phone number ID:", phone_number_id, "WABA ID:", waba_id);
+            toast.success('WhatsApp Business cadastrado com sucesso!');
+          } 
+          // Se o usuário cancelar
+          else if (data.event === 'CANCEL') {
+            const { current_step } = data.data;
+            console.warn("⚠️ Cancelado na etapa:", current_step);
+            toast.warning(`Cadastro cancelado na etapa: ${current_step}`);
+          } 
+          // Se houver erro
+          else if (data.event === 'ERROR') {
+            const { error_message } = data.data;
+            console.error("❌ Erro:", error_message);
+            toast.error(`Erro: ${error_message}`);
+          }
+        }
+      } catch {
+        console.log('Non JSON Response:', event.data);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
     // Carrega o SDK do Facebook
     window.fbAsyncInit = function() {
       window.FB.init({
@@ -24,14 +61,7 @@ export default function AcessoFacebook() {
         version: 'v24.0'
       });
       setSdkLoaded(true);
-      
-      // Verifica status de login ao carregar
-      window.FB.getLoginStatus(function(response) {
-        setLoginStatus(response.status);
-        if (response.status === 'connected') {
-          fetchUserInfo();
-        }
-      });
+      console.log('✅ Facebook SDK carregado');
     };
 
     // Carrega o script do SDK
@@ -45,26 +75,6 @@ export default function AcessoFacebook() {
       document.body.appendChild(script);
     }
 
-    // Listener para Embedded Signup do WhatsApp
-    const handleMessage = (event) => {
-      if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") return;
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'WA_EMBEDDED_SIGNUP') {
-          console.log('📱 WhatsApp Embedded Signup:', data);
-          setSessionInfo(data);
-          
-          // data pode conter:
-          // - data.data.phone_number_id
-          // - data.data.waba_id (WhatsApp Business Account ID)
-          // - data.event (ex: 'FINISH', 'CANCEL', 'ERROR')
-        }
-      } catch (e) {
-        // Ignora mensagens que não são JSON
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
