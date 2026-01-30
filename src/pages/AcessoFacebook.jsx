@@ -74,6 +74,67 @@ export default function AcessoFacebook() {
     });
   };
 
+  // Callback do Facebook Login com Embedded Signup
+  const fbLoginCallback = (response) => {
+    setLoading(false);
+    console.log('📱 FB Login Response:', response);
+    
+    if (response.authResponse) {
+      const code = response.authResponse.code;
+      console.log('🔑 Auth Code recebido:', code);
+      setAuthCode(code);
+      setLoginStatus('connected');
+      fetchUserInfo();
+      
+      // O código deve ser enviado ao backend para trocar por access token
+      toast.success('Login realizado! Código de autorização recebido.');
+    } else {
+      setLoginStatus('unknown');
+      toast.error('Login cancelado ou falhou');
+    }
+  };
+
+  // Lança o flow de Cadastro Incorporado do WhatsApp
+  const launchWhatsAppSignup = () => {
+    setLoading(true);
+    window.FB.login(fbLoginCallback, {
+      config_id: '1174321964854822', // Configuration ID do Embedded Signup
+      response_type: 'code', // Necessário para System User access token
+      override_default_response_type: true,
+      extras: {
+        feature: 'whatsapp_embedded_signup',
+        version: 'v3',
+        setup: {
+          business: {
+            id: null,
+            name: null,
+            email: null,
+            phone: { code: null, number: null },
+            website: null,
+            address: {
+              streetAddress1: null,
+              streetAddress2: null,
+              city: null,
+              state: null,
+              zipPostal: null,
+              country: null
+            },
+            timezone: null
+          },
+          phone: {
+            displayName: null,
+            category: null,
+            description: null
+          },
+          preVerifiedPhone: { ids: null },
+          solutionID: null,
+          whatsAppBusinessAccount: { ids: null }
+        }
+      }
+    });
+  };
+
+  // Login tradicional do Facebook (sem Embedded Signup)
   const handleLogin = () => {
     setLoading(true);
     window.FB.login(function(response) {
@@ -83,11 +144,7 @@ export default function AcessoFacebook() {
         fetchUserInfo();
       }
     }, { 
-      scope: 'public_profile,email,whatsapp_business_management,whatsapp_business_messaging',
-      extras: {
-        feature: 'whatsapp_embedded_signup',
-        setup: {}
-      }
+      scope: 'public_profile,email,whatsapp_business_management,whatsapp_business_messaging'
     });
   };
 
