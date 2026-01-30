@@ -208,22 +208,71 @@ export default function AcessoFacebook() {
 
             {/* Informações do Embedded Signup */}
             {sessionInfo && (
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <h3 className="font-semibold text-green-700 mb-2">📱 WhatsApp Business Conectado!</h3>
-                <div className="text-sm text-green-600 space-y-1">
-                  {sessionInfo.data?.phone_number_id && (
-                    <p><strong>Phone Number ID:</strong> {sessionInfo.data.phone_number_id}</p>
-                  )}
-                  {sessionInfo.data?.waba_id && (
-                    <p><strong>WABA ID:</strong> {sessionInfo.data.waba_id}</p>
-                  )}
-                  {sessionInfo.event && (
-                    <p><strong>Evento:</strong> {sessionInfo.event}</p>
-                  )}
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200 space-y-4">
+                <h3 className="font-semibold text-green-700">📱 WhatsApp Business Conectado!</h3>
+                
+                {sessionInfo.data?.phone_number_id && (
+                  <div className="space-y-1">
+                    <Label className="text-green-700">Phone Number ID</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        value={sessionInfo.data.phone_number_id} 
+                        readOnly 
+                        className="bg-white font-mono"
+                      />
+                      <Button 
+                        size="icon" 
+                        variant="outline"
+                        onClick={() => copyToClipboard(sessionInfo.data.phone_number_id, 'Phone Number ID')}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                {sessionInfo.data?.waba_id && (
+                  <div className="space-y-1">
+                    <Label className="text-green-700">WABA ID (WhatsApp Business Account)</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        value={sessionInfo.data.waba_id} 
+                        readOnly 
+                        className="bg-white font-mono"
+                      />
+                      <Button 
+                        size="icon" 
+                        variant="outline"
+                        onClick={() => copyToClipboard(sessionInfo.data.waba_id, 'WABA ID')}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {sessionInfo.event && (
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${
+                      sessionInfo.event === 'FINISH' ? 'bg-green-200 text-green-800' :
+                      sessionInfo.event === 'CANCEL' ? 'bg-yellow-200 text-yellow-800' :
+                      'bg-red-200 text-red-800'
+                    }`}>
+                      {sessionInfo.event}
+                    </span>
+                  </div>
+                )}
+
+                <details className="mt-2">
+                  <summary className="text-xs text-green-600 cursor-pointer">Ver dados completos</summary>
+                  <pre className="mt-2 p-2 bg-white rounded text-xs overflow-auto max-h-32">
+                    {JSON.stringify(sessionInfo, null, 2)}
+                  </pre>
+                </details>
+
+                <div className="p-3 bg-yellow-50 rounded border border-yellow-200 text-sm text-yellow-800">
+                  <strong>⚠️ Importante:</strong> Copie o <strong>Phone Number ID</strong> e atualize o secret <code>META_PHONE_NUMBER_ID</code> nas configurações do app.
                 </div>
-                <pre className="mt-2 p-2 bg-white rounded text-xs overflow-auto max-h-32">
-                  {JSON.stringify(sessionInfo, null, 2)}
-                </pre>
               </div>
             )}
 
