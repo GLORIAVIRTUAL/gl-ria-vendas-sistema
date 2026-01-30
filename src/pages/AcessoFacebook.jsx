@@ -81,7 +81,18 @@ export default function AcessoFacebook() {
       if (response.status === 'connected') {
         fetchUserInfo();
       }
-    }, { scope: 'public_profile,email,whatsapp_business_management,whatsapp_business_messaging' });
+    }, { 
+      scope: 'public_profile,email,whatsapp_business_management,whatsapp_business_messaging',
+      extras: {
+        feature: 'whatsapp_embedded_signup',
+        setup: {}
+      }
+    });
+  };
+
+  const copyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copiado!`);
   };
 
   const handleLogout = () => {
