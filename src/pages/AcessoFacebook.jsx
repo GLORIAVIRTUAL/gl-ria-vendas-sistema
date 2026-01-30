@@ -192,6 +192,27 @@ export default function AcessoFacebook() {
               )}
             </div>
 
+            {/* Informações do Embedded Signup */}
+            {sessionInfo && (
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                <h3 className="font-semibold text-green-700 mb-2">📱 WhatsApp Business Conectado!</h3>
+                <div className="text-sm text-green-600 space-y-1">
+                  {sessionInfo.data?.phone_number_id && (
+                    <p><strong>Phone Number ID:</strong> {sessionInfo.data.phone_number_id}</p>
+                  )}
+                  {sessionInfo.data?.waba_id && (
+                    <p><strong>WABA ID:</strong> {sessionInfo.data.waba_id}</p>
+                  )}
+                  {sessionInfo.event && (
+                    <p><strong>Evento:</strong> {sessionInfo.event}</p>
+                  )}
+                </div>
+                <pre className="mt-2 p-2 bg-white rounded text-xs overflow-auto max-h-32">
+                  {JSON.stringify(sessionInfo, null, 2)}
+                </pre>
+              </div>
+            )}
+
             {/* Instruções */}
             <div className="mt-6 p-4 bg-slate-50 rounded-lg">
               <h3 className="font-semibold text-slate-700 mb-2">📌 Instruções</h3>
@@ -200,6 +221,7 @@ export default function AcessoFacebook() {
                 <li>2. Autorize o acesso ao seu perfil</li>
                 <li>3. Selecione a conta do WhatsApp Business</li>
                 <li>4. Conceda as permissões necessárias</li>
+                <li>5. O Phone Number ID aparecerá automaticamente</li>
               </ul>
             </div>
           </CardContent>
