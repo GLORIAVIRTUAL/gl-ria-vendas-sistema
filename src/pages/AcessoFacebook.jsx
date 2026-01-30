@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Facebook, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Facebook, CheckCircle, AlertCircle, Loader2, Copy, Save } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AcessoFacebook() {
   const [sdkLoaded, setSdkLoaded] = useState(false);
