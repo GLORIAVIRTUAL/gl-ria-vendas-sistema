@@ -235,19 +235,34 @@ export default function AcessoFacebook() {
             {/* Botões */}
             <div className="flex flex-col gap-3">
               {loginStatus !== 'connected' ? (
-                <Button 
-                  onClick={handleLogin}
-                  disabled={!sdkLoaded || loading}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                  size="lg"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  ) : (
+                <>
+                  {/* Botão principal - Cadastro Incorporado WhatsApp */}
+                  <Button 
+                    onClick={launchWhatsAppSignup}
+                    disabled={!sdkLoaded || loading}
+                    className="w-full bg-green-600 hover:bg-green-700"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    ) : (
+                      <Facebook className="w-5 h-5 mr-2" />
+                    )}
+                    🚀 Cadastrar WhatsApp Business
+                  </Button>
+
+                  {/* Botão secundário - Login simples */}
+                  <Button 
+                    onClick={handleLogin}
+                    disabled={!sdkLoaded || loading}
+                    variant="outline"
+                    className="w-full"
+                    size="lg"
+                  >
                     <Facebook className="w-5 h-5 mr-2" />
-                  )}
-                  Conectar com Facebook
-                </Button>
+                    Login Simples (sem cadastro)
+                  </Button>
+                </>
               ) : (
                 <Button 
                   onClick={handleLogout}
@@ -263,6 +278,28 @@ export default function AcessoFacebook() {
                 </Button>
               )}
             </div>
+
+            {/* Código de Autorização */}
+            {authCode && (
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-2">
+                <h3 className="font-semibold text-blue-700">🔑 Código de Autorização</h3>
+                <p className="text-xs text-blue-600">Este código deve ser trocado por um Access Token no backend.</p>
+                <div className="flex gap-2">
+                  <Input 
+                    value={authCode} 
+                    readOnly 
+                    className="bg-white font-mono text-xs"
+                  />
+                  <Button 
+                    size="icon" 
+                    variant="outline"
+                    onClick={() => copyToClipboard(authCode, 'Código')}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {/* Informações do Embedded Signup */}
             {sessionInfo && (
