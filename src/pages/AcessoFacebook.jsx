@@ -104,7 +104,7 @@ export default function AcessoFacebook() {
     }
   };
 
-  // Lança o flow de Cadastro Incorporado do WhatsApp (com opção de migrar número existente)
+  // Lança o flow de Cadastro Incorporado do WhatsApp (com suporte a COEX)
   const launchWhatsAppSignup = () => {
     setLoading(true);
     window.FB.login(fbLoginCallback, {
@@ -112,8 +112,9 @@ export default function AcessoFacebook() {
       response_type: 'code',
       override_default_response_type: true,
       extras: {
-        "featureType": "coex_replacement",
-        "sessionInfoVersion": "3"
+        "featureType": "whatsapp_embedded_signup",
+        "sessionInfoVersion": "3",
+        "setup": {}
       }
     });
   };
