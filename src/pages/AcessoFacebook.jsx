@@ -104,7 +104,7 @@ export default function AcessoFacebook() {
     }
   };
 
-  // Lança o flow de Cadastro Incorporado do WhatsApp (formato exato da documentação)
+  // Lança o flow de Cadastro Incorporado do WhatsApp (com opção de migrar número existente)
   const launchWhatsAppSignup = () => {
     setLoading(true);
     window.FB.login(fbLoginCallback, {
@@ -112,33 +112,8 @@ export default function AcessoFacebook() {
       response_type: 'code',
       override_default_response_type: true,
       extras: {
-        "version": "v3",
-        "setup": {
-          "business": {
-            "id": null,
-            "name": null,
-            "email": null,
-            "phone": { "code": null, "number": null },
-            "website": null,
-            "address": {
-              "streetAddress1": null,
-              "streetAddress2": null,
-              "city": null,
-              "state": null,
-              "zipPostal": null,
-              "country": null
-            },
-            "timezone": null
-          },
-          "phone": {
-            "displayName": null,
-            "category": null,
-            "description": null
-          },
-          "preVerifiedPhone": { "ids": null },
-          "solutionID": null,
-          "whatsAppBusinessAccount": { "ids": null }
-        }
+        "featureType": "coex_replacement",
+        "sessionInfoVersion": "3"
       }
     });
   };
