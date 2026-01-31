@@ -295,7 +295,7 @@ async function processAIResponse(base44, contact, phone, customerMessage) {
           messaging_product: 'whatsapp',
           to: phone,
           type: 'text',
-          text: { body: aiResponse }
+          text: { body: finalResponse }
         })
       }
     );
