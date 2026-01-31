@@ -212,12 +212,70 @@ async function processAIResponse(base44, contact, phone, customerMessage) {
 
     console.log('✅ Resposta da IA:', aiResponse);
 
+    // Verifica se a resposta contém comando de agendamento
+    let finalResponse = aiResponse;
+    const agendarMatch = aiResponse.match(/\[AGENDAR\]([\s\S]*?)\[\/AGENDAR\]/);
+    
+    if (agendarMatch) {
+      console.log('📅 Detectado comando de agendamento!');
+      const agendarBlock = agendarMatch[1];
+      
+      // Extrai dados do bloco
+      const extractField = (field) => {
+        const match = agendarBlock.match(new RegExp(`${field}:\\s*(.+)`, 'i'));
+        return match ? match[1].trim() : '';
+      };
+      
+      const nome = extractField('NOME');
+      const email = extractField('EMAIL');
+      const telefone = extractField('TELEFONE') || phone;
+      const produto = extractField('PRODUTO');
+      const data = extractField('DATA');
+      const horario = extractField('HORARIO');
+      
+      console.log('📋 Dados extraídos:', { nome, email, telefone, produto, data, horario });
+      
+      // Valida se tem os dados mínimos necessários
+      if (nome && produto && data && horario && nome !== '[nome completo]' && data !== '[AAAA-MM-DD]') {
+        try {
+          // Cria o agendamento
+          const agendamento = await base44.asServiceRole.entities.Agendamento.create({
+            nome_cliente: nome,
+            email_cliente: email || `${telefone}@whatsapp.temp`,
+            telefone_cliente: telefone,
+            produto: produto,
+            data: data,
+            horario: horario,
+            status: 'Agendada',
+            origem: 'Chatbot',
+            observacoes: `Agendado via WhatsApp IA - Contato: ${contact.name || phone}`
+          });
+          
+          console.log('✅ Agendamento criado com sucesso! ID:', agendamento.id);
+          
+          // Remove o bloco [AGENDAR] e adiciona confirmação
+          finalResponse = aiResponse.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
+          finalResponse += `\n\n✅ *Agendamento Confirmado!*\n📅 Data: ${data}\n⏰ Horário: ${horario}\n📦 Produto: ${produto.replace(/_/g, ' ')}\n\nAguardamos você! 🎉`;
+          
+        } catch (agendaError) {
+          console.error('❌ Erro ao criar agendamento:', agendaError);
+          finalResponse = aiResponse.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
+          finalResponse += '\n\n⚠️ Houve um problema ao confirmar seu agendamento. Por favor, tente novamente ou entre em contato conosco.';
+        }
+      } else {
+        console.log('⚠️ Dados incompletos ou com placeholders, não criando agendamento');
+        // Remove o bloco mas não confirma
+        finalResponse = aiResponse.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
+        finalResponse += '\n\nPor favor, me informe os dados que faltam para completar seu agendamento.';
+      }
+    }
+
     // Salva resposta no banco
     await base44.asServiceRole.entities.Message.create({
       contact_id: contact.id,
       direction: 'outbound',
       sender: 'ai',
-      content: aiResponse,
+      content: finalResponse,
       type: 'text',
       status: 'sent'
     });
