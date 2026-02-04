@@ -49,7 +49,7 @@ export default function Dashboard() {
   };
 
   const handleSaveUser = (userId) => {
-    updateUserMutation.mutate({ id: userId, data: { full_name: editName } });
+    updateUserMutation.mutate({ id: userId, fullName: editName });
   };
 
   if (isLoading) {
