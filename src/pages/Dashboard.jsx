@@ -11,11 +11,40 @@ import { createPageUrl } from "@/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
+  const queryClient = useQueryClient();
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editName, setEditName] = useState('');
+
   const { data: agendamentos = [], isLoading } = useQuery({
     queryKey: ['agendamentos'],
     queryFn: () => base44.entities.Agendamento.list(),
     initialData: [],
   });
+
+  const { data: usuarios = [] } = useQuery({
+    queryKey: ['usuarios'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.User.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['usuarios'] });
+      setEditingUserId(null);
+      toast.success('Nome atualizado!');
+    },
+    onError: () => toast.error('Erro ao atualizar'),
+  });
+
+  const handleEditUser = (user) => {
+    setEditingUserId(user.id);
+    setEditName(user.full_name || '');
+  };
+
+  const handleSaveUser = (userId) => {
+    updateUserMutation.mutate({ id: userId, data: { full_name: editName } });
+  };
 
   if (isLoading) {
     return (
