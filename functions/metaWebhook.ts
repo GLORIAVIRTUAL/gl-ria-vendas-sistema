@@ -246,16 +246,48 @@ async function processAIResponse(base44, contact, phone, customerMessage) {
     const now = new Date();
     const recifeTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Recife' }));
     const hora = recifeTime.getHours();
+    const dia = recifeTime.getDate();
+    const mes = recifeTime.getMonth() + 1;
+    const ano = recifeTime.getFullYear();
+    const diaSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'][recifeTime.getDay()];
+    
+    // Formata a data atual para exibição
+    const dataAtualFormatada = `${dia.toString().padStart(2, '0')}/${mes.toString().padStart(2, '0')}/${ano}`;
+    const dataAtualISO = `${ano}-${mes.toString().padStart(2, '0')}-${dia.toString().padStart(2, '0')}`;
+    
     let saudacao = 'Bom dia';
     if (hora >= 12 && hora < 18) {
       saudacao = 'Boa tarde';
     } else if (hora >= 18 || hora < 6) {
       saudacao = 'Boa noite';
     }
-    console.log(`🕐 Horário Recife: ${hora}h - Saudação: ${saudacao}`);
+    console.log(`🕐 Horário Recife: ${hora}h - Data: ${dataAtualFormatada} (${diaSemana}) - Saudação: ${saudacao}`);
+
+    // Nome do cliente (do contato)
+    const nomeCliente = contact.name || 'Cliente';
 
     const systemPrompt = settings.system_prompt || 'Você é GLÓRIA, uma assistente virtual inteligente.';
-    const fullPrompt = `${systemPrompt}\n\nINSTRUÇÃO IMPORTANTE: O horário atual em Recife é ${hora}h. Use a saudação "${saudacao}" quando cumprimentar o cliente.\n\nHistórico:\n${history}\n\nCliente: ${customerMessage}`;
+    const fullPrompt = `${systemPrompt}
+
+INFORMAÇÕES IMPORTANTES DO CONTEXTO:
+- Data de HOJE: ${dataAtualFormatada} (${diaSemana})
+- Data ISO de hoje: ${dataAtualISO}
+- Horário atual: ${hora}h
+- Saudação correta: ${saudacao}
+- Nome do cliente: ${nomeCliente}
+- Telefone do cliente: ${phone}
+
+REGRAS PARA AGENDAMENTO:
+1. SEMPRE pergunte o nome completo do cliente se ainda não souber
+2. SEMPRE pergunte o email do cliente
+3. Só agende para datas FUTURAS (após ${dataAtualFormatada})
+4. Não agende para sábados ou domingos
+5. Horários disponíveis: 08:00 às 20:00
+
+Histórico:
+${history}
+
+Cliente: ${customerMessage}`;
 
     console.log('🔄 Chamando IA...');
 
