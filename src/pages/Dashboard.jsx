@@ -28,13 +28,19 @@ export default function Dashboard() {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.User.update(id, data),
+    mutationFn: async ({ id, fullName }) => {
+      const result = await base44.functions.invoke('updateUserName', { userId: id, fullName });
+      if (result.status !== 200) {
+        throw new Error(result.data?.error || 'Erro ao atualizar');
+      }
+      return result.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
       setEditingUserId(null);
       toast.success('Nome atualizado!');
     },
-    onError: () => toast.error('Erro ao atualizar'),
+    onError: (error) => toast.error(error.message || 'Erro ao atualizar'),
   });
 
   const handleEditUser = (user) => {
