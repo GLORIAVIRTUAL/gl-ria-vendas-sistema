@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Send, Loader2 } from 'lucide-react';
+import { MessageSquare, Send, Loader2, RefreshCw } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -14,15 +14,19 @@ import { toast } from 'sonner';
 
 export default function TemplateSelector({ contact, onSent }) {
   const [selectedTemplate, setSelectedTemplate] = useState('');
-  const [parameters, setParameters] = useState([]);
+  const [parameters, setParameters] = useState({});
 
-  const { data: templates = [] } = useQuery({
-    queryKey: ['meta-templates'],
-    queryFn: () => base44.entities.MetaTemplate.filter({ 
-      ativo: true, 
-      status: 'APPROVED' 
-    }),
+  // Busca templates diretamente do WABA conectado
+  const { data: wabaData, isLoading: loadingTemplates, refetch } = useQuery({
+    queryKey: ['waba-templates'],
+    queryFn: async () => {
+      const response = await base44.functions.invoke('getWabaTemplates');
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
   });
+
+  const templates = wabaData?.templates || [];
 
   const sendMutation = useMutation({
     mutationFn: async () => {
