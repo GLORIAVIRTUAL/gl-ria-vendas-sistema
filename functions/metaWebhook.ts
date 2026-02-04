@@ -242,8 +242,20 @@ async function processAIResponse(base44, contact, phone, customerMessage) {
       `${m.sender === 'customer' ? 'Cliente' : 'Assistente'}: ${m.content}`
     ).join('\n');
 
+    // Calcula saudação baseada no horário de Recife (GMT-3)
+    const now = new Date();
+    const recifeTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Recife' }));
+    const hora = recifeTime.getHours();
+    let saudacao = 'Bom dia';
+    if (hora >= 12 && hora < 18) {
+      saudacao = 'Boa tarde';
+    } else if (hora >= 18 || hora < 6) {
+      saudacao = 'Boa noite';
+    }
+    console.log(`🕐 Horário Recife: ${hora}h - Saudação: ${saudacao}`);
+
     const systemPrompt = settings.system_prompt || 'Você é GLÓRIA, uma assistente virtual inteligente.';
-    const fullPrompt = `${systemPrompt}\n\nHistórico:\n${history}\n\nCliente: ${customerMessage}`;
+    const fullPrompt = `${systemPrompt}\n\nINSTRUÇÃO IMPORTANTE: O horário atual em Recife é ${hora}h. Use a saudação "${saudacao}" quando cumprimentar o cliente.\n\nHistórico:\n${history}\n\nCliente: ${customerMessage}`;
 
     console.log('🔄 Chamando IA...');
 
