@@ -30,17 +30,33 @@ export default function TemplateSelector({ contact, onSent }) {
 
   const sendMutation = useMutation({
     mutationFn: async () => {
+      // Extrai os parâmetros em ordem para cada componente
+      const templateParams = [];
+      const currentTemplate = templates.find(t => t.name === selectedTemplate);
+      
+      if (currentTemplate?.components) {
+        currentTemplate.components.forEach(comp => {
+          if (comp.type === 'BODY' && comp.example?.body_text?.[0]) {
+            const bodyParams = comp.example.body_text[0].map((_, idx) => 
+              parameters[`body_${idx}`] || ''
+            );
+            templateParams.push(...bodyParams);
+          }
+        });
+      }
+
       const response = await base44.functions.invoke('sendTemplateMessage', {
         phone: contact.phone,
         template_name: selectedTemplate,
-        parameters: parameters.filter(p => p.trim())
+        language: currentTemplate?.language || 'pt_BR',
+        parameters: templateParams.filter(p => p.trim())
       });
       return response;
     },
     onSuccess: () => {
       toast.success('Template enviado com sucesso!');
       setSelectedTemplate('');
-      setParameters([]);
+      setParameters({});
       onSent?.();
     },
     onError: (error) => {
@@ -49,6 +65,27 @@ export default function TemplateSelector({ contact, onSent }) {
   });
 
   const currentTemplate = templates.find(t => t.name === selectedTemplate);
+  
+  // Extrai variáveis do template
+  const getTemplateVariables = () => {
+    if (!currentTemplate?.components) return [];
+    
+    const variables = [];
+    currentTemplate.components.forEach(comp => {
+      if (comp.type === 'BODY') {
+        // Encontra {{1}}, {{2}}, etc no texto
+        const text = comp.text || '';
+        const matches = text.match(/\{\{(\d+)\}\}/g) || [];
+        matches.forEach((match, idx) => {
+          const num = match.replace(/\{\{|\}\}/g, '');
+          variables.push({ key: `body_${idx}`, label: `Variável ${num}`, example: comp.example?.body_text?.[0]?.[idx] });
+        });
+      }
+    });
+    return variables;
+  };
+
+  const templateVars = getTemplateVariables();
 
   const handleSend = () => {
     if (!selectedTemplate) {
