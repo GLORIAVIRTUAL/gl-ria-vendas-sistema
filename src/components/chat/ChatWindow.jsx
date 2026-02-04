@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Send, Paperclip, Bot, User, 
-  MoreVertical, X, Loader2, FileText, Trash2 
+  MoreVertical, X, Loader2, FileText, Trash2, CheckCircle2 
 } from 'lucide-react';
 import {
   DropdownMenu,
