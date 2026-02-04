@@ -29,11 +29,12 @@ export default function Dashboard() {
 
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, fullName }) => {
-      const result = await base44.functions.invoke('updateUserName', { userId: id, fullName });
-      if (result.status !== 200) {
-        throw new Error(result.data?.error || 'Erro ao atualizar');
+      const response = await base44.functions.invoke('updateUserName', { userId: id, fullName });
+      const result = response.data;
+      if (result?.error) {
+        throw new Error(result.error);
       }
-      return result.data;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usuarios'] });
