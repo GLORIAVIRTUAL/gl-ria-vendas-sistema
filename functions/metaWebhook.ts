@@ -70,6 +70,18 @@ Deno.serve(async (req) => {
 
       // Processa cada mensagem
       for (const message of messages) {
+        // Verifica se a mensagem já foi processada (evita duplicação)
+        const messageId = message.id;
+        if (messageId && processedMessages.has(messageId)) {
+          console.log('⚠️ Mensagem já processada, ignorando:', messageId);
+          continue;
+        }
+        if (messageId) {
+          processedMessages.add(messageId);
+          // Limpa cache após 5 minutos para evitar memory leak
+          setTimeout(() => processedMessages.delete(messageId), 300000);
+        }
+
         const phone = message.from;
         const timestamp = message.timestamp;
         
