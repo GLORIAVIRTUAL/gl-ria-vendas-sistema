@@ -48,6 +48,7 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import APIDocumentacao from './pages/APIDocumentacao';
+import AcessoFacebook from './pages/AcessoFacebook';
 import Afiliados from './pages/Afiliados';
 import Agenda from './pages/Agenda';
 import AgendaAfiliado from './pages/AgendaAfiliado';
@@ -86,12 +87,12 @@ import PipelineIA from './pages/PipelineIA';
 import TesteStripe from './pages/TesteStripe';
 import TesteWebhook from './pages/TesteWebhook';
 import TesteWhatsApp from './pages/TesteWhatsApp';
-import AcessoFacebook from './pages/AcessoFacebook';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "APIDocumentacao": APIDocumentacao,
+    "AcessoFacebook": AcessoFacebook,
     "Afiliados": Afiliados,
     "Agenda": Agenda,
     "AgendaAfiliado": AgendaAfiliado,
@@ -130,11 +131,10 @@ export const PAGES = {
     "TesteStripe": TesteStripe,
     "TesteWebhook": TesteWebhook,
     "TesteWhatsApp": TesteWhatsApp,
-    "AcessoFacebook": AcessoFacebook,
 }
 
 export const pagesConfig = {
-    mainPage: "AcessoFacebook",
+    mainPage: "Dashboard",
     Pages: PAGES,
     Layout: __Layout,
 };
