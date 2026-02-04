@@ -95,50 +95,82 @@ export default function TemplateSelector({ contact, onSent }) {
     sendMutation.mutate();
   };
 
+  // Extrai o texto do body do template
+  const getTemplateBody = () => {
+    if (!currentTemplate?.components) return '';
+    const bodyComp = currentTemplate.components.find(c => c.type === 'BODY');
+    return bodyComp?.text || '';
+  };
+
   return (
     <div className="space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-      <div className="flex items-center gap-2 mb-3">
-        <MessageSquare className="w-4 h-4 text-blue-600" />
-        <span className="text-sm font-semibold text-blue-900">Enviar Template Aprovado</span>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-4 h-4 text-blue-600" />
+          <span className="text-sm font-semibold text-blue-900">Enviar Template Aprovado</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={loadingTemplates}
+          className="h-7 px-2"
+        >
+          <RefreshCw className={`w-3 h-3 ${loadingTemplates ? 'animate-spin' : ''}`} />
+        </Button>
       </div>
 
-      <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+      <Select value={selectedTemplate} onValueChange={(val) => {
+        setSelectedTemplate(val);
+        setParameters({});
+      }}>
         <SelectTrigger className="bg-white">
-          <SelectValue placeholder="Escolha um template..." />
+          <SelectValue placeholder={loadingTemplates ? "Carregando templates..." : "Escolha um template..."} />
         </SelectTrigger>
         <SelectContent>
+          {templates.length === 0 && !loadingTemplates && (
+            <div className="px-2 py-3 text-sm text-slate-500 text-center">
+              Nenhum template aprovado encontrado
+            </div>
+          )}
           {templates.map(t => (
-            <SelectItem key={t.id} value={t.name}>
-              {t.name}
+            <SelectItem key={t.id || t.name} value={t.name}>
+              <div className="flex items-center gap-2">
+                <span>{t.name}</span>
+                <span className="text-xs text-slate-400">({t.language})</span>
+              </div>
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
-      {currentTemplate && currentTemplate.parameters?.length > 0 && (
+      {templateVars.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-medium text-slate-600">Parâmetros:</p>
-          {currentTemplate.parameters.map((param, idx) => (
+          <p className="text-xs font-medium text-slate-600">Preencha as variáveis:</p>
+          {templateVars.map((v) => (
             <input
-              key={idx}
+              key={v.key}
               type="text"
-              placeholder={`${param.name} (${param.type})`}
-              value={parameters[idx] || ''}
+              placeholder={v.example ? `Ex: ${v.example}` : v.label}
+              value={parameters[v.key] || ''}
               onChange={(e) => {
-                const newParams = [...parameters];
-                newParams[idx] = e.target.value;
-                setParameters(newParams);
+                setParameters(prev => ({ ...prev, [v.key]: e.target.value }));
               }}
-              className="w-full px-2 py-1 text-sm border border-slate-300 rounded"
+              className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:border-blue-400 focus:outline-none"
             />
           ))}
         </div>
       )}
 
-      {currentTemplate?.body && (
-        <div className="p-2 bg-white rounded border border-slate-200">
+      {currentTemplate && (
+        <div className="p-3 bg-white rounded-lg border border-slate-200">
           <p className="text-xs text-slate-500 mb-1">Preview:</p>
-          <p className="text-sm text-slate-700">{currentTemplate.body}</p>
+          <p className="text-sm text-slate-700 whitespace-pre-wrap">{getTemplateBody()}</p>
+          {currentTemplate.category && (
+            <span className="inline-block mt-2 text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
+              {currentTemplate.category}
+            </span>
+          )}
         </div>
       )}
 
