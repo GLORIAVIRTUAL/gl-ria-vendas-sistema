@@ -168,6 +168,55 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Seção de Usuários do Sistema */}
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Users className="w-5 h-5 text-purple-600" />
+              <h3 className="text-lg font-semibold">Usuários do Sistema</h3>
+            </div>
+            {usuarios.length === 0 ? (
+              <p className="text-slate-500 text-center py-4">Nenhum usuário encontrado</p>
+            ) : (
+              <div className="space-y-3">
+                {usuarios.map(user => (
+                  <div key={user.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
+                    {editingUserId === user.id ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <Input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="flex-1"
+                          placeholder="Nome do usuário"
+                        />
+                        <Button size="sm" onClick={() => handleSaveUser(user.id)} className="bg-green-600 hover:bg-green-700">
+                          <Save className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingUserId(null)}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <p className="font-medium text-slate-900">{user.full_name || 'Sem nome'}</p>
+                          <p className="text-sm text-slate-500">{user.email}</p>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                            {user.role === 'admin' ? 'Admin' : 'Usuário'}
+                          </span>
+                        </div>
+                        <Button size="sm" variant="ghost" onClick={() => handleEditUser(user)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 shadow-lg">
             <CardContent className="p-6">
