@@ -21,8 +21,8 @@ Deno.serve(async (req) => {
       ? `*${senderName}:*\n${message}` 
       : message;
 
-    const PHONE_NUMBER_ID = Deno.env.get('META_PHONE_NUMBER_ID');
-    const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
+    const PHONE_NUMBER_ID = (Deno.env.get('META_PHONE_NUMBER_ID') || '').trim();
+    const ACCESS_TOKEN = (Deno.env.get('META_ACCESS_TOKEN') || '').trim();
 
     if (!PHONE_NUMBER_ID || !ACCESS_TOKEN) {
       console.error('❌ Meta credentials not configured');
