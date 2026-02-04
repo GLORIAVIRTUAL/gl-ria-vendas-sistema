@@ -1,8 +1,11 @@
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Plus, Clock, Users, CheckCircle, TrendingUp, ArrowUp } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Calendar, Plus, Clock, Users, CheckCircle, TrendingUp, ArrowUp, Pencil, Save, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
