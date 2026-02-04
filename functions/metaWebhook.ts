@@ -349,21 +349,88 @@ Cliente: ${customerMessage}`;
             const endHora = horaNum + 1;
             const endDateTime = `${data}T${endHora.toString().padStart(2, '0')}:${minNum.toString().padStart(2, '0')}:00`;
             
-            console.log('📅 Criando evento no Google Calendar...');
-            const calendarResult = await base44.asServiceRole.functions.invoke('createGoogleCalendarEvent', {
-              summary: `Reunião - ${nome} - ${produto.replace(/_/g, ' ')}`,
-              description: `Cliente: ${nome}\nEmail: ${email}\nTelefone: ${telefone}\nProduto: ${produto.replace(/_/g, ' ')}\n\nAgendado via WhatsApp IA`,
-              startDateTime,
-              endDateTime,
-              attendeeEmail: email,
-              attendeeName: nome
-            });
+            console.log('📅 Criando evento no Google Calendar diretamente...');
             
-            console.log('📅 Resultado do Calendar:', calendarResult);
+            // Busca credenciais do Google
+            const clientId = (Deno.env.get('GOOGLE_CALENDAR_CLIENT_ID') || '').replace('client_id=', '').trim();
+            const clientSecret = (Deno.env.get('GOOGLE_CALENDAR_CLIENT_SECRET') || '').replace('client_secret=', '').trim();
+            const refreshToken = (Deno.env.get('GOOGLE_CALENDAR_REFRESH_TOKEN') || '').replace('refresh_token=', '').trim();
             
-            if (calendarResult?.meetLink) {
-              meetLink = calendarResult.meetLink;
-              console.log('✅ Link do Meet obtido:', meetLink);
+            if (clientId && clientSecret && refreshToken) {
+              // Obtém access token
+              const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                  client_id: clientId,
+                  client_secret: clientSecret,
+                  refresh_token: refreshToken,
+                  grant_type: 'refresh_token',
+                }),
+              });
+              
+              if (tokenResponse.ok) {
+                const tokenData = await tokenResponse.json();
+                const accessToken = tokenData.access_token;
+                
+                // Cria evento no Calendar
+                const event = {
+                  summary: `Reunião - ${nome} - ${produto.replace(/_/g, ' ')}`,
+                  description: `Cliente: ${nome}\nEmail: ${email}\nTelefone: ${telefone}\nProduto: ${produto.replace(/_/g, ' ')}\n\nAgendado via WhatsApp IA`,
+                  start: { dateTime: startDateTime, timeZone: 'America/Sao_Paulo' },
+                  end: { dateTime: endDateTime, timeZone: 'America/Sao_Paulo' },
+                  attendees: [{ email: email, displayName: nome }],
+                  conferenceData: {
+                    createRequest: {
+                      requestId: `meet-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                      conferenceSolutionKey: { type: 'hangoutsMeet' }
+                    }
+                  },
+                  reminders: {
+                    useDefault: false,
+                    overrides: [
+                      { method: 'email', minutes: 24 * 60 },
+                      { method: 'popup', minutes: 30 },
+                    ],
+                  },
+                };
+                
+                const calendarResponse = await fetch(
+                  'https://www.googleapis.com/calendar/v3/calendars/primary/events?conferenceDataVersion=1&sendUpdates=all',
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${accessToken}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(event),
+                  }
+                );
+                
+                if (calendarResponse.ok) {
+                  const eventData = await calendarResponse.json();
+                  console.log('📅 Evento criado:', eventData.id);
+                  
+                  // Extrai link do Meet
+                  if (eventData.conferenceData?.entryPoints) {
+                    const videoEntry = eventData.conferenceData.entryPoints.find(ep => ep.entryPointType === 'video');
+                    if (videoEntry?.uri) {
+                      meetLink = videoEntry.uri;
+                    }
+                  }
+                  if (!meetLink && eventData.hangoutLink) {
+                    meetLink = eventData.hangoutLink;
+                  }
+                  console.log('✅ Link do Meet obtido:', meetLink);
+                } else {
+                  const errorText = await calendarResponse.text();
+                  console.error('❌ Erro ao criar evento no Calendar:', errorText);
+                }
+              } else {
+                console.error('❌ Erro ao obter access token');
+              }
+            } else {
+              console.error('⚠️ Credenciais do Google Calendar não configuradas');
             }
           } catch (calendarError) {
             console.error('⚠️ Erro ao criar evento no Calendar (continuando sem link):', calendarError);
