@@ -138,14 +138,29 @@ Deno.serve(async (req) => {
             pipeline_stage: 'novo_lead',
             ai_enabled: true,
             is_active: true,
+            conversation_finished: false,
             last_message_at: new Date(parseInt(timestamp) * 1000).toISOString()
           });
         } else {
           contact = existingContacts[0];
+          
+          // Se a conversa foi finalizada, reseta para nova conversa
+          const wasFinished = contact.conversation_finished || contact.is_active === false;
+          
           await base44.asServiceRole.entities.Contact.update(contact.id, {
             last_message_at: new Date(parseInt(timestamp) * 1000).toISOString(),
-            name: contactName || contact.name
+            name: contactName || contact.name,
+            is_active: true,
+            conversation_finished: false
           });
+          
+          // Atualiza o objeto local
+          contact.is_active = true;
+          contact.conversation_finished = false;
+          
+          if (wasFinished) {
+            console.log('🔄 Nova conversa iniciada (anterior foi finalizada)');
+          }
         }
 
         console.log('💾 Salvando mensagem no banco...');
