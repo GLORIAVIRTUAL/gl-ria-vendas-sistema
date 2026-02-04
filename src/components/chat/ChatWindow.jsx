@@ -111,17 +111,21 @@ export default function ChatWindow({
     // Envia mensagem de encerramento via WhatsApp
     const finishMessage = "✅ *Conversa Finalizada*\n\nObrigado pelo seu contato! 🙏\n\nCaso precise de algo mais, é só enviar uma nova mensagem que iniciaremos um novo atendimento.\n\nAté breve! 👋";
     
-    await onSendMessage({
-      content: finishMessage,
-      type: 'text'
-    });
-
-    // Desativa a IA e limpa o histórico de contexto marcando como finalizada
-    onUpdateContact({ 
-      ai_enabled: true, // Mantém IA ativa para próxima conversa
-      is_active: false, // Marca como inativa para zerar contexto
-      conversation_finished: true 
-    });
+    try {
+      await onSendMessage({
+        content: finishMessage,
+        type: 'text'
+      });
+      
+      // Só atualiza o contato APÓS enviar a mensagem com sucesso
+      await onUpdateContact({ 
+        ai_enabled: true, // Mantém IA ativa para próxima conversa
+        is_active: false, // Marca como inativa para zerar contexto
+        conversation_finished: true 
+      });
+    } catch (error) {
+      console.error('Erro ao finalizar conversa:', error);
+    }
   };
 
   if (!contact) {
