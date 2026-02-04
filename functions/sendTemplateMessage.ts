@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { phone, template_name, parameters = [] } = await req.json();
+    const { phone, template_name, language = 'pt_BR', parameters = [] } = await req.json();
 
     if (!phone || !template_name) {
       return Response.json({ 
@@ -21,8 +21,8 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    const PHONE_NUMBER_ID = Deno.env.get('META_PHONE_NUMBER_ID');
-    const ACCESS_TOKEN = Deno.env.get('META_ACCESS_TOKEN');
+    const PHONE_NUMBER_ID = (Deno.env.get('META_PHONE_NUMBER_ID') || '').trim();
+    const ACCESS_TOKEN = (Deno.env.get('META_ACCESS_TOKEN') || '').trim();
 
     if (!PHONE_NUMBER_ID || !ACCESS_TOKEN) {
       return Response.json({ 
@@ -38,16 +38,23 @@ Deno.serve(async (req) => {
       template: {
         name: template_name,
         language: {
-          code: 'pt_BR'
-        },
-        body: {
+          code: language
+        }
+      }
+    };
+
+    // Adiciona parâmetros apenas se existirem
+    if (parameters && parameters.length > 0) {
+      payload.template.components = [
+        {
+          type: 'body',
           parameters: parameters.map(p => ({
             type: 'text',
             text: String(p)
           }))
         }
-      }
-    };
+      ];
+    }
 
     console.log('📤 Enviando template:', template_name, 'para', phone);
 
