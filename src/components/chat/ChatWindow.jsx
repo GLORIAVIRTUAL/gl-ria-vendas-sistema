@@ -107,6 +107,23 @@ export default function ChatWindow({
     onUpdateContact({ pipeline_stage: stage });
   };
 
+  const handleFinishConversation = async () => {
+    // Envia mensagem de encerramento via WhatsApp
+    const finishMessage = "✅ *Conversa Finalizada*\n\nObrigado pelo seu contato! 🙏\n\nCaso precise de algo mais, é só enviar uma nova mensagem que iniciaremos um novo atendimento.\n\nAté breve! 👋";
+    
+    await onSendMessage({
+      content: finishMessage,
+      type: 'text'
+    });
+
+    // Desativa a IA e limpa o histórico de contexto marcando como finalizada
+    onUpdateContact({ 
+      ai_enabled: true, // Mantém IA ativa para próxima conversa
+      is_active: false, // Marca como inativa para zerar contexto
+      conversation_finished: true 
+    });
+  };
+
   if (!contact) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
