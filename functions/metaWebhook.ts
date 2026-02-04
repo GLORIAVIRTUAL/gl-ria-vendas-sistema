@@ -1,5 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Cache para evitar processamento duplicado de mensagens
+const processedMessages = new Set();
+
 Deno.serve(async (req) => {
   console.log('🔔 Webhook Meta recebido:', req.method);
   
