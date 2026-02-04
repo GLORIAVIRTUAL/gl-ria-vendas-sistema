@@ -218,12 +218,24 @@ async function processAIResponse(base44, contact, phone, customerMessage) {
 
     console.log('⚙️ Config IA:', settings.name);
 
-    // Busca histórico de mensagens
-    const recentMessages = await base44.asServiceRole.entities.Message.filter(
+    // Busca histórico de mensagens (apenas da conversa atual)
+    const allMessages = await base44.asServiceRole.entities.Message.filter(
       { contact_id: contact.id },
       '-created_date',
-      10
+      50
     );
+    
+    // Se a conversa anterior foi finalizada, ignora mensagens antigas
+    // Encontra a última mensagem de finalização
+    const finishIndex = allMessages.findIndex(m => 
+      m.content?.includes('*Conversa Finalizada*') || 
+      m.content?.includes('Conversa encerrada')
+    );
+    
+    // Pega apenas mensagens após a última finalização (máximo 10)
+    const recentMessages = finishIndex > -1 
+      ? allMessages.slice(0, finishIndex).slice(0, 10)
+      : allMessages.slice(0, 10);
 
     // Monta contexto
     const history = recentMessages.reverse().map(m => 
