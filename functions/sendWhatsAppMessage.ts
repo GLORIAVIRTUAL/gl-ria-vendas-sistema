@@ -34,7 +34,10 @@ Deno.serve(async (req) => {
     // Formata telefone (remove caracteres especiais)
     const phoneFormatted = phone.replace(/\D/g, '');
     
-    console.log('📤 Enviando mensagem para:', phoneFormatted);
+    console.log('📤 Enviando mensagem manual para:', phoneFormatted);
+    console.log('📝 Mensagem:', messageWithSender.substring(0, 100));
+    console.log('🔑 Phone Number ID:', PHONE_NUMBER_ID);
+    console.log('🔑 Token (últimos 10):', ACCESS_TOKEN.slice(-10));
 
     // Envia via Meta WhatsApp API
     const response = await fetch(
