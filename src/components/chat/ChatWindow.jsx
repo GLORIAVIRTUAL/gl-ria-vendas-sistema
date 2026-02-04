@@ -197,8 +197,15 @@ export default function ChatWindow({
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-500" onClick={onClose}>
-                Fechar conversa
+              <DropdownMenuItem 
+                className="text-green-600 font-semibold" 
+                onClick={handleFinishConversation}
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                ✅ Finalizar Conversa
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-slate-500" onClick={onClose}>
+                Fechar janela
               </DropdownMenuItem>
               {isAdmin && (
                 <DropdownMenuItem 
