@@ -316,22 +316,68 @@ Cliente: ${customerMessage}`;
       const email = extractField('EMAIL');
       const telefone = extractField('TELEFONE') || phone;
       const produto = extractField('PRODUTO');
-      const data = extractField('DATA');
+      let data = extractField('DATA');
       const horario = extractField('HORARIO');
       
       console.log('📋 Dados extraídos:', { nome, email, telefone, produto, data, horario });
       
-      // Valida se tem os dados mínimos necessários
-      if (nome && produto && data && horario && nome !== '[nome completo]' && data !== '[AAAA-MM-DD]') {
+      // Valida data - deve ser futura
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const dataAgendamento = new Date(data + 'T00:00:00');
+      const dataValida = !isNaN(dataAgendamento.getTime()) && dataAgendamento > hoje;
+      
+      // Verifica se é fim de semana
+      const diaSemanaAgendamento = dataAgendamento.getDay();
+      const ehFimDeSemana = diaSemanaAgendamento === 0 || diaSemanaAgendamento === 6;
+      
+      // Validações
+      const nomeValido = nome && nome.length > 2 && !nome.includes('[') && nome.toLowerCase() !== 'cliente';
+      const emailValido = email && email.includes('@') && !email.includes('[');
+      const produtoValido = produto && !produto.includes('[');
+      const horarioValido = horario && /^\d{2}:\d{2}$/.test(horario);
+      
+      console.log('✅ Validações:', { nomeValido, emailValido, produtoValido, dataValida, horarioValido, ehFimDeSemana });
+      
+      if (nomeValido && emailValido && produtoValido && dataValida && horarioValido && !ehFimDeSemana) {
         try {
+          // Cria evento no Google Calendar com link do Meet
+          let meetLink = null;
+          try {
+            const startDateTime = `${data}T${horario}:00`;
+            const [horaNum, minNum] = horario.split(':').map(Number);
+            const endHora = horaNum + 1;
+            const endDateTime = `${data}T${endHora.toString().padStart(2, '0')}:${minNum.toString().padStart(2, '0')}:00`;
+            
+            console.log('📅 Criando evento no Google Calendar...');
+            const calendarResult = await base44.asServiceRole.functions.invoke('createGoogleCalendarEvent', {
+              summary: `Reunião - ${nome} - ${produto.replace(/_/g, ' ')}`,
+              description: `Cliente: ${nome}\nEmail: ${email}\nTelefone: ${telefone}\nProduto: ${produto.replace(/_/g, ' ')}\n\nAgendado via WhatsApp IA`,
+              startDateTime,
+              endDateTime,
+              attendeeEmail: email,
+              attendeeName: nome
+            });
+            
+            console.log('📅 Resultado do Calendar:', calendarResult);
+            
+            if (calendarResult?.meetLink) {
+              meetLink = calendarResult.meetLink;
+              console.log('✅ Link do Meet obtido:', meetLink);
+            }
+          } catch (calendarError) {
+            console.error('⚠️ Erro ao criar evento no Calendar (continuando sem link):', calendarError);
+          }
+          
           // Cria o agendamento
           const agendamento = await base44.asServiceRole.entities.Agendamento.create({
             nome_cliente: nome,
-            email_cliente: email || `${telefone}@whatsapp.temp`,
+            email_cliente: email,
             telefone_cliente: telefone,
             produto: produto,
             data: data,
             horario: horario,
+            link_reuniao: meetLink || '',
             status: 'Agendada',
             origem: 'Chatbot',
             observacoes: `Agendado via WhatsApp IA - Contato: ${contact.name || phone}`
@@ -341,7 +387,13 @@ Cliente: ${customerMessage}`;
           
           // Remove o bloco [AGENDAR] e adiciona confirmação
           finalResponse = aiResponse.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
-          finalResponse += `\n\n✅ *Agendamento Confirmado!*\n📅 Data: ${data}\n⏰ Horário: ${horario}\n📦 Produto: ${produto.replace(/_/g, ' ')}\n\nAguardamos você! 🎉`;
+          finalResponse += `\n\n✅ *Agendamento Confirmado!*\n👤 Nome: ${nome}\n📅 Data: ${data}\n⏰ Horário: ${horario}\n📦 Produto: ${produto.replace(/_/g, ' ')}`;
+          
+          if (meetLink) {
+            finalResponse += `\n🔗 Link da reunião: ${meetLink}`;
+          }
+          
+          finalResponse += `\n\nAguardamos você! 🎉`;
           
         } catch (agendaError) {
           console.error('❌ Erro ao criar agendamento:', agendaError);
@@ -349,10 +401,22 @@ Cliente: ${customerMessage}`;
           finalResponse += '\n\n⚠️ Houve um problema ao confirmar seu agendamento. Por favor, tente novamente ou entre em contato conosco.';
         }
       } else {
-        console.log('⚠️ Dados incompletos ou com placeholders, não criando agendamento');
+        console.log('⚠️ Dados incompletos ou inválidos, não criando agendamento');
+        
+        // Monta mensagem específica do que falta
+        let faltam = [];
+        if (!nomeValido) faltam.push('nome completo');
+        if (!emailValido) faltam.push('email válido');
+        if (!produtoValido) faltam.push('produto de interesse');
+        if (!dataValida) faltam.push('data válida (futura)');
+        if (!horarioValido) faltam.push('horário no formato HH:MM');
+        if (ehFimDeSemana) faltam.push('data em dia útil (não atendemos sábados e domingos)');
+        
         // Remove o bloco mas não confirma
         finalResponse = aiResponse.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
-        finalResponse += '\n\nPor favor, me informe os dados que faltam para completar seu agendamento.';
+        if (faltam.length > 0) {
+          finalResponse += `\n\nPara completar seu agendamento, preciso que você informe: ${faltam.join(', ')}.`;
+        }
       }
     }
 
