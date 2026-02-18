@@ -73,8 +73,8 @@ Deno.serve((req) => {
                 <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
                     <!-- Header -->
                     <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 text-center">
-                        <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f3ccc3a454aaec766ae684/2f46531d6_Untitleddesign34.png"
-                             alt="Glória Vendas" class="w-20 h-20 mx-auto mb-4 rounded-xl">
+                        <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f3ccc3a454aaec766ae684/973791adc_Untitleddesign14.png"
+                             alt="Glória" class="w-48 h-auto mx-auto mb-4">
                         <h1 class="text-3xl font-bold mb-2">Agende sua Reunião</h1>
                         <p class="opacity-90">Preencha os dados para marcar um horário</p>
                     </div>
