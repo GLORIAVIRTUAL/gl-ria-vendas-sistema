@@ -1,6 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
-
-// Esta function retorna uma página HTML completa e pública
+// Esta function retorna uma página HTML completa e pública (v2)
 Deno.serve((req) => {
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
