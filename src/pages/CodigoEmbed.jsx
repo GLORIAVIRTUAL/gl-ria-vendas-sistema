@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Copy, Check, Code, ExternalLink, Settings, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { base44 } from "@/api/base44Client";
 
 export default function CodigoEmbed() {
   const [copiado, setCopiado] = useState(false);
@@ -15,9 +15,15 @@ export default function CodigoEmbed() {
   const [urlApp, setUrlApp] = useState("");
 
   useEffect(() => {
-    // Pega a URL atual do app
-    const currentUrl = window.location.origin;
-    setUrlApp(currentUrl);
+    // Usa a URL base da API do Base44 SDK para garantir que funcione no preview e publicado
+    const apiBaseUrl = base44._baseUrl || window.location.origin;
+    // A URL base da API é algo como https://app.base44.com/api/v1/apps/APP_ID
+    // Precisamos extrair a URL do app: origin + /api/functions/...
+    // Alternativa: usar a URL do próprio SDK para montar
+    const appOrigin = apiBaseUrl.includes('/api/v1/') 
+      ? apiBaseUrl.split('/api/v1/')[0]
+      : window.location.origin;
+    setUrlApp(appOrigin);
   }, []);
 
   // 🔓 URL PÚBLICA que funciona sem login
