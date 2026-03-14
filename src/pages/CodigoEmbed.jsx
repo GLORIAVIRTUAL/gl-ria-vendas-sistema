@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Copy, Check, Code, ExternalLink, Settings, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { base44 } from "@/api/base44Client";
 
 export default function CodigoEmbed() {
   const [copiado, setCopiado] = useState(false);
