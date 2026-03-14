@@ -63,6 +63,11 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/CodigoEmbed" element={
+        <LayoutWrapper currentPageName="CodigoEmbed">
+          <CodigoEmbed />
+        </LayoutWrapper>
+      } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
