@@ -15,15 +15,19 @@ export default function CodigoEmbed() {
   const [urlApp, setUrlApp] = useState("");
 
   useEffect(() => {
-    // Usa a URL base da API do Base44 SDK para garantir que funcione no preview e publicado
-    const apiBaseUrl = base44._baseUrl || window.location.origin;
-    // A URL base da API é algo como https://app.base44.com/api/v1/apps/APP_ID
-    // Precisamos extrair a URL do app: origin + /api/functions/...
-    // Alternativa: usar a URL do próprio SDK para montar
-    const appOrigin = apiBaseUrl.includes('/api/v1/') 
-      ? apiBaseUrl.split('/api/v1/')[0]
-      : window.location.origin;
-    setUrlApp(appOrigin);
+    // Detecta a URL correta do app (funciona tanto no preview quanto publicado)
+    const hostname = window.location.hostname;
+    if (hostname.includes('preview-sandbox--')) {
+      // No preview, extrai o app ID e monta a URL publicada
+      const appId = hostname.split('preview-sandbox--')[1]?.split('.')[0];
+      if (appId) {
+        setUrlApp(`https://app.base44.com/apps/${appId}`);
+      } else {
+        setUrlApp(window.location.origin);
+      }
+    } else {
+      setUrlApp(window.location.origin);
+    }
   }, []);
 
   // 🔓 URL PÚBLICA que funciona sem login
