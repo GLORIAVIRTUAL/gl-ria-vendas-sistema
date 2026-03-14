@@ -14,19 +14,8 @@ export default function CodigoEmbed() {
   const [urlApp, setUrlApp] = useState("");
 
   useEffect(() => {
-    // Detecta a URL correta do app (funciona tanto no preview quanto publicado)
-    const hostname = window.location.hostname;
-    if (hostname.includes('preview-sandbox--')) {
-      // No preview, extrai o app ID e monta a URL publicada
-      const appId = hostname.split('preview-sandbox--')[1]?.split('.')[0];
-      if (appId) {
-        setUrlApp(`https://app.base44.com/apps/${appId}`);
-      } else {
-        setUrlApp(window.location.origin);
-      }
-    } else {
-      setUrlApp(window.location.origin);
-    }
+    // Domínio customizado do app publicado
+    setUrlApp("https://sistema.gloriavendas.com.br");
   }, []);
 
   // 🔓 URL PÚBLICA que funciona sem login
