@@ -12,6 +12,8 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 // Add page imports here
 import CodigoEmbed from '@/pages/CodigoEmbed';
+import PoliticaPrivacidade from '@/pages/PoliticaPrivacidade';
+import TermosServico from '@/pages/TermosServico';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -68,6 +70,8 @@ const AuthenticatedApp = () => {
           <CodigoEmbed />
         </LayoutWrapper>
       } />
+      <Route path="/PoliticaPrivacidade" element={<PoliticaPrivacidade />} />
+      <Route path="/TermosServico" element={<TermosServico />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
