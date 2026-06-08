@@ -113,7 +113,7 @@ export default function ChatIA() {
     
     try {
       // Salva mensagem no banco com nome do atendente
-      await createMessageMutation.mutateAsync({
+      const savedMessage = await createMessageMutation.mutateAsync({
         contact_id: selectedContact.id,
         direction: 'outbound',
         sender: 'human',
@@ -134,6 +134,12 @@ export default function ChatIA() {
 
         if (result.status === 200 && result.data?.success) {
           console.log('✅ Mensagem enviada via Z-API');
+          // Salva o messageId do Z-API para rastrear status (tracinhos)
+          if (result.data.messageId && savedMessage?.id) {
+            await base44.entities.Message.update(savedMessage.id, {
+              whatsapp_message_id: result.data.messageId
+            });
+          }
         } else {
           console.error('❌ Erro ao enviar:', result.data);
           toast.error(result.data?.error || 'Erro ao enviar mensagem ao WhatsApp');

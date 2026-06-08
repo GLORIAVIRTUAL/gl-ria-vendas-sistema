@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
   try {
@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    console.log('📩 Webhook recebido do ZAPI:', JSON.stringify(body, null, 2));
+    console.log('📩 Webhook de status do ZAPI:', JSON.stringify(body, null, 2));
 
     const base44 = createClientFromRequest(req);
 
@@ -16,70 +16,89 @@ Deno.serve(async (req) => {
     // {
     //   "messageId": "3EB0...",
     //   "phone": "5511999999999",
-    //   "status": "SENT" | "RECEIVED" | "READ" | "DELETED" | "FAILED",
+    //   "status": "SENT" | "RECEIVED" | "READ" | "DELETED" | "FAILED" | "PLAYED",
     //   "momment": 1234567890,
     //   ...
     // }
 
-    const { messageId, phone, status, momment } = body;
+    const { messageId, phone, status } = body;
 
-    if (!messageId || !phone) {
+    if (!messageId && !phone) {
       console.log('⚠️ Webhook sem messageId ou phone, ignorando...');
       return Response.json({ success: true, message: 'Webhook ignorado' });
     }
 
-    // Busca o disparo pelo telefone
-    const disparos = await base44.asServiceRole.entities.DisparoWhatsApp.filter({
-      telefone: phone
-    });
-
-    if (disparos.length === 0) {
-      console.log(`⚠️ Nenhum disparo encontrado para o telefone ${phone}`);
-      return Response.json({ success: true, message: 'Disparo não encontrado' });
-    }
-
-    // Pega o último disparo para este telefone
-    const disparo = disparos[disparos.length - 1];
-
-    // Mapeia status do ZAPI para nosso sistema
-    let novoStatus = disparo.status;
-    let erroMensagem = disparo.erro_mensagem;
-
+    // Mapeia status do ZAPI para os tracinhos do chat
+    let novoStatus = null;
     switch (status?.toUpperCase()) {
       case 'SENT':
+        novoStatus = 'sent';        // 1 traço
+        break;
       case 'RECEIVED':
+        novoStatus = 'delivered';   // 2 traços
+        break;
       case 'READ':
-        novoStatus = 'Enviado';
-        erroMensagem = null;
+      case 'PLAYED':
+        novoStatus = 'read';        // 2 traços azuis
         break;
       case 'FAILED':
       case 'DELETED':
-        novoStatus = 'Erro';
-        erroMensagem = `Status ZAPI: ${status}`;
+        novoStatus = 'failed';
         break;
     }
 
-    // Atualiza o disparo
-    await base44.asServiceRole.entities.DisparoWhatsApp.update(disparo.id, {
-      status: novoStatus,
-      erro_mensagem: erroMensagem,
-      data_envio: novoStatus === 'Enviado' ? new Date().toISOString() : disparo.data_envio
-    });
+    if (!novoStatus) {
+      console.log(`⚠️ Status "${status}" não mapeado, ignorando`);
+      return Response.json({ success: true });
+    }
 
-    console.log(`✅ Status atualizado para disparo ${disparo.id}: ${novoStatus}`);
+    // 1) Atualiza a Message do chat pelo whatsapp_message_id
+    if (messageId) {
+      const mensagens = await base44.asServiceRole.entities.Message.filter({
+        whatsapp_message_id: messageId
+      });
 
-    return Response.json({
-      success: true,
-      message: 'Status atualizado com sucesso',
-      disparo_id: disparo.id,
-      novo_status: novoStatus
-    });
+      if (mensagens.length > 0) {
+        await base44.asServiceRole.entities.Message.update(mensagens[0].id, {
+          status: novoStatus
+        });
+        console.log(`✅ Message ${mensagens[0].id} atualizada para: ${novoStatus}`);
+      } else {
+        console.log(`⚠️ Nenhuma Message encontrada para messageId ${messageId}`);
+      }
+    }
+
+    // 2) Mantém compatibilidade: atualiza DisparoWhatsApp pelo telefone
+    if (phone) {
+      const disparos = await base44.asServiceRole.entities.DisparoWhatsApp.filter({
+        telefone: phone
+      });
+
+      if (disparos.length > 0) {
+        const disparo = disparos[disparos.length - 1];
+        let disparoStatus = disparo.status;
+        let erroMensagem = disparo.erro_mensagem;
+
+        if (novoStatus === 'failed') {
+          disparoStatus = 'Erro';
+          erroMensagem = `Status ZAPI: ${status}`;
+        } else {
+          disparoStatus = 'Enviado';
+          erroMensagem = null;
+        }
+
+        await base44.asServiceRole.entities.DisparoWhatsApp.update(disparo.id, {
+          status: disparoStatus,
+          erro_mensagem: erroMensagem,
+          data_envio: disparoStatus === 'Enviado' ? new Date().toISOString() : disparo.data_envio
+        });
+      }
+    }
+
+    return Response.json({ success: true, novo_status: novoStatus });
 
   } catch (error) {
-    console.error('❌ Erro no webhook:', error);
-    return Response.json({
-      success: false,
-      error: error.message
-    }, { status: 500 });
+    console.error('❌ Erro no webhook de status:', error);
+    return Response.json({ success: false, error: error.message }, { status: 500 });
   }
 });

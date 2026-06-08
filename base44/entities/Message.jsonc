@@ -59,6 +59,10 @@
       "default": "sent",
       "description": "Status da mensagem"
     },
+    "whatsapp_message_id": {
+      "type": "string",
+      "description": "ID da mensagem no WhatsApp (Z-API) para rastrear status"
+    },
     "extracted_data": {
       "type": "object",
       "description": "Dados extra\u00eddos pela IA"
