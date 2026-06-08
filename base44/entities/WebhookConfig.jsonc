@@ -1,0 +1,52 @@
+{
+  "name": "WebhookConfig",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do webhook"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "outgoing",
+        "incoming"
+      ],
+      "description": "Tipo de webhook (sa\u00edda ou entrada)"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL do webhook"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Eventos que disparam o webhook"
+    },
+    "headers": {
+      "type": "object",
+      "description": "Headers HTTP customizados"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o webhook est\u00e1 ativo"
+    },
+    "secret_token": {
+      "type": "string",
+      "description": "Token secreto para valida\u00e7\u00e3o"
+    },
+    "last_triggered": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u00daltima vez que foi disparado"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "url"
+  ]
+}

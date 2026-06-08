@@ -1,0 +1,51 @@
+{
+  "name": "DisparoWhatsApp",
+  "type": "object",
+  "properties": {
+    "agendamento_id": {
+      "type": "string",
+      "description": "ID do agendamento relacionado"
+    },
+    "telefone": {
+      "type": "string",
+      "description": "Telefone do destinat\u00e1rio (com c\u00f3digo do pa\u00eds)"
+    },
+    "mensagem": {
+      "type": "string",
+      "description": "Conte\u00fado da mensagem"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Programado",
+        "Enviado",
+        "Erro"
+      ],
+      "default": "Programado",
+      "description": "Status do disparo"
+    },
+    "data_programada": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data e hora programada para envio"
+    },
+    "data_envio": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data e hora real do envio"
+    },
+    "horas_antes": {
+      "type": "integer",
+      "description": "Quantas horas antes da reuni\u00e3o o lembrete foi enviado"
+    },
+    "erro_mensagem": {
+      "type": "string",
+      "description": "Mensagem de erro (se houver)"
+    }
+  },
+  "required": [
+    "telefone",
+    "mensagem",
+    "status"
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "name": "Agendamento",
+  "type": "object",
+  "properties": {
+    "nome_cliente": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "email_cliente": {
+      "type": "string",
+      "format": "email",
+      "description": "Email do cliente"
+    },
+    "telefone_cliente": {
+      "type": "string",
+      "description": "Telefone do cliente"
+    },
+    "produto": {
+      "type": "string",
+      "enum": [
+        "Atendimento_IA_24_7",
+        "Maquina_de_Videos",
+        "Gloria_Clinica",
+        "Gloria_Vendas",
+        "Especialistas_Virtuais",
+        "Sites_em_24_Horas"
+      ],
+      "description": "Produto escolhido"
+    },
+    "data": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da reuni\u00e3o"
+    },
+    "horario": {
+      "type": "string",
+      "enum": [
+        "08:00",
+        "09:00",
+        "10:00",
+        "11:00",
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00",
+        "19:00",
+        "20:00"
+      ],
+      "description": "Hor\u00e1rio da reuni\u00e3o"
+    },
+    "link_reuniao": {
+      "type": "string",
+      "description": "Link da reuni\u00e3o online"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Agendada",
+        "Confirmada",
+        "Conclu\u00edda",
+        "Cancelada"
+      ],
+      "default": "Agendada",
+      "description": "Status da reuni\u00e3o"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es adicionais"
+    },
+    "origem": {
+      "type": "string",
+      "enum": [
+        "Manual",
+        "Chatbot",
+        "Agendamento Online"
+      ],
+      "default": "Manual",
+      "description": "Origem do agendamento"
+    }
+  },
+  "required": [
+    "nome_cliente",
+    "email_cliente",
+    "produto",
+    "data",
+    "horario"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "name": "AISettings",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome da configura\u00e7\u00e3o"
+    },
+    "system_prompt": {
+      "type": "string",
+      "description": "Prompt de sistema que define a personalidade da IA"
+    },
+    "greeting_message": {
+      "type": "string",
+      "description": "Mensagem de sauda\u00e7\u00e3o inicial"
+    },
+    "business_hours_start": {
+      "type": "string",
+      "description": "Hor\u00e1rio de in\u00edcio do expediente (HH:MM)"
+    },
+    "business_hours_end": {
+      "type": "string",
+      "description": "Hor\u00e1rio de fim do expediente (HH:MM)"
+    },
+    "out_of_hours_message": {
+      "type": "string",
+      "description": "Mensagem para fora do hor\u00e1rio comercial"
+    },
+    "transfer_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Palavras que acionam transfer\u00eancia para humano"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se a IA est\u00e1 ativa"
+    },
+    "capture_fields": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Campos para captura autom\u00e1tica"
+    },
+    "functions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "webhook_url": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Functions/webhooks que a IA pode acionar"
+    },
+    "ai_model": {
+      "type": "string",
+      "enum": [
+        "gpt-4o",
+        "gpt-4o-mini",
+        "gpt-4-turbo",
+        "gpt-3.5-turbo"
+      ],
+      "default": "gpt-4o",
+      "description": "Modelo GPT a ser usado pela IA"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

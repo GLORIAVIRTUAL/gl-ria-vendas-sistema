@@ -1,0 +1,27 @@
+{
+  "name": "EmailNotificacao",
+  "type": "object",
+  "properties": {
+    "subject": {
+      "type": "string",
+      "description": "Assunto do email"
+    },
+    "from": {
+      "type": "string",
+      "description": "Remetente do email"
+    },
+    "text": {
+      "type": "string",
+      "description": "Texto do email"
+    },
+    "lido": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a notifica\u00e7\u00e3o foi visualizada"
+    }
+  },
+  "required": [
+    "subject",
+    "from"
+  ]
+}

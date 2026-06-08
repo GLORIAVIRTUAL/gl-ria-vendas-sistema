@@ -1,0 +1,69 @@
+{
+  "name": "Contact",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do contato"
+    },
+    "phone": {
+      "type": "string",
+      "description": "N\u00famero de telefone (com c\u00f3digo do pa\u00eds)"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email do contato"
+    },
+    "profile_picture": {
+      "type": "string",
+      "description": "URL da foto de perfil"
+    },
+    "pipeline_stage": {
+      "type": "string",
+      "enum": [
+        "novo_lead",
+        "qualificado",
+        "proposta",
+        "negociacao",
+        "fechado_ganho",
+        "fechado_perdido"
+      ],
+      "default": "novo_lead",
+      "description": "Est\u00e1gio no pipeline de vendas"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags/palavras-chave aplicadas ao contato"
+    },
+    "custom_fields": {
+      "type": "object",
+      "description": "Campos personalizados capturados"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre o contato"
+    },
+    "ai_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se a IA est\u00e1 ativa para este contato"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se a conversa est\u00e1 ativa"
+    },
+    "last_message_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data/hora da \u00faltima mensagem"
+    }
+  },
+  "required": [
+    "phone"
+  ]
+}

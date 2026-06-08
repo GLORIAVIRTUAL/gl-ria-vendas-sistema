@@ -1,0 +1,53 @@
+{
+  "name": "CustomField",
+  "type": "object",
+  "properties": {
+    "field_name": {
+      "type": "string",
+      "description": "Nome t\u00e9cnico do campo (snake_case)"
+    },
+    "field_label": {
+      "type": "string",
+      "description": "Label exibido ao usu\u00e1rio"
+    },
+    "field_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "email",
+        "phone",
+        "date",
+        "datetime",
+        "number",
+        "select",
+        "boolean"
+      ],
+      "description": "Tipo de campo"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Op\u00e7\u00f5es (para tipo select)"
+    },
+    "is_required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o campo \u00e9 obrigat\u00f3rio"
+    },
+    "ai_capture_prompt": {
+      "type": "string",
+      "description": "Instru\u00e7\u00e3o para a IA capturar este dado"
+    },
+    "order": {
+      "type": "integer",
+      "description": "Ordem de exibi\u00e7\u00e3o"
+    }
+  },
+  "required": [
+    "field_name",
+    "field_label",
+    "field_type"
+  ]
+}

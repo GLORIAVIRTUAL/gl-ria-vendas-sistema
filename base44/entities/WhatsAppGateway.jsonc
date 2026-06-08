@@ -1,0 +1,48 @@
+{
+  "name": "WhatsAppGateway",
+  "type": "object",
+  "properties": {
+    "nome_identificacao": {
+      "type": "string",
+      "description": "Nome para identificar este n\u00famero (ex: 'WhatsApp Principal', 'Cliente XPTO')"
+    },
+    "phone_number_id": {
+      "type": "string",
+      "description": "ID do n\u00famero no Meta Business (ex: 123456789012345)"
+    },
+    "numero_telefone": {
+      "type": "string",
+      "description": "N\u00famero de telefone formatado (ex: +55 11 99999-9999)"
+    },
+    "cliente_associado": {
+      "type": "string",
+      "description": "Nome do cliente/empresa associado a este n\u00famero"
+    },
+    "cliente_id": {
+      "type": "string",
+      "description": "ID do cliente (se houver entidade de clientes)"
+    },
+    "access_token": {
+      "type": "string",
+      "description": "Token de acesso do Meta (opcional, pode usar vari\u00e1vel global)"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se este n\u00famero est\u00e1 ativo para receber mensagens"
+    },
+    "webhook_url": {
+      "type": "string",
+      "description": "URL do webhook configurado (para refer\u00eancia)"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre este n\u00famero/cliente"
+    }
+  },
+  "required": [
+    "nome_identificacao",
+    "phone_number_id",
+    "numero_telefone"
+  ]
+}

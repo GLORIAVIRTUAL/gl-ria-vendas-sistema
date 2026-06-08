@@ -1,0 +1,107 @@
+{
+  "name": "Lead",
+  "type": "object",
+  "properties": {
+    "nome_cliente": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "nome_empresa": {
+      "type": "string",
+      "description": "Nome da empresa"
+    },
+    "email_cliente": {
+      "type": "string",
+      "format": "email",
+      "description": "Email do cliente"
+    },
+    "telefone_cliente": {
+      "type": "string",
+      "description": "Telefone do cliente"
+    },
+    "produto_interesse": {
+      "type": "string",
+      "enum": [
+        "Atendimento_IA_24_7",
+        "Maquina_de_Videos",
+        "Gloria_Clinica",
+        "Gloria_Vendas",
+        "Especialistas_Virtuais",
+        "Sites_em_24_Horas"
+      ],
+      "description": "Produto de interesse"
+    },
+    "estagio": {
+      "type": "string",
+      "enum": [
+        "Reuniao_Marcada",
+        "Em_Avaliacao",
+        "Negocio_Fechado",
+        "Implantacao",
+        "Inicio_de_Uso",
+        "Estavel"
+      ],
+      "default": "Reuniao_Marcada",
+      "description": "Est\u00e1gio no funil de vendas"
+    },
+    "valor_estimado": {
+      "type": "number",
+      "description": "Valor estimado do neg\u00f3cio em reais"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre o lead"
+    },
+    "proximos_passos": {
+      "type": "string",
+      "description": "Pr\u00f3ximos passos a serem executados"
+    },
+    "data_entrega": {
+      "type": "string",
+      "format": "date",
+      "description": "Data prevista para entrega/conclus\u00e3o"
+    },
+    "tarefas_pendentes": {
+      "type": "string",
+      "description": "Lista de tarefas pendentes"
+    },
+    "status_onboarding": {
+      "type": "string",
+      "enum": [
+        "Nao_Iniciado",
+        "Em_Andamento",
+        "Aguardando_Cliente",
+        "Concluido"
+      ],
+      "description": "Status do processo de onboarding"
+    },
+    "agendamento_id": {
+      "type": "string",
+      "description": "ID do agendamento relacionado"
+    },
+    "negocio_id": {
+      "type": "string",
+      "description": "ID do neg\u00f3cio fechado relacionado"
+    },
+    "data_reuniao": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da reuni\u00e3o"
+    },
+    "prioridade": {
+      "type": "string",
+      "enum": [
+        "Baixa",
+        "Media",
+        "Alta"
+      ],
+      "default": "Media",
+      "description": "Prioridade do lead"
+    }
+  },
+  "required": [
+    "nome_cliente",
+    "email_cliente",
+    "produto_interesse"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "Afiliado",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome completo do afiliado"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email do afiliado"
+    },
+    "telefone": {
+      "type": "string",
+      "description": "Telefone do afiliado"
+    },
+    "stripe_connect_account_id": {
+      "type": "string",
+      "description": "ID da conta conectada no Stripe (ex: acct_xxx)"
+    },
+    "percentual_comissao": {
+      "type": "number",
+      "default": 20,
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Percentual de comiss\u00e3o (0-100)"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o afiliado est\u00e1 ativo"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre o afiliado"
+    }
+  },
+  "required": [
+    "nome",
+    "email",
+    "stripe_connect_account_id"
+  ]
+}

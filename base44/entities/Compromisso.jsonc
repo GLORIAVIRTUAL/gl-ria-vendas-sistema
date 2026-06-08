@@ -1,0 +1,91 @@
+{
+  "name": "Compromisso",
+  "type": "object",
+  "properties": {
+    "titulo": {
+      "type": "string",
+      "description": "T\u00edtulo do compromisso"
+    },
+    "descricao": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o detalhada"
+    },
+    "data": {
+      "type": "string",
+      "format": "date",
+      "description": "Data do compromisso"
+    },
+    "horario": {
+      "type": "string",
+      "description": "Hor\u00e1rio do compromisso (HH:MM)"
+    },
+    "prioridade": {
+      "type": "string",
+      "enum": [
+        "Baixa",
+        "Media",
+        "Alta"
+      ],
+      "default": "Media",
+      "description": "Prioridade do compromisso"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Pendente",
+        "Concluido",
+        "Cancelado"
+      ],
+      "default": "Pendente",
+      "description": "Status do compromisso"
+    },
+    "notificar_whatsapp": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enviar notifica\u00e7\u00e3o via WhatsApp"
+    },
+    "telefone_notificacao": {
+      "type": "string",
+      "description": "Telefone para enviar notifica\u00e7\u00e3o WhatsApp"
+    },
+    "minutos_antes_notificar": {
+      "type": "integer",
+      "default": 30,
+      "description": "Minutos antes para notificar (30, 60, 120)"
+    },
+    "notificacao_enviada": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a notifica\u00e7\u00e3o j\u00e1 foi enviada"
+    },
+    "cor": {
+      "type": "string",
+      "default": "#3b82f6",
+      "description": "Cor do compromisso"
+    },
+    "recorrente": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o compromisso \u00e9 recorrente"
+    },
+    "tipo_recorrencia": {
+      "type": "string",
+      "enum": [
+        "Nenhuma",
+        "Semanal",
+        "Mensal"
+      ],
+      "default": "Nenhuma",
+      "description": "Tipo de recorr\u00eancia"
+    },
+    "compromisso_pai_id": {
+      "type": "string",
+      "description": "ID do compromisso original (para compromissos gerados automaticamente)"
+    }
+  },
+  "required": [
+    "titulo",
+    "data",
+    "horario"
+  ]
+}

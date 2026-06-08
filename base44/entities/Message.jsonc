@@ -1,0 +1,77 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "contact_id": {
+      "type": "string",
+      "description": "ID do contato relacionado"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "inbound",
+        "outbound"
+      ],
+      "description": "Dire\u00e7\u00e3o da mensagem (recebida ou enviada)"
+    },
+    "sender": {
+      "type": "string",
+      "enum": [
+        "ai",
+        "human",
+        "customer"
+      ],
+      "description": "Quem enviou a mensagem"
+    },
+    "content": {
+      "type": "string",
+      "description": "Conte\u00fado da mensagem"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "image",
+        "video",
+        "audio",
+        "document"
+      ],
+      "default": "text",
+      "description": "Tipo de mensagem"
+    },
+    "media_url": {
+      "type": "string",
+      "description": "URL do arquivo de m\u00eddia"
+    },
+    "media_mime_type": {
+      "type": "string",
+      "description": "Tipo MIME do arquivo"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "sent",
+        "delivered",
+        "read",
+        "failed"
+      ],
+      "default": "sent",
+      "description": "Status da mensagem"
+    },
+    "extracted_data": {
+      "type": "object",
+      "description": "Dados extra\u00eddos pela IA"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Mensagem de erro (se houver)"
+    }
+  },
+  "required": [
+    "contact_id",
+    "direction",
+    "sender",
+    "content"
+  ]
+}

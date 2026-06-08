@@ -1,0 +1,95 @@
+{
+  "name": "NegocioFechado",
+  "type": "object",
+  "properties": {
+    "nome_cliente": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "nome_empresa": {
+      "type": "string",
+      "description": "Nome da empresa"
+    },
+    "email_cliente": {
+      "type": "string",
+      "format": "email",
+      "description": "Email do cliente"
+    },
+    "telefone_cliente": {
+      "type": "string",
+      "description": "Telefone do cliente"
+    },
+    "produto": {
+      "type": "string",
+      "description": "Produtos contratados (pode ser m\u00faltiplos separados por +)"
+    },
+    "valor_mensalidade": {
+      "type": "number",
+      "description": "Valor da mensalidade em reais"
+    },
+    "dia_cobranca": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 31,
+      "description": "Dia do m\u00eas para cobran\u00e7a"
+    },
+    "data_primeira_cobranca": {
+      "type": "string",
+      "format": "date",
+      "description": "Data da primeira cobran\u00e7a"
+    },
+    "forma_pagamento": {
+      "type": "string",
+      "enum": [
+        "card",
+        "boleto"
+      ],
+      "description": "Forma de pagamento"
+    },
+    "status_pagamento": {
+      "type": "string",
+      "enum": [
+        "Ativo",
+        "Inadimplente",
+        "Cancelado",
+        "Suspenso"
+      ],
+      "default": "Ativo",
+      "description": "Status do pagamento"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es adicionais"
+    },
+    "agendamento_id": {
+      "type": "string",
+      "description": "ID do agendamento que originou este neg\u00f3cio"
+    },
+    "stripe_customer_id": {
+      "type": "string",
+      "description": "ID do cliente no Stripe"
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "description": "ID da assinatura no Stripe"
+    },
+    "stripe_payment_link": {
+      "type": "string",
+      "description": "Link de pagamento do Stripe"
+    },
+    "afiliado_id": {
+      "type": "string",
+      "description": "ID do afiliado que indicou este cliente"
+    }
+  },
+  "required": [
+    "nome_cliente",
+    "nome_empresa",
+    "email_cliente",
+    "produto",
+    "valor_mensalidade",
+    "dia_cobranca",
+    "data_primeira_cobranca",
+    "forma_pagamento"
+  ]
+}

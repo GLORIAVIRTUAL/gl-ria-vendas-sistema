@@ -1,0 +1,109 @@
+{
+  "name": "Cliente",
+  "type": "object",
+  "properties": {
+    "negocio_id": {
+      "type": "string",
+      "description": "ID do neg\u00f3cio fechado relacionado"
+    },
+    "nome_cliente": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "nome_empresa": {
+      "type": "string",
+      "description": "Nome da empresa"
+    },
+    "email_cliente": {
+      "type": "string",
+      "format": "email",
+      "description": "Email do cliente"
+    },
+    "telefone_cliente": {
+      "type": "string",
+      "description": "Telefone do cliente"
+    },
+    "produto": {
+      "type": "string",
+      "description": "Produto(s) contratado(s)"
+    },
+    "valor_mensalidade": {
+      "type": "number",
+      "description": "Valor da mensalidade"
+    },
+    "status_pagamento": {
+      "type": "string",
+      "enum": [
+        "Ativo",
+        "Inadimplente",
+        "Cancelado",
+        "Suspenso"
+      ],
+      "description": "Status do pagamento"
+    },
+    "representante_nome": {
+      "type": "string",
+      "description": "Nome do representante da empresa"
+    },
+    "representante_cargo": {
+      "type": "string",
+      "description": "Cargo do representante"
+    },
+    "representante_email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email do representante"
+    },
+    "representante_telefone": {
+      "type": "string",
+      "description": "Telefone do representante"
+    },
+    "representante_cpf": {
+      "type": "string",
+      "description": "CPF do representante"
+    },
+    "cnpj": {
+      "type": "string",
+      "description": "CNPJ da empresa"
+    },
+    "endereco_completo": {
+      "type": "string",
+      "description": "Endere\u00e7o completo"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre o cliente"
+    },
+    "arquivos_urls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "data_upload": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Lista de arquivos anexados (PDFs, imagens, etc)"
+    },
+    "data_inicio_contrato": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de in\u00edcio do contrato"
+    }
+  },
+  "required": [
+    "nome_cliente",
+    "nome_empresa",
+    "email_cliente"
+  ]
+}

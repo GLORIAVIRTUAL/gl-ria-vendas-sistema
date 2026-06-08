@@ -1,0 +1,41 @@
+{
+  "name": "Keyword",
+  "type": "object",
+  "properties": {
+    "keyword": {
+      "type": "string",
+      "description": "Palavra-chave/tag"
+    },
+    "category": {
+      "type": "string",
+      "description": "Categoria da palavra-chave"
+    },
+    "color": {
+      "type": "string",
+      "description": "Cor da tag (hex)"
+    },
+    "auto_apply": {
+      "type": "boolean",
+      "default": true,
+      "description": "Aplicar automaticamente quando detectada"
+    },
+    "trigger_action": {
+      "type": "string",
+      "enum": [
+        "none",
+        "move_pipeline",
+        "notify",
+        "webhook"
+      ],
+      "default": "none",
+      "description": "A\u00e7\u00e3o ao detectar a palavra"
+    },
+    "action_config": {
+      "type": "object",
+      "description": "Configura\u00e7\u00e3o da a\u00e7\u00e3o"
+    }
+  },
+  "required": [
+    "keyword"
+  ]
+}

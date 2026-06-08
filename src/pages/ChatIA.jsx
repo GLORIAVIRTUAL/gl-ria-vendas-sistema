@@ -42,7 +42,7 @@ export default function ChatIA() {
   const { data: contacts = [], isLoading: loadingContacts, refetch: refetchContacts } = useQuery({
     queryKey: ['contacts'],
     queryFn: () => base44.entities.Contact.list('-last_message_at'),
-    refetchInterval: 15000,
+    refetchInterval: 5000,
   });
 
   const { data: messages = [], refetch: refetchMessages } = useQuery({
@@ -51,7 +51,7 @@ export default function ChatIA() {
       ? base44.entities.Message.filter({ contact_id: selectedContact.id }, 'created_date')
       : [],
     enabled: !!selectedContact,
-    refetchInterval: 10000,
+    refetchInterval: 3000,
   });
 
   useEffect(() => {
@@ -125,19 +125,18 @@ export default function ChatIA() {
         extracted_data: { sent_by: currentUser?.full_name || currentUser?.email }
       });
 
-      // Envia via WhatsApp (Meta API)
+      // Envia via WhatsApp (Z-API)
       try {
-        const result = await base44.functions.invoke('sendWhatsAppMessage', {
-          phone: selectedContact.phone,
-          message: messageData.content,
-          senderName: currentUser?.full_name || 'Atendente'
+        const result = await base44.functions.invoke('whatsapp/sendMessage', {
+          telefone: selectedContact.phone,
+          mensagem: messageData.content
         });
 
-        if (result.status === 200) {
-          console.log('✅ Mensagem enviada via WhatsApp');
+        if (result.status === 200 && result.data?.success) {
+          console.log('✅ Mensagem enviada via Z-API');
         } else {
           console.error('❌ Erro ao enviar:', result.data);
-          toast.error('Erro ao enviar mensagem ao WhatsApp');
+          toast.error(result.data?.error || 'Erro ao enviar mensagem ao WhatsApp');
         }
       } catch (whatsappError) {
         console.error('❌ Erro ao enviar WhatsApp:', whatsappError);

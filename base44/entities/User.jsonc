@@ -1,0 +1,22 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "tipo_conta": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "afiliado"
+      ],
+      "default": "admin",
+      "description": "Tipo de acesso do usu\u00e1rio"
+    },
+    "afiliado_id": {
+      "type": "string",
+      "description": "ID do afiliado vinculado (somente se tipo_conta = afiliado)"
+    }
+  },
+  "required": [
+    "afiliado_id"
+  ]
+}

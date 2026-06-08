@@ -1,0 +1,47 @@
+{
+  "name": "CustomAPI",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome da API"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o do que a API faz"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL da API"
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH"
+      ],
+      "default": "POST",
+      "description": "M\u00e9todo HTTP"
+    },
+    "headers": {
+      "type": "object",
+      "description": "Headers customizados"
+    },
+    "body_template": {
+      "type": "string",
+      "description": "Template do corpo da requisi\u00e7\u00e3o (JSON com {{vari\u00e1veis}})"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se a API est\u00e1 ativa"
+    }
+  },
+  "required": [
+    "name",
+    "url"
+  ]
+}

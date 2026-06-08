@@ -1,0 +1,66 @@
+{
+  "name": "MetaTemplate",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do template na Meta"
+    },
+    "language": {
+      "type": "string",
+      "default": "pt_BR",
+      "description": "Idioma do template"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "APPROVED",
+        "PENDING_MODERATION",
+        "REJECTED",
+        "DISABLED"
+      ],
+      "description": "Status de aprova\u00e7\u00e3o na Meta"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "MARKETING",
+        "AUTHENTICATION",
+        "UTILITY"
+      ],
+      "description": "Categoria do template"
+    },
+    "body": {
+      "type": "string",
+      "description": "Conte\u00fado do template (pode ter {{var}} para vari\u00e1veis)"
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "number"
+            ]
+          }
+        }
+      },
+      "description": "Par\u00e2metros aceitos pelo template"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o template est\u00e1 ativo para uso"
+    }
+  },
+  "required": [
+    "name",
+    "body"
+  ]
+}
