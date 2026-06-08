@@ -68,7 +68,7 @@ export default function MessageBubble({ message }) {
       isOutbound ? "justify-end" : "justify-start"
     )}>
       <div className={cn(
-        "max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm",
+        "max-w-[75%] rounded-2xl px-3 py-2 shadow-sm",
         isOutbound 
           ? isAI 
             ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-br-md" 
@@ -143,22 +143,6 @@ export default function MessageBubble({ message }) {
           </span>
           {isOutbound && statusIcons[message.status || 'sent']}
         </div>
-
-        {message.extracted_data && Object.keys(message.extracted_data).length > 0 && (
-          <div className={cn(
-            "mt-2 pt-2 border-t text-[10px]",
-            isOutbound ? "border-white/20 text-white/70" : "border-slate-200 text-slate-500"
-          )}>
-            <span className="font-medium">Dados capturados:</span>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {Object.entries(message.extracted_data).map(([key, value]) => (
-                <span key={key} className="bg-white/20 px-2 py-0.5 rounded">
-                  {key}: {value}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
