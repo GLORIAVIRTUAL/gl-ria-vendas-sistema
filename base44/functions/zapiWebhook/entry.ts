@@ -221,6 +221,10 @@ async function processAIResponse(base44, contact, phone, customerMessage) {
     // É a primeira mensagem da IA nesta conversa? (só saúda na primeira)
     const jaRespondeu = recentMessages.some(m => m.sender === 'ai');
 
+    const primeiraMsg = !jaRespondeu 
+      ? `\nPRIMEIRA MENSAGEM: Apresente a Glória Virtual de forma geral e acolhedora (quem você é, o que faz). Não mencione nenhum produto ou solução específica ainda. Pergunte como você pode ajudar de forma simples.`
+      : '';
+
     const fullPrompt = `${systemPrompt}
 
 INFORMAÇÕES IMPORTANTES DO CONTEXTO:
@@ -237,7 +241,7 @@ ESTILO DE CONVERSA (MUITO IMPORTANTE):
 - Mensagens CURTAS: no máximo 2 a 3 frases por resposta. NUNCA mande textão.
 - Faça UMA pergunta por vez. Não despeje várias perguntas juntas.
 - Não repita o que já foi dito. Não reenvie a mesma mensagem.
-- Nada de listas longas ou explicações enormes — seja objetivo e simpático.
+- Nada de listas longas ou explicações enormes — seja objetivo e simpático.${primeiraMsg}
 
 REGRAS PARA AGENDAMENTO:
 1. Peça o nome completo do cliente se ainda não souber (uma coisa de cada vez)
