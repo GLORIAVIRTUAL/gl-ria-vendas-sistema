@@ -218,39 +218,32 @@ async function processAIResponse(base44, contact, phone, customerMessage) {
     const nomeCliente = contact.name || 'Cliente';
     const systemPrompt = settings.system_prompt || 'Você é GLÓRIA, uma assistente virtual inteligente.';
 
-    // É a primeira mensagem da IA nesta conversa? (só saúda na primeira)
+    // É a primeira mensagem da IA nesta conversa?
     const jaRespondeu = recentMessages.some(m => m.sender === 'ai');
 
-    const primeiraMsg = !jaRespondeu 
-      ? `\nPRIMEIRA MENSAGEM: Apresente a Glória Virtual de forma geral e acolhedora (quem você é, o que faz). Não mencione nenhum produto ou solução específica ainda. Pergunte como você pode ajudar de forma simples.`
-      : '';
-
+    // O prompt salvo no sistema é a fonte principal de comportamento.
+    // Aqui anexamos apenas o contexto técnico que a IA precisa para funcionar.
     const fullPrompt = `${systemPrompt}
 
-INFORMAÇÕES IMPORTANTES DO CONTEXTO:
+---
+CONTEXTO TÉCNICO (use apenas como referência, siga sempre as instruções acima):
 - Data de HOJE: ${dataAtualFormatada} (${diaSemana})
 - Data ISO de hoje: ${dataAtualISO}
-- Horário atual: ${hora}h
-- Saudação correta para AGORA: ${saudacao}
+- Horário atual em Recife: ${hora}h
 - Nome do cliente: ${nomeCliente}
 - Telefone do cliente: ${phone}
+- Esta ${jaRespondeu ? 'NÃO é a primeira mensagem da conversa (já conversaram antes)' : 'É a primeira mensagem da IA nesta conversa'}.
 
-ESTILO DE CONVERSA (MUITO IMPORTANTE):
-- Converse como um humano real no WhatsApp: natural, leve e direto.
-- ${jaRespondeu ? 'NÃO use saudação (já conversaram). Vá direto ao ponto.' : `Use a saudação "${saudacao}" UMA ÚNICA VEZ, só nesta primeira mensagem.`}
-- Mensagens CURTAS: no máximo 2 a 3 frases por resposta. NUNCA mande textão.
-- Faça UMA pergunta por vez. Não despeje várias perguntas juntas.
-- Não repita o que já foi dito. Não reenvie a mesma mensagem.
-- Nada de listas longas ou explicações enormes — seja objetivo e simpático.${primeiraMsg}
+PARA AGENDAR uma reunião, quando tiver todos os dados, inclua no final da resposta um bloco neste formato exato:
+[AGENDAR]
+NOME: nome completo
+EMAIL: email do cliente
+TELEFONE: ${phone}
+DATA: YYYY-MM-DD (apenas datas futuras e em dias úteis, horários 08:00 às 20:00)
+HORARIO: HH:MM
+[/AGENDAR]
 
-REGRAS PARA AGENDAMENTO:
-1. Peça o nome completo do cliente se ainda não souber (uma coisa de cada vez)
-2. Depois peça o email
-3. Só agende para datas FUTURAS (após ${dataAtualFormatada})
-4. Não agende para sábados ou domingos
-5. Horários disponíveis: 08:00 às 20:00
-
-Histórico:
+HISTÓRICO DA CONVERSA:
 ${history}
 
 Cliente: ${customerMessage}`;
@@ -294,10 +287,9 @@ Cliente: ${customerMessage}`;
 
       const nomeValido = nome && nome.length > 2 && !nome.includes('[') && nome.toLowerCase() !== 'cliente';
       const emailValido = email && email.includes('@') && !email.includes('[');
-      const produtoValido = produto && !produto.includes('[');
       const horarioValido = horario && /^\d{2}:\d{2}$/.test(horario);
 
-      if (nomeValido && emailValido && produtoValido && dataValida && horarioValido && !ehFimDeSemana) {
+      if (nomeValido && emailValido && dataValida && horarioValido && !ehFimDeSemana) {
         try {
           // Cria evento no Google Calendar
           let meetLink = null;
@@ -325,8 +317,8 @@ Cliente: ${customerMessage}`;
               if (tokenResponse.ok) {
                 const tokenData = await tokenResponse.json();
                 const event = {
-                  summary: `Reunião - ${nome} - ${produto.replace(/_/g, ' ')}`,
-                  description: `Cliente: ${nome}\nEmail: ${email}\nTelefone: ${telefone}\nProduto: ${produto.replace(/_/g, ' ')}\n\nAgendado via WhatsApp IA (Z-API)`,
+                  summary: `Reunião - ${nome}`,
+                  description: `Cliente: ${nome}\nEmail: ${email}\nTelefone: ${telefone}\n\nAgendado via WhatsApp IA (Z-API)`,
                   start: { dateTime: startDateTime, timeZone: 'America/Sao_Paulo' },
                   end: { dateTime: endDateTime, timeZone: 'America/Sao_Paulo' },
                   attendees: [{ email, displayName: nome }],
@@ -377,7 +369,6 @@ Cliente: ${customerMessage}`;
             nome_cliente: nome,
             email_cliente: email,
             telefone_cliente: telefone,
-            produto,
             data,
             horario,
             link_reuniao: meetLink || '',
@@ -389,7 +380,7 @@ Cliente: ${customerMessage}`;
           console.log('✅ Agendamento criado!');
 
           finalResponse = aiResponse.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
-          finalResponse += `\n\n✅ *Agendamento Confirmado!*\n👤 Nome: ${nome}\n📅 Data: ${data}\n⏰ Horário: ${horario}\n📦 Produto: ${produto.replace(/_/g, ' ')}`;
+          finalResponse += `\n\n✅ *Agendamento Confirmado!*\n👤 Nome: ${nome}\n📅 Data: ${data}\n⏰ Horário: ${horario}`;
           if (meetLink) finalResponse += `\n🔗 Link da reunião: ${meetLink}`;
           finalResponse += `\n\nAguardamos você! 🎉`;
 
@@ -402,7 +393,6 @@ Cliente: ${customerMessage}`;
         let faltam = [];
         if (!nomeValido) faltam.push('nome completo');
         if (!emailValido) faltam.push('email válido');
-        if (!produtoValido) faltam.push('produto de interesse');
         if (!dataValida) faltam.push('data válida (futura)');
         if (!horarioValido) faltam.push('horário no formato HH:MM');
         if (ehFimDeSemana) faltam.push('data em dia útil');
