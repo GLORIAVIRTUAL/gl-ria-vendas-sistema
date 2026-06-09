@@ -365,7 +365,7 @@ Cliente: ${customerMessage}`;
           }
 
           // Cria agendamento
-          await base44.asServiceRole.entities.Agendamento.create({
+          const novoAgendamento = await base44.asServiceRole.entities.Agendamento.create({
             nome_cliente: nome,
             email_cliente: email,
             telefone_cliente: telefone,
@@ -378,6 +378,23 @@ Cliente: ${customerMessage}`;
           });
 
           console.log('✅ Agendamento criado!');
+
+          // Cria Lead no CRM no estágio "Reunião Marcada"
+          try {
+            await base44.asServiceRole.entities.Lead.create({
+              nome_cliente: nome,
+              email_cliente: email,
+              telefone_cliente: telefone,
+              estagio: 'Reuniao_Marcada',
+              data_reuniao: data,
+              agendamento_id: novoAgendamento.id,
+              observacoes: `Reunião marcada via WhatsApp IA (Z-API) - ${data} às ${horario}`,
+              proximos_passos: 'Realizar reunião agendada'
+            });
+            console.log('✅ Lead criado no CRM (Reunião Marcada)!');
+          } catch (leadError) {
+            console.error('⚠️ Erro ao criar Lead no CRM:', leadError.message);
+          }
 
           finalResponse = aiResponse.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
           finalResponse += `\n\n✅ *Agendamento Confirmado!*\n👤 Nome: ${nome}\n📅 Data: ${data}\n⏰ Horário: ${horario}`;
