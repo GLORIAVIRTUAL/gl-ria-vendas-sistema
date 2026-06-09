@@ -106,6 +106,9 @@ Deno.serve(async (req) => {
         conversation_finished: false,
         last_message_at: new Date().toISOString()
       });
+
+      // Notifica o dono no celular pessoal sobre cliente novo no chat
+      await notificarClienteNovo(contactName || phone, phone);
     } else {
       contact = existingContacts[0];
       const wasFinished = contact.conversation_finished || contact.is_active === false;
@@ -462,5 +465,41 @@ Cliente: ${customerMessage}`;
 
   } catch (error) {
     console.error('❌ Erro no processamento da IA:', error);
+  }
+}
+
+// ========== NOTIFICA O DONO SOBRE CLIENTE NOVO NO CHAT ==========
+async function notificarClienteNovo(nomeContato, telefoneCliente) {
+  try {
+    const clientToken = (Deno.env.get('CLIENT_TOKEN') || '').trim();
+    const instanceToken = (Deno.env.get('TOKEN_DA_INSTANCIA') || '').trim();
+    const instanceId = (Deno.env.get('IA_DA_INSTANCIA') || '').trim();
+
+    if (!clientToken || !instanceToken || !instanceId) {
+      console.error('❌ Credenciais Z-API incompletas para notificação');
+      return;
+    }
+
+    const meuNumero = '5587988020504';
+    const mensagem = `🔔 *Novo cliente no chat da Glória!*\n\n👤 Nome: ${nomeContato}\n📱 Telefone: ${telefoneCliente}\n\nUm novo contato acabou de iniciar uma conversa.`;
+
+    const zapiUrl = `https://api.z-api.io/instances/${instanceId}/token/${instanceToken}/send-text`;
+
+    const res = await fetch(zapiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Client-Token': clientToken
+      },
+      body: JSON.stringify({ phone: meuNumero, message: mensagem })
+    });
+
+    if (res.ok) {
+      console.log('✅ Notificação de cliente novo enviada ao dono!');
+    } else {
+      console.error('❌ Erro ao notificar dono:', await res.text());
+    }
+  } catch (error) {
+    console.error('⚠️ Erro ao notificar cliente novo:', error.message);
   }
 }
