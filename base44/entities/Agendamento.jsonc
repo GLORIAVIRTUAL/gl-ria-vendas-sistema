@@ -17,15 +17,7 @@
     },
     "produto": {
       "type": "string",
-      "enum": [
-        "Atendimento_IA_24_7",
-        "Maquina_de_Videos",
-        "Gloria_Clinica",
-        "Gloria_Vendas",
-        "Especialistas_Virtuais",
-        "Sites_em_24_Horas"
-      ],
-      "description": "Produto escolhido"
+      "description": "Produto (legado / opcional)"
     },
     "data": {
       "type": "string",
@@ -84,7 +76,6 @@
   "required": [
     "nome_cliente",
     "email_cliente",
-    "produto",
     "data",
     "horario"
   ]

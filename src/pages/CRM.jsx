@@ -137,11 +137,9 @@ export default function CRM() {
     const baseUrl = window.location.origin;
     const formLink = `${baseUrl}/OnboardingPublico?email=${encodeURIComponent(lead.email_cliente)}&lead_id=${lead.id}`;
     
-    const produtoNome = produtoConfig[lead.produto_interesse]?.nome || lead.produto_interesse;
-    
     const mensagemPadrao = `Olá ${lead.nome_cliente}! 👋
 
-Para darmos continuidade ao processo de ${produtoNome}, precisamos que você preencha o formulário de cadastro da sua empresa.
+Para darmos continuidade ao processo, precisamos que você preencha o formulário de cadastro da sua empresa.
 
 📋 *Formulário de Onboarding:*
 ${formLink}

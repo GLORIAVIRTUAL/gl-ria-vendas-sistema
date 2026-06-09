@@ -107,10 +107,6 @@ export default function LeadCard({ lead, produtoConfig, isDragging, onEdit, onEn
           )}
         </div>
 
-        <Badge className={`${produtoConfig[lead.produto_interesse]?.cor} border w-full justify-center`}>
-          {produtoConfig[lead.produto_interesse]?.nome}
-        </Badge>
-
         {/* Status do Onboarding */}
         {lead.status_onboarding && (
           <Badge className={`${statusOnboardingCor[lead.status_onboarding]} border w-full justify-center text-xs`}>

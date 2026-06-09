@@ -15,21 +15,11 @@ Deno.serve((req) => {
     <div id="app" class="max-w-4xl mx-auto py-8"></div>
     
     <script>
-        const produtoConfig = {
-            atendimento_ia_24_7: { nome: "Atendimento IA 24/7", icon: "🤖" },
-            maquina_de_videos: { nome: "Máquina de Vídeos", icon: "🎬" },
-            gloria_clinica: { nome: "Glória Clínica", icon: "🏥" },
-            gloria_vendas: { nome: "Glória Vendas", icon: "💼" },
-            especialistas_virtuais: { nome: "Especialistas Virtuais", icon: "👨‍⚕️" },
-            sites_em_24_horas: { nome: "Sites em 24 Horas", icon: "🌐" }
-        };
-
         let etapa = 1;
         let formData = {
             nome_cliente: "",
             email_cliente: "",
             telefone_cliente: "",
-            produto: "",
             data: "",
             horario: "",
             observacoes: ""
@@ -79,7 +69,7 @@ Deno.serve((req) => {
 
                     <!-- Steps -->
                     <div class="flex justify-center gap-4 p-6 bg-slate-50 border-b">
-                        \${[1,2,3].map(step => \`
+                        \${[1,2].map(step => \`
                             <div class="flex items-center gap-2 \${etapa >= step ? 'opacity-100' : 'opacity-40'}">
                                 <div class="\${etapa >= step ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'} w-10 h-10 rounded-full flex items-center justify-center font-bold">
                                     \${etapa > step ? '✓' : step}
@@ -126,36 +116,11 @@ Deno.serve((req) => {
                         </div>
                         <button onclick="proximaEtapa()" 
                                 class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold">
-                            Próximo: Escolher Produto
+                            Próximo: Data e Hora
                         </button>
                     </div>
                 \`;
             } else if (etapa === 2) {
-                content.innerHTML = \`
-                    <div class="space-y-4">
-                        <h2 class="text-xl font-bold mb-4">📦 Escolha o Produto</h2>
-                        <div class="grid md:grid-cols-2 gap-4">
-                            \${Object.entries(produtoConfig).map(([key, config]) => \`
-                                <button onclick="selecionarProduto('\${key}')" 
-                                        class="\${formData.produto === key ? 'border-blue-500 bg-blue-50' : 'border-slate-200'} border-2 p-6 rounded-lg text-left hover:shadow-md transition">
-                                    <div class="text-3xl mb-2">\${config.icon}</div>
-                                    <h3 class="font-bold">\${config.nome}</h3>
-                                </button>
-                            \`).join('')}
-                        </div>
-                        <div class="flex gap-3">
-                            <button onclick="voltarEtapa()" 
-                                    class="flex-1 border border-slate-300 py-3 rounded-lg font-semibold">
-                                Voltar
-                            </button>
-                            <button onclick="proximaEtapa()" 
-                                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold">
-                                Próximo: Data e Hora
-                            </button>
-                        </div>
-                    </div>
-                \`;
-            } else if (etapa === 3) {
                 content.innerHTML = \`
                     <div class="space-y-4">
                         <h2 class="text-xl font-bold mb-4">📅 Data e Horário</h2>
@@ -199,11 +164,6 @@ Deno.serve((req) => {
                     mostrarErro('Preencha nome e email');
                     return;
                 }
-            } else if (etapa === 2) {
-                if (!formData.produto) {
-                    mostrarErro('Escolha um produto');
-                    return;
-                }
             }
             
             etapa++;
@@ -212,11 +172,6 @@ Deno.serve((req) => {
 
         function voltarEtapa() {
             etapa--;
-            render();
-        }
-
-        function selecionarProduto(produto) {
-            formData.produto = produto;
             render();
         }
 
@@ -278,7 +233,6 @@ Deno.serve((req) => {
                         nome_cliente: formData.nome_cliente,
                         email_cliente: formData.email_cliente,
                         telefone_cliente: formData.telefone_cliente,
-                        produto: formData.produto,
                         data: formData.data,
                         horario: formData.horario,
                         observacoes: formData.observacoes,

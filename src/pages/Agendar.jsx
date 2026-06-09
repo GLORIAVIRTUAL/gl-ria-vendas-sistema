@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,21 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
-import { ArrowLeft, Check, Clock, User, Mail, Phone, Package, Calendar as CalendarIcon, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Clock, User, Mail, Phone, Calendar as CalendarIcon, AlertCircle, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, isWeekend, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-const produtoConfig = {
-  Atendimento_IA_24_7: { nome: "Atendimento IA 24/7", cor: "bg-blue-500", icon: "🤖" },
-  Maquina_de_Videos: { nome: "Máquina de Vídeos", cor: "bg-purple-500", icon: "🎬" },
-  Gloria_Clinica: { nome: "Glória Clínica", cor: "bg-green-500", icon: "🏥" },
-  Gloria_Vendas: { nome: "Glória Vendas", cor: "bg-orange-500", icon: "💼" },
-  Especialistas_Virtuais: { nome: "Especialistas Virtuais", cor: "bg-pink-500", icon: "👨‍⚕️" },
-  Sites_em_24_Horas: { nome: "Sites em 24 Horas", cor: "bg-cyan-500", icon: "🌐" }
-};
 
 const horarios = [
   "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00",
@@ -38,7 +28,6 @@ export default function Agendar() {
     nome_cliente: "",
     email_cliente: "",
     telefone_cliente: "",
-    produto: "",
     data: null,
     horario: "",
     observacoes: ""
@@ -66,12 +55,10 @@ export default function Agendar() {
         const endHora = String(parseInt(hora) + 1).padStart(2, '0');
         const endDateTime = `${dataStr}T${endHora}:${minuto}:00`;
 
-        const produtoNome = produtoConfig[data.produto]?.nome || data.produto;
-
         setProcessingStepMessage("Criando evento no Google Calendar..."); // Specific step message
         const response = await base44.functions.invoke('createGoogleCalendarEvent', {
-          summary: `Reunião - ${produtoNome} - ${data.nome_cliente}`,
-          description: `Reunião sobre ${produtoNome}\n\nCliente: ${data.nome_cliente}\nEmail: ${data.email_cliente}\n\nObservações: ${data.observacoes || 'Nenhuma'}`,
+          summary: `Reunião - ${data.nome_cliente}`,
+          description: `Reunião com ${data.nome_cliente}\nEmail: ${data.email_cliente}\n\nObservações: ${data.observacoes || 'Nenhuma'}`,
           startDateTime,
           endDateTime,
           attendeeEmail: data.email_cliente,
@@ -87,7 +74,6 @@ export default function Agendar() {
           nome_cliente: data.nome_cliente,
           email_cliente: data.email_cliente,
           telefone_cliente: data.telefone_cliente,
-          produto: data.produto,
           data: dataStr,
           horario: data.horario,
           observacoes: data.observacoes,
@@ -102,7 +88,6 @@ export default function Agendar() {
           nome_cliente: data.nome_cliente,
           email_cliente: data.email_cliente,
           telefone_cliente: data.telefone_cliente,
-          produto_interesse: data.produto,
           data_reuniao: dataStr,
           observacoes: data.observacoes,
           agendamento_id: agendamento.id,
@@ -204,7 +189,7 @@ export default function Agendar() {
   const handleSubmit = async () => {
     setErro(null);
 
-    if (!formData.nome_cliente || !formData.email_cliente || !formData.produto || !formData.data || !formData.horario) {
+    if (!formData.nome_cliente || !formData.email_cliente || !formData.data || !formData.horario) {
       setErro("Por favor, preencha todos os campos obrigatórios");
       return;
     }
@@ -238,7 +223,7 @@ export default function Agendar() {
 
         {/* Progress Steps */}
         <div className="flex items-center justify-center mb-8 gap-4">
-          {[1, 2, 3].map((step) => (
+          {[1, 2].map((step) => (
             <React.Fragment key={step}>
               <div className={`flex items-center gap-2 ${etapa >= step ? 'opacity-100' : 'opacity-40'}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 ${
@@ -250,11 +235,10 @@ export default function Agendar() {
                 </div>
                 <span className="hidden md:inline font-medium text-slate-700">
                   {step === 1 && "Cliente"}
-                  {step === 2 && "Produto"}
-                  {step === 3 && "Data e Hora"}
+                  {step === 2 && "Data e Hora"}
                 </span>
               </div>
-              {step < 3 && <div className={`w-12 h-1 rounded ${etapa > step ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-slate-200'}`} />}
+              {step < 2 && <div className={`w-12 h-1 rounded ${etapa > step ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-slate-200'}`} />}
             </React.Fragment>
           ))}
         </div>
@@ -340,67 +324,13 @@ export default function Agendar() {
                   disabled={!formData.nome_cliente || !formData.email_cliente || criandoEvento}
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg font-semibold shadow-lg"
                 >
-                  Próximo: Escolher Produto
+                  Próximo: Data e Hora
                 </Button>
               </div>
             )}
 
-            {/* Etapa 2: Escolher Produto */}
+            {/* Etapa 2: Data e Horário */}
             {etapa === 2 && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-                    <Package className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900">Escolha o Produto</h2>
-                    <p className="text-sm text-slate-600">Selecione o produto para a reunião</p>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  {Object.entries(produtoConfig).map(([key, config]) => (
-                    <button
-                      key={key}
-                      onClick={() => setFormData({...formData, produto: key})}
-                      disabled={criandoEvento}
-                      className={`p-6 rounded-xl border-2 transition-all duration-200 text-left hover:shadow-lg ${
-                        formData.produto === key
-                          ? 'border-blue-500 bg-blue-50 shadow-md'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 mb-3">
-                        <span className="text-3xl">{config.icon}</span>
-                        <div className={`w-3 h-3 rounded-full ${config.cor}`}></div>
-                      </div>
-                      <h3 className="font-bold text-slate-900 text-lg">{config.nome}</h3>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex gap-3">
-                  <Button 
-                    onClick={() => setEtapa(1)}
-                    variant="outline"
-                    className="flex-1 h-12"
-                    disabled={criandoEvento}
-                  >
-                    Voltar
-                  </Button>
-                  <Button 
-                    onClick={() => setEtapa(3)}
-                    disabled={!formData.produto || criandoEvento}
-                    className="flex-1 h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 font-semibold shadow-lg"
-                  >
-                    Próximo: Data e Hora
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Etapa 3: Data e Horário */}
-            {etapa === 3 && (
               <div className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
@@ -471,7 +401,7 @@ export default function Agendar() {
 
                 <div className="flex gap-3">
                   <Button 
-                    onClick={() => setEtapa(2)}
+                    onClick={() => setEtapa(1)}
                     variant="outline"
                     className="flex-1 h-12"
                     disabled={criandoEvento}

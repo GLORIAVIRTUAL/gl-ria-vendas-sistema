@@ -283,18 +283,6 @@ ${agendamento.link_reuniao ? `🎥 *Link da reunião:*\n${agendamento.link_reuni
                 className="pl-10 h-12"
               />
             </div>
-            <Select value={filtroProduto} onValueChange={setFiltroProduto}>
-              <SelectTrigger className="w-full md:w-48 h-12">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Produto" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos os Produtos</SelectItem>
-                {Object.entries(produtoConfig).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>{config.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Select value={filtroStatus} onValueChange={setFiltroStatus}>
               <SelectTrigger className="w-full md:w-48 h-12">
                 <Filter className="w-4 h-4 mr-2" />

@@ -58,31 +58,13 @@ Deno.serve(async (req) => {
       }, { status: 401 });
     }
 
-    if (!nome_cliente || !email_cliente || !produto || !data || !horario) {
+    if (!nome_cliente || !email_cliente || !data || !horario) {
       console.error('❌ Campos obrigatórios faltando');
       return Response.json({ 
         error: 'Campos obrigatórios faltando',
-        message: 'nome_cliente, email_cliente, produto, data e horario são obrigatórios'
+        message: 'nome_cliente, email_cliente, data e horario são obrigatórios'
       }, { status: 400 });
     }
-
-    const produtosValidos = ['atendimento_ia_24_7', 'maquina_de_videos', 'gloria_clinica', 'gloria_vendas', 'especialistas_virtuais', 'sites_em_24_horas'];
-    if (!produtosValidos.includes(produto.toLowerCase())) {
-      return Response.json({ 
-        error: 'Produto inválido',
-        message: `Produto deve ser um de: ${produtosValidos.join(', ')}`
-      }, { status: 400 });
-    }
-
-    const produtoMap = {
-      'atendimento_ia_24_7': 'Atendimento_IA_24_7',
-      'maquina_de_videos': 'Maquina_de_Videos',
-      'gloria_clinica': 'Gloria_Clinica',
-      'gloria_vendas': 'Gloria_Vendas',
-      'especialistas_virtuais': 'Especialistas_Virtuais',
-      'sites_em_24_horas': 'Sites_em_24_Horas'
-    };
-    const produtoEnum = produtoMap[produto.toLowerCase()];
 
     const horariosValidos = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
     if (!horariosValidos.includes(horario)) {
@@ -109,15 +91,6 @@ Deno.serve(async (req) => {
       }, { status: 409 });
     }
 
-    const produtoNomes = {
-      'Atendimento_IA_24_7': 'Atendimento IA 24/7',
-      'Maquina_de_Videos': 'Máquina de Vídeos',
-      'Gloria_Clinica': 'Glória Clínica',
-      'Gloria_Vendas': 'Glória Vendas',
-      'Especialistas_Virtuais': 'Especialistas Virtuais',
-      'Sites_em_24_Horas': 'Sites em 24 Horas'
-    };
-
     console.log('📅 Criando evento no Google Calendar...');
     const startDateTime = `${data}T${horario}:00`;
     const [hora, minuto] = horario.split(':');
@@ -125,8 +98,8 @@ Deno.serve(async (req) => {
     const endDateTime = `${data}T${endHora}:${minuto}:00`;
 
     const calendarResponse = await base44.asServiceRole.functions.invoke('createGoogleCalendarEvent', {
-      summary: `Reunião - ${produtoNomes[produtoEnum]} - ${nome_cliente}`,
-      description: `Reunião sobre ${produtoNomes[produtoEnum]}\n\nCliente: ${nome_cliente}\nEmail: ${email_cliente}\nTelefone: ${telefone_cliente || 'Não informado'}\n\nObservações: ${observacoes || 'Nenhuma'}\n\n🌐 Agendado via Chatbot`,
+      summary: `Reunião - ${nome_cliente}`,
+      description: `Cliente: ${nome_cliente}\nEmail: ${email_cliente}\nTelefone: ${telefone_cliente || 'Não informado'}\n\nObservações: ${observacoes || 'Nenhuma'}\n\n🌐 Agendado via Chatbot`,
       startDateTime,
       endDateTime,
       attendeeEmail: email_cliente,
@@ -142,7 +115,6 @@ Deno.serve(async (req) => {
       nome_cliente,
       email_cliente,
       telefone_cliente: telefone_cliente || '',
-      produto: produtoEnum,
       data,
       horario,
       observacoes: observacoes || '',
@@ -156,7 +128,6 @@ Deno.serve(async (req) => {
       nome_cliente,
       email_cliente,
       telefone_cliente: telefone_cliente || '',
-      produto_interesse: produtoEnum,
       data_reuniao: data,
       observacoes: observacoes || '',
       agendamento_id: agendamento.id,
@@ -168,14 +139,13 @@ Deno.serve(async (req) => {
     try {
       console.log('📧 Enviando email de confirmação...');
       
-      const produtoNome = produtoNomes[produtoEnum];
       const dataFormatada = new Date(data).toLocaleDateString('pt-BR', { 
         day: '2-digit', 
         month: 'long', 
         year: 'numeric' 
       });
 
-      const assuntoConfirmacao = `✅ Reunião Confirmada - ${produtoNome}`;
+      const assuntoConfirmacao = `✅ Reunião Confirmada`;
       const corpoConfirmacao = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(to bottom, #f8fafc, #e0e7ff); border-radius: 10px;">
           <div style="background: linear-gradient(to right, #3b82f6, #8b5cf6); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -188,14 +158,13 @@ Deno.serve(async (req) => {
             </p>
             
             <p style="font-size: 16px; color: #475569; margin-bottom: 25px;">
-              Sua reunião foi confirmada com sucesso! Estamos ansiosos para conversar com você sobre <strong>${produtoNome}</strong>.
+              Sua reunião foi confirmada com sucesso! Estamos ansiosos para conversar com você.
             </p>
             
             <div style="background: #f1f5f9; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
               <h2 style="color: #1e293b; margin-top: 0; font-size: 20px;">📋 Detalhes da Reunião</h2>
               <p style="margin: 10px 0; color: #334155;"><strong>📅 Data:</strong> ${dataFormatada}</p>
               <p style="margin: 10px 0; color: #334155;"><strong>⏰ Horário:</strong> ${horario}</p>
-              <p style="margin: 10px 0; color: #334155;"><strong>📦 Produto:</strong> ${produtoNome}</p>
             </div>
             
             ${calendarResponse.data.meetLink ? `
@@ -259,14 +228,13 @@ Deno.serve(async (req) => {
       const dataHoraReuniao = new Date(`${data}T${horario}:00`);
       const dataHoraLembrete = new Date(dataHoraReuniao.getTime() - (2 * 60 * 60 * 1000));
       
-      const produtoNome = produtoNomes[produtoEnum];
       const dataFormatada = new Date(data).toLocaleDateString('pt-BR', { 
         day: '2-digit', 
         month: 'long', 
         year: 'numeric' 
       });
 
-      const assuntoLembrete = `⏰ Lembrete: Reunião em 2h - ${produtoNome}`;
+      const assuntoLembrete = `⏰ Lembrete: Reunião em 2h`;
       const corpoLembrete = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(to bottom, #fef3c7, #fde68a); border-radius: 10px;">
           <div style="background: linear-gradient(to right, #f59e0b, #d97706); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -279,7 +247,7 @@ Deno.serve(async (req) => {
             </p>
             
             <p style="font-size: 16px; color: #475569; margin-bottom: 25px;">
-              Este é um lembrete de que sua reunião sobre <strong>${produtoNome}</strong> está chegando!
+              Este é um lembrete de que sua reunião está chegando!
             </p>
             
             <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: center;">
@@ -339,7 +307,6 @@ Deno.serve(async (req) => {
         id: agendamento.id,
         nome_cliente,
         email_cliente,
-        produto: produtoNomes[produtoEnum],
         data,
         horario,
         link_reuniao: calendarResponse.data.meetLink,
