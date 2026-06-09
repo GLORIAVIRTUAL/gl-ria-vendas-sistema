@@ -101,7 +101,6 @@
   },
   "required": [
     "nome_cliente",
-    "email_cliente",
-    "produto_interesse"
+    "email_cliente"
   ]
 }
