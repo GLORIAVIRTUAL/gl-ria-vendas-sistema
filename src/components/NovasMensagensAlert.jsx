@@ -146,7 +146,6 @@ export default function NovasMensagensAlert() {
                 <span className="font-semibold">{alert.agendamento.nome_cliente}</span>
               </p>
               <p className="text-sm bg-white/10 rounded p-2">
-                <strong>{alert.agendamento.produto.replace(/_/g, ' ')}</strong><br/>
                 📅 {new Date(alert.agendamento.data + 'T00:00:00').toLocaleDateString('pt-BR')}<br/>
                 🕐 {alert.agendamento.horario}
               </p>
