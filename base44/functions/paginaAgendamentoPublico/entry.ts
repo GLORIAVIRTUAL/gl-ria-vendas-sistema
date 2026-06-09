@@ -11,8 +11,8 @@ Deno.serve((req) => {
         body { font-family: system-ui, -apple-system, sans-serif; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen p-4">
-    <div id="app" class="max-w-4xl mx-auto py-8"></div>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen p-3 sm:p-4">
+    <div id="app" class="max-w-2xl mx-auto py-4 sm:py-8"></div>
     
     <script>
         let etapa = 1;
@@ -60,26 +60,26 @@ Deno.serve((req) => {
             app.innerHTML = \`
                 <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
                     <!-- Header -->
-                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8 text-center">
+                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 sm:p-8 text-center">
                         <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f3ccc3a454aaec766ae684/973791adc_Untitleddesign14.png"
-                             alt="Glória" class="w-48 h-auto mx-auto mb-4">
-                        <h1 class="text-3xl font-bold mb-2">Agende sua Reunião</h1>
-                        <p class="opacity-90">Preencha os dados para marcar um horário</p>
+                             alt="Glória" class="w-32 sm:w-48 h-auto mx-auto mb-3 sm:mb-4">
+                        <h1 class="text-xl sm:text-3xl font-bold mb-1 sm:mb-2">Agende sua Reunião</h1>
+                        <p class="text-sm sm:text-base opacity-90">Preencha os dados para marcar um horário</p>
                     </div>
 
                     <!-- Steps -->
-                    <div class="flex justify-center gap-4 p-6 bg-slate-50 border-b">
+                    <div class="flex justify-center items-center gap-2 sm:gap-4 p-4 sm:p-6 bg-slate-50 border-b">
                         \${[1,2].map(step => \`
                             <div class="flex items-center gap-2 \${etapa >= step ? 'opacity-100' : 'opacity-40'}">
-                                <div class="\${etapa >= step ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'} w-10 h-10 rounded-full flex items-center justify-center font-bold">
+                                <div class="\${etapa >= step ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'} w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold">
                                     \${etapa > step ? '✓' : step}
                                 </div>
                             </div>
-                        \`).join('<div class="w-12 h-1 bg-slate-200 rounded"></div>')}
+                        \`).join('<div class="w-8 sm:w-12 h-1 bg-slate-200 rounded"></div>')}
                     </div>
 
                     <!-- Form -->
-                    <div class="p-8">
+                    <div class="p-5 sm:p-8">
                         <div id="erro" class="hidden mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded"></div>
                         <div id="loading" class="hidden text-center py-4">
                             <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -98,24 +98,24 @@ Deno.serve((req) => {
             if (etapa === 1) {
                 content.innerHTML = \`
                     <div class="space-y-4">
-                        <h2 class="text-xl font-bold mb-4">👤 Seus Dados</h2>
+                        <h2 class="text-lg sm:text-xl font-bold mb-4">👤 Seus Dados</h2>
                         <div>
                             <label class="block text-sm font-medium mb-2">Nome Completo *</label>
                             <input type="text" id="nome" value="\${formData.nome_cliente}" 
-                                   class="w-full px-4 py-2 border rounded-lg" placeholder="João Silva">
+                                   class="w-full px-4 py-3 text-base border rounded-lg" placeholder="João Silva">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Email *</label>
                             <input type="email" id="email" value="\${formData.email_cliente}"
-                                   class="w-full px-4 py-2 border rounded-lg" placeholder="joao@email.com">
+                                   class="w-full px-4 py-3 text-base border rounded-lg" placeholder="joao@email.com">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Telefone</label>
                             <input type="tel" id="telefone" value="\${formData.telefone_cliente}"
-                                   class="w-full px-4 py-2 border rounded-lg" placeholder="(11) 99999-9999">
+                                   class="w-full px-4 py-3 text-base border rounded-lg" placeholder="(11) 99999-9999">
                         </div>
                         <button onclick="proximaEtapa()" 
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold">
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-lg font-semibold text-base">
                             Próximo: Data e Hora
                         </button>
                     </div>
@@ -123,29 +123,29 @@ Deno.serve((req) => {
             } else if (etapa === 2) {
                 content.innerHTML = \`
                     <div class="space-y-4">
-                        <h2 class="text-xl font-bold mb-4">📅 Data e Horário</h2>
+                        <h2 class="text-lg sm:text-xl font-bold mb-4">📅 Data e Horário</h2>
                         <div>
                             <label class="block text-sm font-medium mb-2">Data *</label>
                             <input type="date" id="data" value="\${formData.data}" onchange="verificarHorarios()"
                                    min="\${new Date().toISOString().split('T')[0]}"
-                                   class="w-full px-4 py-2 border rounded-lg">
+                                   class="w-full px-4 py-3 text-base border rounded-lg">
                         </div>
                         <div id="horarios-container" class="hidden">
                             <label class="block text-sm font-medium mb-2">Horário *</label>
-                            <div id="horarios-grid" class="grid grid-cols-3 gap-2"></div>
+                            <div id="horarios-grid" class="grid grid-cols-3 sm:grid-cols-4 gap-2"></div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Observações</label>
                             <textarea id="observacoes" rows="3" 
-                                      class="w-full px-4 py-2 border rounded-lg">\${formData.observacoes}</textarea>
+                                      class="w-full px-4 py-3 text-base border rounded-lg">\${formData.observacoes}</textarea>
                         </div>
-                        <div class="flex gap-3">
+                        <div class="flex flex-col sm:flex-row gap-3">
                             <button onclick="voltarEtapa()" 
-                                    class="flex-1 border border-slate-300 py-3 rounded-lg font-semibold">
+                                    class="flex-1 border border-slate-300 py-3.5 rounded-lg font-semibold text-base">
                                 Voltar
                             </button>
                             <button onclick="finalizarAgendamento()" 
-                                    class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold">
+                                    class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3.5 rounded-lg font-semibold text-base">
                                 ✓ Confirmar Agendamento
                             </button>
                         </div>
@@ -197,7 +197,7 @@ Deno.serve((req) => {
                 
                 grid.innerHTML = horariosDisponiveis.map(h => \`
                     <button onclick="selecionarHorario('\${h}')" 
-                            class="\${formData.horario === h ? 'bg-blue-600 text-white' : 'bg-slate-100 hover:bg-slate-200'} px-4 py-2 rounded-lg font-mono font-semibold">
+                            class="\${formData.horario === h ? 'bg-blue-600 text-white' : 'bg-slate-100 hover:bg-slate-200'} px-2 py-3 rounded-lg font-mono font-semibold text-sm sm:text-base">
                         \${h}
                     </button>
                 \`).join('');
