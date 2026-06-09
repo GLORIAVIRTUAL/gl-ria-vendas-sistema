@@ -218,19 +218,30 @@ async function processAIResponse(base44, contact, phone, customerMessage) {
     const nomeCliente = contact.name || 'Cliente';
     const systemPrompt = settings.system_prompt || 'Você é GLÓRIA, uma assistente virtual inteligente.';
 
+    // É a primeira mensagem da IA nesta conversa? (só saúda na primeira)
+    const jaRespondeu = recentMessages.some(m => m.sender === 'ai');
+
     const fullPrompt = `${systemPrompt}
 
 INFORMAÇÕES IMPORTANTES DO CONTEXTO:
 - Data de HOJE: ${dataAtualFormatada} (${diaSemana})
 - Data ISO de hoje: ${dataAtualISO}
 - Horário atual: ${hora}h
-- Saudação correta: ${saudacao}
+- Saudação correta para AGORA: ${saudacao}
 - Nome do cliente: ${nomeCliente}
 - Telefone do cliente: ${phone}
 
+ESTILO DE CONVERSA (MUITO IMPORTANTE):
+- Converse como um humano real no WhatsApp: natural, leve e direto.
+- ${jaRespondeu ? 'NÃO use saudação (já conversaram). Vá direto ao ponto.' : `Use a saudação "${saudacao}" UMA ÚNICA VEZ, só nesta primeira mensagem.`}
+- Mensagens CURTAS: no máximo 2 a 3 frases por resposta. NUNCA mande textão.
+- Faça UMA pergunta por vez. Não despeje várias perguntas juntas.
+- Não repita o que já foi dito. Não reenvie a mesma mensagem.
+- Nada de listas longas ou explicações enormes — seja objetivo e simpático.
+
 REGRAS PARA AGENDAMENTO:
-1. SEMPRE pergunte o nome completo do cliente se ainda não souber
-2. SEMPRE pergunte o email do cliente
+1. Peça o nome completo do cliente se ainda não souber (uma coisa de cada vez)
+2. Depois peça o email
 3. Só agende para datas FUTURAS (após ${dataAtualFormatada})
 4. Não agende para sábados ou domingos
 5. Horários disponíveis: 08:00 às 20:00
