@@ -233,7 +233,7 @@ export default function ChatIA() {
           </div>
           <div className="grid grid-cols-2 gap-2 mb-3">
             <Button
-              onClick={() => setLlmFilter('atual')}
+              onClick={() => { setLlmFilter('atual'); setSelectedContact(null); }}
               className={cn(
                 "w-full",
                 llmFilter === 'atual'
@@ -244,7 +244,7 @@ export default function ChatIA() {
               🤖 IA Atual
             </Button>
             <Button
-              onClick={() => setLlmFilter('openclaw')}
+              onClick={() => { setLlmFilter('openclaw'); setSelectedContact(null); }}
               className={cn(
                 "w-full",
                 llmFilter === 'openclaw'
