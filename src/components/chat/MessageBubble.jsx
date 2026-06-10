@@ -10,7 +10,7 @@ const statusIcons = {
   pending: <Clock className="w-3 h-3" />
 };
 
-export default function MessageBubble({ message }) {
+export default function MessageBubble({ message, isOpenClaw = false }) {
   const isOutbound = message.direction === 'outbound';
   const isAI = message.sender === 'ai';
   
@@ -71,17 +71,19 @@ export default function MessageBubble({ message }) {
         "max-w-[75%] rounded-2xl px-3 py-2 shadow-sm",
         isOutbound 
           ? isAI 
-            ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-br-md" 
+            ? isOpenClaw
+              ? "bg-gradient-to-r from-red-500 to-red-600 text-white rounded-br-md"
+              : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-br-md"
             : "bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-br-md"
           : "bg-white border border-slate-100 rounded-bl-md"
       )}>
         {isOutbound && (
           <div className={cn(
             "flex items-center gap-1.5 text-[10px] mb-1",
-            isAI ? "text-blue-100" : "text-slate-300"
+            isAI ? (isOpenClaw ? "text-red-100" : "text-blue-100") : "text-slate-300"
           )}>
             {isAI ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
-            <span>{isAI ? 'IA GLÓRIA' : (message.extracted_data?.sent_by || 'Atendente')}</span>
+            <span>{isAI ? (isOpenClaw ? '🦅 OPENCLAW' : 'IA GLÓRIA') : (message.extracted_data?.sent_by || 'Atendente')}</span>
           </div>
         )}
         {!isOutbound && message.extracted_data?.sender_name && (

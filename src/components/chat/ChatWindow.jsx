@@ -229,7 +229,7 @@ export default function ChatWindow({
         <TemplateSelector contact={contact} onSent={() => {}} />
         <div className="space-y-1">
           {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
+            <MessageBubble key={msg.id} message={msg} isOpenClaw={contact.llm_destino === 'openclaw'} />
           ))}
           <div ref={messagesEndRef} />
         </div>
