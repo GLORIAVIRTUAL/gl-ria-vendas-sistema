@@ -25,11 +25,28 @@ export default function ClientesOpenClaw() {
     queryFn: () => base44.entities.ClienteOpenClaw.list('-created_date'),
   });
 
+  const sincronizarContato = async (data) => {
+    const telLimpo = (data.telefone_cliente || '').replace(/\D/g, '');
+    if (!telLimpo) return;
+    const destino = data.ativo === false ? 'atual' : 'openclaw';
+    const contatos = await base44.entities.Contact.list('-created_date', 500);
+    const alvos = contatos.filter((ct) => {
+      const t = (ct.phone || '').replace(/\D/g, '');
+      return t && (t === telLimpo || t.endsWith(telLimpo) || telLimpo.endsWith(t));
+    });
+    await Promise.all(
+      alvos.map((ct) => base44.entities.Contact.update(ct.id, { llm_destino: destino }))
+    );
+  };
+
   const saveMutation = useMutation({
-    mutationFn: (data) =>
-      editing
-        ? base44.entities.ClienteOpenClaw.update(editing.id, data)
-        : base44.entities.ClienteOpenClaw.create(data),
+    mutationFn: async (data) => {
+      const saved = editing
+        ? await base44.entities.ClienteOpenClaw.update(editing.id, data)
+        : await base44.entities.ClienteOpenClaw.create(data);
+      await sincronizarContato(data);
+      return saved;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clientes-openclaw'] });
       setDialogOpen(false);
