@@ -2,6 +2,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const processedMessages = new Set();
 
+// Acumulador de mensagens por telefone (debounce)
+// Permite que o cliente envie várias frases e a IA responda apenas uma vez
+const pendingTimers = new Map();
+const DEBOUNCE_MS = 8000; // espera 8s após a última mensagem antes de responder
+
 Deno.serve(async (req) => {
   console.log('🔔 Webhook Z-API recebido:', req.method);
 
@@ -143,10 +148,36 @@ Deno.serve(async (req) => {
 
     console.log('✅ Mensagem salva!');
 
-    // Se IA estiver habilitada, processa resposta
+    // Se IA estiver habilitada, agenda resposta com acumulador (debounce)
     if (contact.ai_enabled) {
-      console.log('🤖 Processando resposta da IA...');
-      await processAIResponse(base44, contact, phone, content);
+      console.log('🤖 Agendando resposta da IA (acumulador)...');
+
+      // Cancela timer anterior se o cliente ainda está digitando/enviando
+      const existing = pendingTimers.get(phone);
+      if (existing) {
+        clearTimeout(existing);
+        console.log('⏳ Nova mensagem recebida, reiniciando contador...');
+      }
+
+      const contactId = contact.id;
+      const timer = setTimeout(async () => {
+        pendingTimers.delete(phone);
+        try {
+          // Recarrega o contato atualizado antes de responder
+          const fresh = await base44.asServiceRole.entities.Contact.filter({ phone });
+          const currentContact = fresh[0] || contact;
+          if (!currentContact.ai_enabled) {
+            console.log('⚠️ IA desabilitada para o contato, ignorando.');
+            return;
+          }
+          console.log('🤖 Acumulador concluído, processando resposta da IA...');
+          await processAIResponse(base44, currentContact, phone);
+        } catch (err) {
+          console.error('❌ Erro no processamento acumulado:', err);
+        }
+      }, DEBOUNCE_MS);
+
+      pendingTimers.set(phone, timer);
     }
 
     return Response.json({ success: true });
@@ -158,7 +189,7 @@ Deno.serve(async (req) => {
 });
 
 // ========== FUNÇÃO PARA PROCESSAR IA E RESPONDER VIA Z-API ==========
-async function processAIResponse(base44, contact, phone, customerMessage) {
+async function processAIResponse(base44, contact, phone) {
   try {
     const clientToken = (Deno.env.get('CLIENT_TOKEN') || '').trim();
     const instanceToken = (Deno.env.get('TOKEN_DA_INSTANCIA') || '').trim();
@@ -229,6 +260,14 @@ async function processAIResponse(base44, contact, phone, customerMessage) {
     const fullPrompt = `${systemPrompt}
 
 ---
+REGRAS DE ESTILO DA RESPOSTA (OBRIGATÓRIO):
+- Responda de forma CURTA e direta, como uma conversa real de WhatsApp (no máximo 2 a 3 frases).
+- NÃO repita informações, perguntas ou cumprimentos que você já enviou antes no histórico.
+- Use saudação ("${saudacao}") apenas se for a primeira mensagem da IA nesta conversa.
+- Faça apenas UMA pergunta por vez. Não envie textos longos nem listas extensas.
+- O cliente pode ter enviado várias frases seguidas; leia todas e responda UMA única vez, de forma natural.
+
+---
 CONTEXTO TÉCNICO (use apenas como referência, siga sempre as instruções acima):
 - Data de HOJE: ${dataAtualFormatada} (${diaSemana})
 - Data ISO de hoje: ${dataAtualISO}
@@ -246,10 +285,8 @@ DATA: YYYY-MM-DD (apenas datas futuras e em dias úteis, horários 08:00 às 20:
 HORARIO: HH:MM
 [/AGENDAR]
 
-HISTÓRICO DA CONVERSA:
-${history}
-
-Cliente: ${customerMessage}`;
+HISTÓRICO DA CONVERSA (as últimas mensagens "Cliente:" são as mais recentes, responda a elas):
+${history}`;
 
     console.log('🔄 Chamando IA...');
 
