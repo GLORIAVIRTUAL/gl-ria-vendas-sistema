@@ -8,11 +8,15 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const openclawUrl = (Deno.env.get('OPENCLAW_API_URL') || '').trim();
+    // Permite testar uma URL específica via payload (override) ou usa a secret
+    let bodyIn = {};
+    try { bodyIn = await req.json(); } catch { /* sem body */ }
+
+    const openclawUrl = (bodyIn.url || Deno.env.get('OPENCLAW_API_URL') || '').trim();
     const openclawKey = (Deno.env.get('OPENCLAW_API_KEY') || '').trim();
 
     const diagnostico = {
-      url_configurada: openclawUrl ? `${openclawUrl.slice(0, 40)}...` : 'VAZIA',
+      url_testada: openclawUrl || 'VAZIA',
       key_configurada: openclawKey ? `${openclawKey.slice(0, 8)}...` : 'VAZIA',
     };
 
@@ -43,7 +47,8 @@ Deno.serve(async (req) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${openclawKey}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(20000)
       });
 
       status = ocResponse.status;
@@ -69,7 +74,7 @@ Deno.serve(async (req) => {
       ok: status >= 200 && status < 300,
       diagnostico,
       http_status: status,
-      resposta_bruta: rawText?.slice(0, 1000),
+      resposta_bruta: rawText?.slice(0, 1500),
       texto_extraido: reply || '(nenhum campo reply/response/message/text encontrado)',
       payload_enviado: payload
     });
