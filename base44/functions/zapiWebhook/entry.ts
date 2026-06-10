@@ -100,12 +100,18 @@ Deno.serve(async (req) => {
     // Se estiver, este contato é roteado para a LLM do OpenClaw (outro dispositivo),
     // e a IA atual NÃO responde.
     const telefoneLimpo = phone.replace(/\D/g, '');
-    const clientesOpenClaw = await base44.asServiceRole.entities.ClienteOpenClaw.list();
-    const ehOpenClaw = clientesOpenClaw.some(c => {
-      if (c.ativo === false) return false;
-      const telCadastrado = (c.telefone_cliente || '').replace(/\D/g, '');
-      return telCadastrado && (telCadastrado === telefoneLimpo || telefoneLimpo.endsWith(telCadastrado) || telCadastrado.endsWith(telefoneLimpo));
-    });
+    let ehOpenClaw = false;
+    try {
+      const clientesOpenClaw = await base44.asServiceRole.entities.ClienteOpenClaw.list();
+      ehOpenClaw = clientesOpenClaw.some(c => {
+        if (c.ativo === false) return false;
+        const telCadastrado = (c.telefone_cliente || '').replace(/\D/g, '');
+        return telCadastrado && (telCadastrado === telefoneLimpo || telefoneLimpo.endsWith(telCadastrado) || telCadastrado.endsWith(telefoneLimpo));
+      });
+    } catch (orqErr) {
+      console.error('⚠️ Erro no orquestrador OpenClaw (seguindo com IA atual):', orqErr.message);
+      ehOpenClaw = false;
+    }
 
     const llmDestino = ehOpenClaw ? 'openclaw' : 'atual';
     console.log(`🧭 Orquestrador: contato roteado para LLM "${llmDestino}"`);
