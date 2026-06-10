@@ -148,6 +148,45 @@ Deno.serve(async (req) => {
 
     console.log('✅ Mensagem salva!');
 
+    // ===== DETECTA PEDIDO DE ATENDIMENTO HUMANO =====
+    const querHumano = messageType === 'text' && /\b(humano|atendente|pessoa|falar com algu[ée]m|atendimento humano|quero falar com|suporte humano|gente de verdade|n[aã]o quero rob[ôo]|sem rob[ôo])\b/i.test(content);
+
+    if (querHumano && contact.ai_enabled) {
+      console.log('🙋 Cliente pediu atendimento humano. Ativando modo humano...');
+
+      // Cancela qualquer resposta de IA pendente
+      const pending = pendingTimers.get(phone);
+      if (pending) {
+        clearTimeout(pending);
+        pendingTimers.delete(phone);
+      }
+
+      // Desliga a IA e marca a transferência
+      await base44.asServiceRole.entities.Contact.update(contact.id, {
+        ai_enabled: false,
+        transferido_humano_at: new Date().toISOString()
+      });
+
+      // Mensagem de transferência ao cliente
+      const msgTransferencia = '👨‍💼 Entendi! Vou te transferir para um de nossos atendentes humanos. Por favor, aguarde um instante que já já alguém vai te responder por aqui. 😊';
+
+      await base44.asServiceRole.entities.Message.create({
+        contact_id: contact.id,
+        direction: 'outbound',
+        sender: 'ai',
+        content: msgTransferencia,
+        type: 'text',
+        status: 'sent'
+      });
+
+      await enviarMensagemZapi(phone, msgTransferencia);
+
+      // Notifica o dono que há um cliente aguardando atendimento humano
+      await notificarTransferenciaHumano(contact.name || phone, phone);
+
+      return Response.json({ success: true, transferido: true });
+    }
+
     // Se IA estiver habilitada, agenda resposta com acumulador (debounce)
     if (contact.ai_enabled) {
       console.log('🤖 Agendando resposta da IA (acumulador)...');
@@ -512,6 +551,70 @@ ${history}`;
 
   } catch (error) {
     console.error('❌ Erro no processamento da IA:', error);
+  }
+}
+
+// ========== ENVIA UMA MENSAGEM DE TEXTO VIA Z-API ==========
+async function enviarMensagemZapi(phone, message) {
+  try {
+    const clientToken = (Deno.env.get('CLIENT_TOKEN') || '').trim();
+    const instanceToken = (Deno.env.get('TOKEN_DA_INSTANCIA') || '').trim();
+    const instanceId = (Deno.env.get('IA_DA_INSTANCIA') || '').trim();
+
+    if (!clientToken || !instanceToken || !instanceId) {
+      console.error('❌ Credenciais Z-API incompletas para envio');
+      return;
+    }
+
+    let telefoneFormatado = phone.replace(/\D/g, '');
+    if (!telefoneFormatado.startsWith('55')) {
+      telefoneFormatado = '55' + telefoneFormatado;
+    }
+
+    const zapiUrl = `https://api.z-api.io/instances/${instanceId}/token/${instanceToken}/send-text`;
+    const res = await fetch(zapiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Client-Token': clientToken
+      },
+      body: JSON.stringify({ phone: telefoneFormatado, message })
+    });
+
+    if (res.ok) {
+      console.log('✅ Mensagem enviada via Z-API!');
+    } else {
+      console.error('❌ Erro ao enviar via Z-API:', await res.text());
+    }
+  } catch (error) {
+    console.error('⚠️ Erro ao enviar mensagem Z-API:', error.message);
+  }
+}
+
+// ========== NOTIFICA O DONO SOBRE TRANSFERÊNCIA PARA HUMANO ==========
+async function notificarTransferenciaHumano(nomeContato, telefoneCliente) {
+  try {
+    const clientToken = (Deno.env.get('CLIENT_TOKEN') || '').trim();
+    const instanceToken = (Deno.env.get('TOKEN_DA_INSTANCIA') || '').trim();
+    const instanceId = (Deno.env.get('IA_DA_INSTANCIA') || '').trim();
+
+    if (!clientToken || !instanceToken || !instanceId) return;
+
+    const meuNumero = '5587988020504';
+    const mensagem = `🙋 *Cliente pediu atendimento humano!*\n\n👤 Nome: ${nomeContato}\n📱 Telefone: ${telefoneCliente}\n\nA IA foi desligada para este contato. Responda manualmente pelo sistema.`;
+
+    const zapiUrl = `https://api.z-api.io/instances/${instanceId}/token/${instanceToken}/send-text`;
+    await fetch(zapiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Client-Token': clientToken
+      },
+      body: JSON.stringify({ phone: meuNumero, message: mensagem })
+    });
+    console.log('✅ Dono notificado sobre transferência para humano!');
+  } catch (error) {
+    console.error('⚠️ Erro ao notificar transferência:', error.message);
   }
 }
 

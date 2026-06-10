@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { X, MessageSquare, Bell, Calendar } from 'lucide-react';
+import { X, MessageSquare, Bell, Calendar, UserCog } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
@@ -16,6 +16,8 @@ export default function NovasMensagensAlert() {
   const audioContextRef = useRef(null);
   const lastMessageIdRef = useRef(null);
   const lastAgendamentoIdRef = useRef(null);
+  const transferidosVistosRef = useRef(new Set());
+  const transferInitRef = useRef(false);
 
   const { data: messages = [] } = useQuery({
     queryKey: ['latest-messages'],
@@ -35,6 +37,15 @@ export default function NovasMensagensAlert() {
     queryKey: ['latest-agendamentos'],
     queryFn: () => base44.entities.Agendamento.list('-created_date', 10),
     refetchInterval: 15000,
+  });
+
+  const { data: transferidos = [] } = useQuery({
+    queryKey: ['contatos-transferidos'],
+    queryFn: async () => {
+      const list = await base44.entities.Contact.list('-transferido_humano_at', 10);
+      return list.filter(c => c.transferido_humano_at);
+    },
+    refetchInterval: 10000,
   });
 
   // Ativa áudio automaticamente no primeiro clique
@@ -126,11 +137,79 @@ export default function NovasMensagensAlert() {
     }
   }, [agendamentos, audioEnabled, displayedAlerts]);
 
+  // Detecta clientes transferidos para atendimento humano
+  useEffect(() => {
+    if (transferidos.length === 0) return;
+
+    // Na primeira carga, apenas registra os existentes sem alertar
+    if (!transferInitRef.current) {
+      transferidos.forEach(c => transferidosVistosRef.current.add(c.id + c.transferido_humano_at));
+      transferInitRef.current = true;
+      return;
+    }
+
+    const novo = transferidos.find(c => {
+      const key = c.id + c.transferido_humano_at;
+      const recente = new Date(c.transferido_humano_at).getTime() > (Date.now() - 60000);
+      return recente && !transferidosVistosRef.current.has(key);
+    });
+
+    if (novo) {
+      transferidosVistosRef.current.add(novo.id + novo.transferido_humano_at);
+      setAlert({
+        id: 'transfer-' + novo.id + novo.transferido_humano_at,
+        type: 'transfer',
+        contact: novo,
+        timestamp: new Date()
+      });
+      if (audioEnabled) {
+        notificationSound.play().catch(() => {});
+      }
+    }
+  }, [transferidos, audioEnabled]);
+
   const handleClose = () => {
     setAlert(null);
   };
 
   if (!alert) return null;
+
+  if (alert.type === 'transfer') {
+    return (
+      <div className="fixed top-4 right-4 z-[100] bg-gradient-to-r from-orange-500 to-red-600 text-white p-5 rounded-xl shadow-2xl max-w-md animate-in slide-in-from-right duration-500 ring-4 ring-orange-300/50">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="bg-white/20 rounded-full p-3">
+              <UserCog className="w-6 h-6 animate-pulse" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-lg mb-1">🙋 Cliente quer um humano!</h3>
+              <p className="text-sm opacity-90 mb-1">
+                <span className="font-semibold">{alert.contact?.name || alert.contact?.phone}</span>
+              </p>
+              <p className="text-sm bg-white/10 rounded p-2">
+                A IA foi desligada. Assuma a conversa manualmente.
+              </p>
+              <Link to={createPageUrl("ChatIA")}>
+                <Button
+                  className="mt-3 w-full bg-white text-red-600 hover:bg-gray-100"
+                  size="sm"
+                >
+                  Atender Agora →
+                </Button>
+              </Link>
+            </div>
+          </div>
+          <button
+            onClick={handleClose}
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (alert.type === 'agendamento') {
     return (

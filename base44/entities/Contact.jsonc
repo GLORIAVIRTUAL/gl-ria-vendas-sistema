@@ -57,6 +57,11 @@
       "default": true,
       "description": "Se a conversa est\u00e1 ativa"
     },
+    "transferido_humano_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data/hora em que o cliente foi transferido para atendimento humano"
+    },
     "last_message_at": {
       "type": "string",
       "format": "date-time",
