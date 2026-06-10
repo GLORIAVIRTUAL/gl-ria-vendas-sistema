@@ -2,10 +2,12 @@ import React from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Clock } from 'lucide-react';
+import { Clock, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from "@/lib/utils";
+import { Link } from 'react-router-dom';
+import { createPageUrl } from "@/utils";
 
 const pipelineStages = [
   { id: 'novo_lead', title: 'Novos Leads', color: 'from-blue-500 to-blue-600' },
@@ -82,6 +84,14 @@ export default function PipelineBoard({ contacts, onDragEnd, onSelectContact }) 
                               </h4>
                               <p className="text-xs text-slate-500 truncate">{contact.phone}</p>
                             </div>
+                            <Link
+                              to={`${createPageUrl("ChatIA")}?contact=${contact.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              title="Abrir conversa"
+                              className="flex-shrink-0 p-2 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </Link>
                           </div>
 
                           {contact.keywords?.length > 0 && (

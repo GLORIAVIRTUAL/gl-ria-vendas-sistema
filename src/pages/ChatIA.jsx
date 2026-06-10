@@ -107,6 +107,19 @@ export default function ChatIA() {
     setUnreadCounts(prev => ({ ...prev, [contact.id]: 0 }));
   }, []);
 
+  // Seleciona o contato automaticamente a partir do parâmetro ?contact= na URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const contactId = params.get('contact');
+    if (contactId && contacts.length > 0 && selectedContact?.id !== contactId) {
+      const found = contacts.find(c => c.id === contactId);
+      if (found) {
+        setSelectedContact(found);
+        setUnreadCounts(prev => ({ ...prev, [found.id]: 0 }));
+      }
+    }
+  }, [contacts]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSendMessage = async (messageData) => {
     if (!selectedContact) return;
     setIsSending(true);
