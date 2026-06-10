@@ -1,0 +1,153 @@
+import React, { useState } from 'react';
+import { base44 } from '@/api/base44Client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Plus, Pencil, Trash2, Bird, Building2, Briefcase, Phone } from 'lucide-react';
+import { toast } from 'sonner';
+import ClienteOpenClawDialog from '../components/openclaw/ClienteOpenClawDialog';
+
+export default function ClientesOpenClaw() {
+  const queryClient = useQueryClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  const { data: clientes = [], isLoading } = useQuery({
+    queryKey: ['clientes-openclaw'],
+    queryFn: () => base44.entities.ClienteOpenClaw.list('-created_date'),
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: (data) =>
+      editing
+        ? base44.entities.ClienteOpenClaw.update(editing.id, data)
+        : base44.entities.ClienteOpenClaw.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes-openclaw'] });
+      setDialogOpen(false);
+      setEditing(null);
+      toast.success(editing ? 'Cliente atualizado!' : 'Cliente cadastrado!');
+    },
+    onError: () => toast.error('Erro ao salvar cliente'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.ClienteOpenClaw.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes-openclaw'] });
+      toast.success('Cliente removido!');
+    },
+  });
+
+  const handleNew = () => {
+    setEditing(null);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (cliente) => {
+    setEditing(cliente);
+    setDialogOpen(true);
+  };
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="bg-red-100 p-3 rounded-xl">
+            <Bird className="w-7 h-7 text-red-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Clientes OpenClaw</h1>
+            <p className="text-sm text-slate-500">
+              Contatos roteados para a LLM do OpenClaw (a IA atual não responde a estes)
+            </p>
+          </div>
+        </div>
+        <Button onClick={handleNew} className="bg-red-600 hover:bg-red-700">
+          <Plus className="w-4 h-4 mr-2" /> Novo Cliente
+        </Button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="p-8 text-center text-slate-400">Carregando...</div>
+        ) : clientes.length === 0 ? (
+          <div className="p-12 text-center text-slate-400">
+            <Bird className="w-12 h-12 mx-auto mb-3 opacity-40" />
+            <p>Nenhum cliente OpenClaw cadastrado ainda.</p>
+            <p className="text-sm">Cadastre clientes para roteá-los para a LLM do OpenClaw.</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Telefone</TableHead>
+                <TableHead>Empresa</TableHead>
+                <TableHead>Cargo</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {clientes.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell className="font-medium">{c.nome_cliente}</TableCell>
+                  <TableCell>
+                    <span className="flex items-center gap-1 text-slate-600">
+                      <Phone className="w-3 h-3" /> {c.telefone_cliente}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="flex items-center gap-1 text-slate-600">
+                      <Building2 className="w-3 h-3" /> {c.empresa || '—'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="flex items-center gap-1 text-slate-600">
+                      <Briefcase className="w-3 h-3" /> {c.cargo || '—'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {c.ativo === false ? (
+                      <Badge variant="secondary" className="bg-slate-100 text-slate-500">Inativo</Badge>
+                    ) : (
+                      <Badge className="bg-red-100 text-red-700 border-none">OpenClaw</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(c)}>
+                      <Pencil className="w-4 h-4 text-slate-500" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteMutation.mutate(c.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      <ClienteOpenClawDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSave={(data) => saveMutation.mutate(data)}
+        cliente={editing}
+      />
+    </div>
+  );
+}

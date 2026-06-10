@@ -1,0 +1,35 @@
+{
+  "name": "ClienteOpenClaw",
+  "type": "object",
+  "properties": {
+    "nome_cliente": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "telefone_cliente": {
+      "type": "string",
+      "description": "Telefone do cliente (com c\u00f3digo do pa\u00eds, ex: 5587999999999)"
+    },
+    "empresa": {
+      "type": "string",
+      "description": "Empresa do cliente"
+    },
+    "cargo": {
+      "type": "string",
+      "description": "Cargo do cliente"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o roteamento para a LLM OpenClaw est\u00e1 ativo para este cliente"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre o cliente"
+    }
+  },
+  "required": [
+    "nome_cliente",
+    "telefone_cliente"
+  ]
+}

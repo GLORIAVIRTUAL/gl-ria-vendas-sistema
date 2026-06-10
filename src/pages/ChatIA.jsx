@@ -30,6 +30,7 @@ export default function ChatIA() {
   const [showDetails, setShowDetails] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [unreadCounts, setUnreadCounts] = useState({});
+  const [llmFilter, setLlmFilter] = useState('atual');
   const [isSending, setIsSending] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const lastMessageCountRef = useRef({});
@@ -195,11 +196,13 @@ export default function ChatIA() {
 
   const filteredContacts = contacts.filter(contact => {
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const destino = contact.llm_destino || 'atual';
+    const matchLlm = destino === llmFilter;
+    const matchSearch =
       (contact.name?.toLowerCase().includes(searchLower)) ||
       (contact.phone?.includes(searchTerm)) ||
-      (contact.keywords?.some(k => k.toLowerCase().includes(searchLower)))
-    );
+      (contact.keywords?.some(k => k.toLowerCase().includes(searchLower)));
+    return matchLlm && matchSearch;
   });
 
   return (
@@ -227,6 +230,30 @@ export default function ChatIA() {
                 <RefreshCw className="w-5 h-5" />
               </Button>
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <Button
+              onClick={() => setLlmFilter('atual')}
+              className={cn(
+                "w-full",
+                llmFilter === 'atual'
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+              )}
+            >
+              🤖 IA Atual
+            </Button>
+            <Button
+              onClick={() => setLlmFilter('openclaw')}
+              className={cn(
+                "w-full",
+                llmFilter === 'openclaw'
+                  ? "bg-red-600 hover:bg-red-700 text-white"
+                  : "bg-red-50 hover:bg-red-100 text-red-600"
+              )}
+            >
+              🦅 OpenClaw
+            </Button>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

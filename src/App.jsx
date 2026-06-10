@@ -14,6 +14,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import CodigoEmbed from '@/pages/CodigoEmbed';
 import PoliticaPrivacidade from '@/pages/PoliticaPrivacidade';
 import TermosServico from '@/pages/TermosServico';
+import ClientesOpenClaw from '@/pages/ClientesOpenClaw';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -68,6 +69,11 @@ const AuthenticatedApp = () => {
       <Route path="/CodigoEmbed" element={
         <LayoutWrapper currentPageName="CodigoEmbed">
           <CodigoEmbed />
+        </LayoutWrapper>
+      } />
+      <Route path="/ClientesOpenClaw" element={
+        <LayoutWrapper currentPageName="ClientesOpenClaw">
+          <ClientesOpenClaw />
         </LayoutWrapper>
       } />
       <Route path="/PoliticaPrivacidade" element={<PoliticaPrivacidade />} />

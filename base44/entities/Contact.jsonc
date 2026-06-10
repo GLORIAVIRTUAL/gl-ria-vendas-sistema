@@ -32,6 +32,15 @@
       "default": "novo_lead",
       "description": "Est\u00e1gio no pipeline de vendas"
     },
+    "llm_destino": {
+      "type": "string",
+      "enum": [
+        "atual",
+        "openclaw"
+      ],
+      "default": "atual",
+      "description": "Qual LLM atende este contato: 'atual' (IA do sistema) ou 'openclaw' (IA externa OpenClaw)"
+    },
     "keywords": {
       "type": "array",
       "items": {

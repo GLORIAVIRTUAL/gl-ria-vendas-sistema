@@ -95,6 +95,21 @@ Deno.serve(async (req) => {
     console.log('💬 Mensagem:', content);
     console.log('📝 Tipo:', messageType);
 
+    // ===== ORQUESTRADOR DE LLM =====
+    // Verifica se o telefone está cadastrado como cliente OpenClaw.
+    // Se estiver, este contato é roteado para a LLM do OpenClaw (outro dispositivo),
+    // e a IA atual NÃO responde.
+    const telefoneLimpo = phone.replace(/\D/g, '');
+    const clientesOpenClaw = await base44.asServiceRole.entities.ClienteOpenClaw.list();
+    const ehOpenClaw = clientesOpenClaw.some(c => {
+      if (c.ativo === false) return false;
+      const telCadastrado = (c.telefone_cliente || '').replace(/\D/g, '');
+      return telCadastrado && (telCadastrado === telefoneLimpo || telefoneLimpo.endsWith(telCadastrado) || telCadastrado.endsWith(telefoneLimpo));
+    });
+
+    const llmDestino = ehOpenClaw ? 'openclaw' : 'atual';
+    console.log(`🧭 Orquestrador: contato roteado para LLM "${llmDestino}"`);
+
     // Busca ou cria contato
     let existingContacts = await base44.asServiceRole.entities.Contact.filter({ phone });
     let contact;
@@ -106,6 +121,7 @@ Deno.serve(async (req) => {
         name: contactName,
         profile_picture: body.senderPhoto || '',
         pipeline_stage: 'novo_lead',
+        llm_destino: llmDestino,
         ai_enabled: true,
         is_active: true,
         conversation_finished: false,
@@ -122,12 +138,14 @@ Deno.serve(async (req) => {
         last_message_at: new Date().toISOString(),
         name: contactName || contact.name,
         profile_picture: body.senderPhoto || contact.profile_picture,
+        llm_destino: llmDestino,
         is_active: true,
         conversation_finished: false
       });
 
       contact.is_active = true;
       contact.conversation_finished = false;
+      contact.llm_destino = llmDestino;
 
       if (wasFinished) {
         console.log('🔄 Nova conversa iniciada (anterior foi finalizada)');
@@ -147,6 +165,14 @@ Deno.serve(async (req) => {
     });
 
     console.log('✅ Mensagem salva!');
+
+    // ===== ROTEAMENTO OPENCLAW =====
+    // Se o contato é roteado para a LLM do OpenClaw, a IA atual NÃO responde.
+    // O OpenClaw (outro dispositivo conectado ao mesmo número) cuidará da resposta.
+    if (contact.llm_destino === 'openclaw') {
+      console.log('🦅 Contato OpenClaw: IA atual não responde. Mensagem registrada para o OpenClaw.');
+      return Response.json({ success: true, roteado: 'openclaw' });
+    }
 
     // ===== DETECTA PEDIDO DE ATENDIMENTO HUMANO =====
     const querHumano = messageType === 'text' && /\b(humano|atendente|pessoa|falar com algu[ée]m|atendimento humano|quero falar com|suporte humano|gente de verdade|n[aã]o quero rob[ôo]|sem rob[ôo])\b/i.test(content);
