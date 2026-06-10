@@ -263,7 +263,9 @@ async function processAIResponse(base44, contact, phone) {
 REGRAS DE ESTILO DA RESPOSTA (OBRIGATÓRIO):
 - Responda de forma CURTA e direta, como uma conversa real de WhatsApp (no máximo 2 a 3 frases).
 - NÃO repita informações, perguntas ou cumprimentos que você já enviou antes no histórico.
-- Use saudação ("${saudacao}") apenas se for a primeira mensagem da IA nesta conversa.
+${jaRespondeu
+  ? `- ⚠️ VOCÊ JÁ ESTÁ NO MEIO DA CONVERSA. É TERMINANTEMENTE PROIBIDO usar qualquer saudação (NÃO diga "Bom dia", "Boa tarde", "Boa noite", "Olá", "Oi"). Vá direto ao ponto.`
+  : `- Esta é a PRIMEIRA mensagem da IA. Você PODE iniciar com a saudação "${saudacao}" uma única vez.`}
 - Faça apenas UMA pergunta por vez. Não envie textos longos nem listas extensas.
 - O cliente pode ter enviado várias frases seguidas; leia todas e responda UMA única vez, de forma natural.
 
@@ -298,6 +300,14 @@ ${history}`;
 
     // Verifica comando de agendamento
     let finalResponse = aiResponse;
+
+    // Reforço: se não for a primeira mensagem, remove saudações que a IA tenha inserido
+    if (jaRespondeu) {
+      finalResponse = finalResponse.replace(
+        /^\s*(bom dia|boa tarde|boa noite|ol[áa]|oi)[\s!,.]*/i,
+        ''
+      ).replace(/^\s+/, '');
+    }
     const agendarMatch = aiResponse.match(/\[AGENDAR\]([\s\S]*?)\[\/AGENDAR\]/);
 
     if (agendarMatch) {
