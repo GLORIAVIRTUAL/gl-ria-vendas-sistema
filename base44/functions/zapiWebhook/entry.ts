@@ -642,6 +642,14 @@ async function processOpenClawResponse(base44, contact, phone) {
       return;
     }
 
+    // Garante que a URL aponte para /v1/chat/completions (formato OpenAI)
+    let chatUrl = openclawUrl;
+    if (!chatUrl.includes('/chat/completions')) {
+      chatUrl = chatUrl.replace(/\/+$/, '');
+      if (chatUrl.endsWith('/v1')) chatUrl += '/chat/completions';
+      else chatUrl += '/v1/chat/completions';
+    }
+
     // Busca histórico recente da conversa para dar contexto ao OpenClaw
     const allMessages = await base44.asServiceRole.entities.Message.filter(
       { contact_id: contact.id },
@@ -654,25 +662,22 @@ async function processOpenClawResponse(base44, contact, phone) {
       .map(m => ({
         role: m.sender === 'customer' ? 'user' : 'assistant',
         content: m.content || ''
-      }));
+      }))
+      .filter(m => m.content);
 
-    const ultimaDoCliente = [...allMessages].reverse().find(m => m.sender === 'customer');
-    const mensagemAtual = ultimaDoCliente?.content || '';
+    console.log('🦅 Chamando motor OpenClaw (formato OpenAI):', chatUrl);
 
-    console.log('🦅 Chamando motor OpenClaw...');
-
-    const ocResponse = await fetch(openclawUrl, {
+    const ocResponse = await fetch(chatUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${openclawKey}`
       },
       body: JSON.stringify({
-        phone,
-        name: contact.name || 'Cliente',
-        message: mensagemAtual,
-        history: messages
-      })
+        model: 'openclaw/default',
+        messages
+      }),
+      signal: AbortSignal.timeout(120000)
     });
 
     if (!ocResponse.ok) {
@@ -681,8 +686,11 @@ async function processOpenClawResponse(base44, contact, phone) {
     }
 
     const ocData = await ocResponse.json();
-    // Aceita diferentes formatos comuns de resposta
-    const reply = (ocData.reply || ocData.response || ocData.message || ocData.text || '').toString().trim();
+    // Formato OpenAI: choices[0].message.content (com fallbacks)
+    const reply = (
+      ocData.choices?.[0]?.message?.content ||
+      ocData.reply || ocData.response || ocData.message || ocData.text || ''
+    ).toString().trim();
 
     if (!reply) {
       console.error('❌ OpenClaw não retornou texto de resposta. Payload:', JSON.stringify(ocData));
