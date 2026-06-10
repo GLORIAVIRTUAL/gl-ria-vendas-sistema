@@ -25,34 +25,50 @@ Deno.serve(async (req) => {
       out.models = { erro: e.message };
     }
 
-    // 2) Testa chat/completions exatamente como o exemplo fornecido
-    try {
-      const inicio = Date.now();
-      const r = await fetch(`${base}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${openclawKey}`
-        },
-        body: JSON.stringify({
-          model: 'openclaw/default',
-          messages: [{ role: 'user', content: 'Diga apenas OK' }]
-        }),
-        signal: AbortSignal.timeout(60000)
-      });
-      const txt = await r.text();
-      const ehHtml = txt.trim().toLowerCase().startsWith('<!doctype');
-      out.chat = {
-        status: r.status,
-        tempo_segundos: Math.round((Date.now() - inicio) / 1000),
-        tipo: ehHtml ? 'HTML (errado)' : 'JSON/Texto (CERTO!)',
-        body: txt.slice(0, 1500)
-      };
-    } catch (e) {
-      out.chat = { erro: e.message };
+    // 2) Testa chat/completions com diferentes formas de autenticação
+    const payload = JSON.stringify({
+      model: 'openclaw/default',
+      messages: [{ role: 'user', content: 'Diga apenas OK' }]
+    });
+
+    const tentativas = [
+      { nome: 'Bearer', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${openclawKey}` } },
+      { nome: 'Sem_Bearer', headers: { 'Content-Type': 'application/json', 'Authorization': openclawKey } },
+      { nome: 'api-key', headers: { 'Content-Type': 'application/json', 'api-key': openclawKey } },
+      { nome: 'x-api-key', headers: { 'Content-Type': 'application/json', 'x-api-key': openclawKey } }
+    ];
+
+    for (const t of tentativas) {
+      try {
+        const inicio = Date.now();
+        const r = await fetch(`${base}/chat/completions`, {
+          method: 'POST',
+          headers: t.headers,
+          body: payload,
+          signal: AbortSignal.timeout(60000)
+        });
+        const txt = await r.text();
+        out[t.nome] = {
+          status: r.status,
+          tempo_segundos: Math.round((Date.now() - inicio) / 1000),
+          body: txt.slice(0, 800)
+        };
+      } catch (e) {
+        out[t.nome] = { erro: e.message };
+      }
     }
 
-    return Response.json({ base, key: openclawKey ? `${openclawKey.slice(0,8)}...` : 'VAZIA', resultados: out });
+    // Mostra detalhes da chave para diagnóstico (tamanho e se tem espaços)
+    const rawKey = Deno.env.get('OPENCLAW_API_KEY') || '';
+    out._diagnostico_chave = {
+      tamanho: rawKey.length,
+      tamanho_apos_trim: openclawKey.length,
+      tem_espaco_ou_quebra: rawKey !== openclawKey,
+      primeiros_6: openclawKey.slice(0, 6),
+      ultimos_4: openclawKey.slice(-4)
+    };
+
+    return Response.json({ base, resultados: out });
 
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
