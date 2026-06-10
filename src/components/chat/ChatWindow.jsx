@@ -46,6 +46,7 @@ export default function ChatWindow({
   const fileInputRef = useRef(null);
   
   const isAdmin = currentUser?.role === 'admin';
+  const isOpenClaw = contact?.llm_destino === 'openclaw';
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -145,12 +146,18 @@ export default function ChatWindow({
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className={cn(
+      "flex-1 flex flex-col h-full bg-gradient-to-br from-slate-50",
+      isOpenClaw ? "to-red-50" : "to-blue-50"
+    )}>
       <div className="flex items-center justify-between p-4 bg-white border-b border-slate-100 shadow-sm">
         <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 border-2 border-blue-200">
+          <Avatar className={cn("h-10 w-10 border-2", isOpenClaw ? "border-red-200" : "border-blue-200")}>
             <AvatarImage src={contact.profile_picture} />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
+            <AvatarFallback className={cn(
+              "text-white",
+              isOpenClaw ? "bg-gradient-to-br from-red-500 to-red-600" : "bg-gradient-to-br from-blue-500 to-cyan-500"
+            )}>
               {(contact.name || contact.phone || '?').charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -160,7 +167,7 @@ export default function ChatWindow({
               <span className="text-xs text-slate-500">{contact.phone}</span>
               <Badge variant="outline" className={cn(
                 "text-[10px] py-0",
-                pipelineStages.find(s => s.value === contact.pipeline_stage)?.color,
+                isOpenClaw ? "bg-red-500" : pipelineStages.find(s => s.value === contact.pipeline_stage)?.color,
                 "text-white border-none"
               )}>
                 {pipelineStages.find(s => s.value === contact.pipeline_stage)?.label || 'Novo'}
@@ -291,7 +298,12 @@ export default function ChatWindow({
           <Button 
             onClick={handleSend}
             disabled={(!newMessage.trim() && !attachmentFile) || isSending || isUploading}
-            className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 rounded-full h-11 w-11 p-0"
+            className={cn(
+              "rounded-full h-11 w-11 p-0",
+              isOpenClaw
+                ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+                : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+            )}
           >
             {isSending || isUploading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

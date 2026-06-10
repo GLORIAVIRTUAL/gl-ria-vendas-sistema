@@ -90,25 +90,36 @@ export default function ContactList({ contacts, selectedContact, onSelectContact
         ) : (
           contacts.map((contact) => {
             const unread = unreadCounts[contact.id] || 0;
+            const isOpenClaw = contact.llm_destino === 'openclaw';
             return (
               <div
                 key={contact.id}
                 onClick={() => onSelectContact(contact)}
                 className={cn(
                   "flex items-center gap-3 p-4 cursor-pointer transition-all border-b border-slate-100",
-                  "hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50",
-                  selectedContact?.id === contact.id && "bg-gradient-to-r from-blue-100 to-cyan-100 border-l-4 border-l-blue-500"
+                  isOpenClaw
+                    ? "hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100"
+                    : "hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50",
+                  selectedContact?.id === contact.id && (isOpenClaw
+                    ? "bg-gradient-to-r from-red-100 to-red-50 border-l-4 border-l-red-500"
+                    : "bg-gradient-to-r from-blue-100 to-cyan-100 border-l-4 border-l-blue-500")
                 )}
               >
                 <div className="relative">
                   <Avatar className="h-12 w-12 border-2 border-white shadow-md">
                     <AvatarImage src={contact.profile_picture} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white font-semibold">
+                    <AvatarFallback className={cn(
+                      "text-white font-semibold",
+                      isOpenClaw ? "bg-gradient-to-br from-red-500 to-red-600" : "bg-gradient-to-br from-blue-500 to-cyan-500"
+                    )}>
                       {(contact.name || contact.phone || '?').charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   {contact.ai_enabled ? (
-                    <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1">
+                    <div className={cn(
+                      "absolute -bottom-1 -right-1 rounded-full p-1",
+                      isOpenClaw ? "bg-red-500" : "bg-blue-500"
+                    )}>
                       <Bot className="w-3 h-3 text-white" />
                     </div>
                   ) : (
@@ -134,14 +145,17 @@ export default function ContactList({ contacts, selectedContact, onSelectContact
                     <div className="flex items-center gap-2">
                       <span className={cn(
                         "text-[10px] px-2 py-0.5 rounded-full text-white font-medium",
-                        pipelineColors[contact.pipeline_stage] || 'bg-gray-400'
+                        isOpenClaw ? "bg-red-500" : (pipelineColors[contact.pipeline_stage] || 'bg-gray-400')
                       )}>
                         {pipelineLabels[contact.pipeline_stage] || 'Novo'}
                       </span>
                     </div>
                     
                     {unread > 0 && (
-                      <span className="bg-blue-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 animate-pulse">
+                      <span className={cn(
+                        "text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 animate-pulse",
+                        isOpenClaw ? "bg-red-500" : "bg-blue-500"
+                      )}>
                         {unread}
                       </span>
                     )}
