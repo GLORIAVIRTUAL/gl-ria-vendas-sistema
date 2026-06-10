@@ -25,8 +25,15 @@ Deno.serve(async (req) => {
       out.models = { erro: e.message };
     }
 
-    // 2) Testa chat/completions com Accept json + stream:false + modelos recomendados
-    for (const modelo of ['openclaw/default', 'openclaw/main']) {
+    // 2) Testa passando o número cadastrado como identificador (user/phone)
+    const meuNumero = '5587988020504';
+    const variacoes = [
+      { nome: 'com_user', body: { model: 'openclaw/default', stream: false, user: meuNumero, messages: [{ role: 'user', content: 'Diga apenas: OK' }] } },
+      { nome: 'com_phone', body: { model: 'openclaw/default', stream: false, phone: meuNumero, messages: [{ role: 'user', content: 'Diga apenas: OK' }] } },
+      { nome: 'com_metadata', body: { model: 'openclaw/default', stream: false, metadata: { phone: meuNumero }, messages: [{ role: 'user', content: 'Diga apenas: OK' }] } }
+    ];
+
+    for (const v of variacoes) {
       try {
         const inicio = Date.now();
         const r = await fetch(`${base}/chat/completions`, {
@@ -36,23 +43,19 @@ Deno.serve(async (req) => {
             'Accept': 'application/json',
             'Authorization': `Bearer ${openclawKey}`
           },
-          body: JSON.stringify({
-            model: modelo,
-            stream: false,
-            messages: [{ role: 'user', content: 'Diga apenas: OK' }]
-          }),
-          signal: AbortSignal.timeout(50000)
+          body: JSON.stringify(v.body),
+          signal: AbortSignal.timeout(40000)
         });
         const txt = await r.text();
         const ehHtml = txt.trim().toLowerCase().startsWith('<!doctype');
-        out[`chat_${modelo}`] = {
+        out[v.nome] = {
           status: r.status,
           tempo_segundos: Math.round((Date.now() - inicio) / 1000),
           tipo: ehHtml ? 'HTML (errado)' : 'JSON/Texto (certo!)',
-          body: txt.slice(0, 1200)
+          body: txt.slice(0, 800)
         };
       } catch (e) {
-        out[`chat_${modelo}`] = { erro: e.message };
+        out[v.nome] = { erro: e.message };
       }
     }
 
