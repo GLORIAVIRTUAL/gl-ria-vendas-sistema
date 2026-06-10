@@ -14,18 +14,44 @@ Deno.serve(async (req) => {
     const base = (bodyIn.base || 'http://187.127.14.25:63766').replace(/\/+$/, '');
     const openclawKey = (Deno.env.get('OPENCLAW_API_KEY') || '').trim();
 
-    // Caminhos candidatos comuns em gateways estilo OpenAI / chat
+    // Caminhos candidatos comuns em gateways estilo OpenAI / OpenClaw / chat
     const caminhos = [
       '/v1/chat/completions',
+      '/chat/completions',
       '/v1/messages',
       '/v1/completions',
+      '/completions',
       '/api/chat',
       '/api/v1/chat',
+      '/api/v1/chat/completions',
+      '/api/chat/completions',
       '/api/message',
+      '/api/messages',
       '/api/send',
+      '/api/sendMessage',
+      '/api/webhook',
+      '/api/agent',
+      '/api/agents/chat',
+      '/api/completion',
+      '/api/generate',
+      '/api/inference',
+      '/api/predict',
+      '/api/ask',
+      '/api/query',
       '/chat',
       '/message',
-      '/v1/responses'
+      '/send',
+      '/webhook',
+      '/agent',
+      '/ask',
+      '/query',
+      '/generate',
+      '/completion',
+      '/v1/responses',
+      '/openai/v1/chat/completions',
+      '/gateway/chat',
+      '/gateway/message',
+      '/api/gateway'
     ];
 
     // Payload estilo OpenAI (mais comum em gateways /v1)
