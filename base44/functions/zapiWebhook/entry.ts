@@ -173,10 +173,37 @@ Deno.serve(async (req) => {
     console.log('✅ Mensagem salva!');
 
     // ===== ROTEAMENTO OPENCLAW =====
-    // Se o contato é roteado para a LLM do OpenClaw, a IA atual NÃO responde.
-    // O OpenClaw (outro dispositivo conectado ao mesmo número) cuidará da resposta.
+    // O OpenClaw é usado como MOTOR DE AGENTE chamado pelo backend.
+    // A Z-API continua sendo o canal oficial de entrada/saída do WhatsApp.
+    // Fluxo: cliente → Z-API → webhook → OpenClaw (HTTP) → resposta → Z-API.
     if (contact.llm_destino === 'openclaw') {
-      console.log('🦅 Contato OpenClaw: IA atual não responde. Mensagem registrada para o OpenClaw.');
+      console.log('🦅 Contato OpenClaw: agendando resposta via motor OpenClaw (acumulador)...');
+
+      // Mesmo debounce da IA atual: acumula várias mensagens e responde uma vez
+      const existingOC = pendingTimers.get(phone);
+      if (existingOC) {
+        clearTimeout(existingOC);
+        console.log('⏳ Nova mensagem OpenClaw recebida, reiniciando contador...');
+      }
+
+      const timerOC = setTimeout(async () => {
+        pendingTimers.delete(phone);
+        try {
+          const fresh = await base44.asServiceRole.entities.Contact.filter({ phone });
+          const currentContact = fresh[0] || contact;
+          if (currentContact.llm_destino !== 'openclaw') {
+            console.log('⚠️ Contato não é mais OpenClaw, ignorando.');
+            return;
+          }
+          console.log('🦅 Acumulador concluído, processando resposta do OpenClaw...');
+          await processOpenClawResponse(base44, currentContact, phone);
+        } catch (err) {
+          console.error('❌ Erro no processamento OpenClaw acumulado:', err);
+        }
+      }, DEBOUNCE_MS);
+
+      pendingTimers.set(phone, timerOC);
+
       return Response.json({ success: true, roteado: 'openclaw' });
     }
 
@@ -583,6 +610,84 @@ ${history}`;
 
   } catch (error) {
     console.error('❌ Erro no processamento da IA:', error);
+  }
+}
+
+// ========== PROCESSA RESPOSTA VIA OPENCLAW E ENVIA PELA Z-API ==========
+async function processOpenClawResponse(base44, contact, phone) {
+  try {
+    const openclawUrl = (Deno.env.get('OPENCLAW_API_URL') || '').trim();
+    const openclawKey = (Deno.env.get('OPENCLAW_API_KEY') || '').trim();
+
+    if (!openclawUrl || !openclawKey) {
+      console.error('❌ Credenciais OpenClaw incompletas (OPENCLAW_API_URL / OPENCLAW_API_KEY)');
+      return;
+    }
+
+    // Busca histórico recente da conversa para dar contexto ao OpenClaw
+    const allMessages = await base44.asServiceRole.entities.Message.filter(
+      { contact_id: contact.id },
+      '-created_date',
+      10
+    );
+
+    const messages = allMessages
+      .reverse()
+      .map(m => ({
+        role: m.sender === 'customer' ? 'user' : 'assistant',
+        content: m.content || ''
+      }));
+
+    const ultimaDoCliente = [...allMessages].reverse().find(m => m.sender === 'customer');
+    const mensagemAtual = ultimaDoCliente?.content || '';
+
+    console.log('🦅 Chamando motor OpenClaw...');
+
+    const ocResponse = await fetch(openclawUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${openclawKey}`
+      },
+      body: JSON.stringify({
+        phone,
+        name: contact.name || 'Cliente',
+        message: mensagemAtual,
+        history: messages
+      })
+    });
+
+    if (!ocResponse.ok) {
+      console.error('❌ Erro ao chamar OpenClaw:', await ocResponse.text());
+      return;
+    }
+
+    const ocData = await ocResponse.json();
+    // Aceita diferentes formatos comuns de resposta
+    const reply = (ocData.reply || ocData.response || ocData.message || ocData.text || '').toString().trim();
+
+    if (!reply) {
+      console.error('❌ OpenClaw não retornou texto de resposta. Payload:', JSON.stringify(ocData));
+      return;
+    }
+
+    console.log('✅ Resposta do OpenClaw:', reply);
+
+    // Salva a resposta no banco
+    await base44.asServiceRole.entities.Message.create({
+      contact_id: contact.id,
+      direction: 'outbound',
+      sender: 'ai',
+      content: reply,
+      type: 'text',
+      status: 'sent'
+    });
+
+    // Envia a resposta do OpenClaw pelo canal oficial (Z-API)
+    await enviarMensagemZapi(phone, reply);
+
+  } catch (error) {
+    console.error('❌ Erro no processamento OpenClaw:', error.message);
   }
 }
 
