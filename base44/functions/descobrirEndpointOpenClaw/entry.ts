@@ -8,91 +8,55 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    let bodyIn = {};
-    try { bodyIn = await req.json(); } catch { /* sem body */ }
-
-    const base = (bodyIn.base || 'http://187.127.14.25:63766').replace(/\/+$/, '');
+    const base = 'http://187.127.14.25:63766/v1';
     const openclawKey = (Deno.env.get('OPENCLAW_API_KEY') || '').trim();
 
-    // Caminhos candidatos comuns em gateways estilo OpenAI / OpenClaw / chat
-    const caminhos = [
-      '/v1/chat/completions',
-      '/chat/completions',
-      '/v1/messages',
-      '/v1/completions',
-      '/completions',
-      '/api/chat',
-      '/api/v1/chat',
-      '/api/v1/chat/completions',
-      '/api/chat/completions',
-      '/api/message',
-      '/api/messages',
-      '/api/send',
-      '/api/sendMessage',
-      '/api/webhook',
-      '/api/agent',
-      '/api/agents/chat',
-      '/api/completion',
-      '/api/generate',
-      '/api/inference',
-      '/api/predict',
-      '/api/ask',
-      '/api/query',
-      '/chat',
-      '/message',
-      '/send',
-      '/webhook',
-      '/agent',
-      '/ask',
-      '/query',
-      '/generate',
-      '/completion',
-      '/v1/responses',
-      '/openai/v1/chat/completions',
-      '/gateway/chat',
-      '/gateway/message',
-      '/api/gateway'
-    ];
+    const out = {};
 
-    // Payload estilo OpenAI (mais comum em gateways /v1)
-    const payloadOpenAI = {
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: 'teste de conexão' }]
-    };
+    // 1) Lista modelos disponíveis
+    try {
+      const r = await fetch(`${base}/models`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${openclawKey}` },
+        signal: AbortSignal.timeout(15000)
+      });
+      out.models = { status: r.status, body: (await r.text()).slice(0, 1000) };
+    } catch (e) {
+      out.models = { erro: e.message };
+    }
 
-    const resultados = [];
-
-    for (const caminho of caminhos) {
-      const url = base + caminho;
+    // 2) Testa chat/completions com Accept json + stream:false + modelos recomendados
+    for (const modelo of ['openclaw/default', 'openclaw/main']) {
       try {
-        const r = await fetch(url, {
+        const inicio = Date.now();
+        const r = await fetch(`${base}/chat/completions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'Authorization': `Bearer ${openclawKey}`
           },
-          body: JSON.stringify(payloadOpenAI),
-          signal: AbortSignal.timeout(15000)
+          body: JSON.stringify({
+            model: modelo,
+            stream: false,
+            messages: [{ role: 'user', content: 'Diga apenas: OK' }]
+          }),
+          signal: AbortSignal.timeout(50000)
         });
         const txt = await r.text();
-        const ehHtml = txt.trim().toLowerCase().startsWith('<!doctype') || txt.trim().toLowerCase().startsWith('<html');
-        resultados.push({
-          url,
+        const ehHtml = txt.trim().toLowerCase().startsWith('<!doctype');
+        out[`chat_${modelo}`] = {
           status: r.status,
-          tipo: ehHtml ? 'HTML (interface web)' : 'JSON/Texto (possível API!)',
-          amostra: txt.slice(0, 300)
-        });
+          tempo_segundos: Math.round((Date.now() - inicio) / 1000),
+          tipo: ehHtml ? 'HTML (errado)' : 'JSON/Texto (certo!)',
+          body: txt.slice(0, 1200)
+        };
       } catch (e) {
-        resultados.push({ url, status: 'erro', tipo: 'falha', amostra: e.message });
+        out[`chat_${modelo}`] = { erro: e.message };
       }
     }
 
-    return Response.json({
-      base_testada: base,
-      key: openclawKey ? `${openclawKey.slice(0, 8)}...` : 'VAZIA',
-      dica: 'Procure os resultados com tipo "JSON/Texto" e status 200/400/401 - esse é provavelmente o endpoint de API correto.',
-      resultados
-    });
+    return Response.json({ base, key: openclawKey ? `${openclawKey.slice(0,8)}...` : 'VAZIA', resultados: out });
 
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
