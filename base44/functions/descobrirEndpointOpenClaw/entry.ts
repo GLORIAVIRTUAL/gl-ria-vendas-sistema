@@ -25,8 +25,8 @@ Deno.serve(async (req) => {
       out.models = { erro: e.message };
     }
 
-    // 2) Testa passando o número cadastrado como identificador (user/phone)
-    const meuNumero = '5587988020504';
+    // 2) Testa passando o número cadastrado (SEM o 9) como identificador
+    const meuNumero = '558788020504';
     const variacoes = [
       { nome: 'com_user', body: { model: 'openclaw/default', stream: false, user: meuNumero, messages: [{ role: 'user', content: 'Diga apenas: OK' }] } },
       { nome: 'com_phone', body: { model: 'openclaw/default', stream: false, phone: meuNumero, messages: [{ role: 'user', content: 'Diga apenas: OK' }] } },
