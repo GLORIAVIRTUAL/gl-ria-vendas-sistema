@@ -2,6 +2,26 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const processedMessages = new Set();
 
+// Compara dois telefones de forma tolerante ao nono dígito (com/sem o 9 após o DDD).
+// Ex: "5587988020504" (com 9) deve casar com "558788020504" (sem 9).
+function telefonesIguais(tel1, tel2) {
+  const limpar = (t) => (t || '').replace(/\D/g, '');
+  // Remove o DDI 55 e o "9" extra de celular para gerar uma chave canônica
+  const canonico = (t) => {
+    let n = limpar(t);
+    if (n.startsWith('55')) n = n.slice(2);        // remove DDI Brasil
+    // n agora deve ser DDD (2) + número (8 ou 9 dígitos)
+    if (n.length === 11 && n[2] === '9') {
+      n = n.slice(0, 2) + n.slice(3);              // remove o 9 após o DDD
+    }
+    return n;
+  };
+  const a = canonico(tel1);
+  const b = canonico(tel2);
+  if (!a || !b) return false;
+  return a === b || a.endsWith(b) || b.endsWith(a);
+}
+
 // Acumulador de mensagens por telefone (debounce)
 // Permite que o cliente envie várias frases e a IA responda apenas uma vez
 const pendingTimers = new Map();
@@ -99,14 +119,12 @@ Deno.serve(async (req) => {
     // Verifica se o telefone está cadastrado como cliente OpenClaw.
     // Se estiver, este contato é roteado para a LLM do OpenClaw (outro dispositivo),
     // e a IA atual NÃO responde.
-    const telefoneLimpo = phone.replace(/\D/g, '');
     let ehOpenClaw = false;
     try {
       const clientesOpenClaw = await base44.asServiceRole.entities.ClienteOpenClaw.list();
       ehOpenClaw = clientesOpenClaw.some(c => {
         if (c.ativo === false) return false;
-        const telCadastrado = (c.telefone_cliente || '').replace(/\D/g, '');
-        return telCadastrado && (telCadastrado === telefoneLimpo || telefoneLimpo.endsWith(telCadastrado) || telCadastrado.endsWith(telefoneLimpo));
+        return telefonesIguais(c.telefone_cliente, phone);
       });
     } catch (orqErr) {
       console.error('⚠️ Erro no orquestrador OpenClaw (seguindo com IA atual):', orqErr.message);
