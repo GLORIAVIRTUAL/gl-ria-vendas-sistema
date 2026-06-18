@@ -28,27 +28,35 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Monta a URL no MESMO formato que o zapiWebhook usa (OpenAI /v1/chat/completions)
+    let chatUrl = openclawUrl;
+    if (!chatUrl.includes('/chat/completions')) {
+      chatUrl = chatUrl.replace(/\/+$/, '');
+      if (chatUrl.endsWith('/v1')) chatUrl += '/chat/completions';
+      else chatUrl += '/v1/chat/completions';
+    }
+    diagnostico.url_chat_completions = chatUrl;
+
+    // Simula EXATAMENTE uma mensagem do Tiago Carvalho (mesmo formato do webhook real)
     const payload = {
-      phone: '5587988020504',
-      name: 'Teste Diagnóstico',
-      message: 'Olá, isso é um teste de conexão do sistema.',
-      history: [
-        { role: 'user', content: 'Olá, isso é um teste de conexão do sistema.' }
+      model: 'openclaw/default',
+      messages: [
+        { role: 'user', content: 'olá gloria estou querendo fazer algumas modificação no meu sistema da embaixada' }
       ]
     };
 
-    console.log('🦅 Chamando OpenClaw em:', openclawUrl);
+    console.log('🦅 Chamando OpenClaw em:', chatUrl);
 
     let status, rawText, parsed = null;
     try {
-      const ocResponse = await fetch(openclawUrl, {
+      const ocResponse = await fetch(chatUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${openclawKey}`
         },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(20000)
+        signal: AbortSignal.timeout(120000)
       });
 
       status = ocResponse.status;
@@ -67,7 +75,7 @@ Deno.serve(async (req) => {
     }
 
     const reply = parsed
-      ? (parsed.reply || parsed.response || parsed.message || parsed.text || '')
+      ? (parsed.choices?.[0]?.message?.content || parsed.reply || parsed.response || parsed.message || parsed.text || '')
       : '';
 
     return Response.json({
