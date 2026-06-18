@@ -97,6 +97,25 @@ Deno.serve(async (req) => {
       content = '[Áudio]';
       messageType = 'audio';
       mediaUrl = body.audio.audioUrl;
+
+      // Transcreve o áudio automaticamente (funciona para os dois modos: IA atual e OpenClaw)
+      if (mediaUrl) {
+        try {
+          console.log('🎙️ Transcrevendo áudio recebido...');
+          const transcricao = await base44.asServiceRole.integrations.Core.TranscribeAudio({
+            audio_url: mediaUrl
+          });
+          const texto = (typeof transcricao === 'string' ? transcricao : (transcricao?.transcript || transcricao?.text || '')).trim();
+          if (texto) {
+            content = `🎙️ ${texto}`;
+            console.log('✅ Áudio transcrito:', texto);
+          } else {
+            console.log('⚠️ Transcrição vazia, mantendo [Áudio]');
+          }
+        } catch (transErr) {
+          console.error('⚠️ Erro ao transcrever áudio:', transErr.message);
+        }
+      }
     } else if (body.document) {
       content = body.document.fileName || '[Documento]';
       messageType = 'document';
