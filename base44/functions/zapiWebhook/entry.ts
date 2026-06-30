@@ -637,7 +637,7 @@ ${history}`;
     }
 
     // Salva resposta no banco
-    await base44.asServiceRole.entities.Message.create({
+    const outboundMsg = await base44.asServiceRole.entities.Message.create({
       contact_id: contact.id,
       direction: 'outbound',
       sender: 'ai',
@@ -670,6 +670,19 @@ ${history}`;
 
     if (sendResponse.ok) {
       console.log('✅ Mensagem enviada via Z-API!');
+      // Salva o whatsapp_message_id retornado para que o webhook de status
+      // consiga atualizar os tracinhos (entregue / lido) desta mensagem.
+      try {
+        const sendData = await sendResponse.json();
+        const zaapId = sendData?.messageId || sendData?.id || sendData?.zaapId || '';
+        if (zaapId) {
+          await base44.asServiceRole.entities.Message.update(outboundMsg.id, {
+            whatsapp_message_id: zaapId
+          });
+        }
+      } catch (idErr) {
+        console.error('⚠️ Não foi possível capturar o ID da mensagem enviada:', idErr.message);
+      }
     } else {
       const errorText = await sendResponse.text();
       console.error('❌ Erro ao enviar via Z-API:', errorText);
@@ -749,7 +762,7 @@ async function processOpenClawResponse(base44, contact, phone) {
     console.log('✅ Resposta do OpenClaw:', reply);
 
     // Salva a resposta no banco
-    await base44.asServiceRole.entities.Message.create({
+    const outboundMsg = await base44.asServiceRole.entities.Message.create({
       contact_id: contact.id,
       direction: 'outbound',
       sender: 'ai',
@@ -759,7 +772,13 @@ async function processOpenClawResponse(base44, contact, phone) {
     });
 
     // Envia a resposta do OpenClaw pelo canal oficial (Z-API)
-    await enviarMensagemZapi(phone, reply);
+    const zaapId = await enviarMensagemZapi(phone, reply);
+    // Salva o ID retornado para o webhook de status atualizar os tracinhos.
+    if (zaapId) {
+      await base44.asServiceRole.entities.Message.update(outboundMsg.id, {
+        whatsapp_message_id: zaapId
+      });
+    }
 
   } catch (error) {
     console.error('❌ Erro no processamento OpenClaw:', error.message);
@@ -775,7 +794,7 @@ async function enviarMensagemZapi(phone, message) {
 
     if (!clientToken || !instanceToken || !instanceId) {
       console.error('❌ Credenciais Z-API incompletas para envio');
-      return;
+      return null;
     }
 
     let telefoneFormatado = phone.replace(/\D/g, '');
@@ -795,11 +814,20 @@ async function enviarMensagemZapi(phone, message) {
 
     if (res.ok) {
       console.log('✅ Mensagem enviada via Z-API!');
+      // Retorna o ID da mensagem para rastrear status (tracinhos de leitura).
+      try {
+        const data = await res.json();
+        return data?.messageId || data?.id || data?.zaapId || null;
+      } catch {
+        return null;
+      }
     } else {
       console.error('❌ Erro ao enviar via Z-API:', await res.text());
+      return null;
     }
   } catch (error) {
     console.error('⚠️ Erro ao enviar mensagem Z-API:', error.message);
+    return null;
   }
 }
 
