@@ -118,6 +118,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "🔧 Testar Stripe", url: createPageUrl("TesteStripe") },
     { title: "🔗 Testar Webhook", url: createPageUrl("TesteWebhook") },
     { title: "➕ Criar Conta Afiliado", url: createPageUrl("CriarContaAfiliado") },
+    { title: "👤 Gerenciar Usuários", url: createPageUrl("GerenciarUsuarios") },
   ];
 
   const navigationItemsAfiliado = [

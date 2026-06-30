@@ -16,6 +16,7 @@ import PoliticaPrivacidade from '@/pages/PoliticaPrivacidade';
 import TermosServico from '@/pages/TermosServico';
 import ClientesOpenClaw from '@/pages/ClientesOpenClaw';
 import Trafego from '@/pages/Trafego';
+import GerenciarUsuarios from '@/pages/GerenciarUsuarios';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -80,6 +81,11 @@ const AuthenticatedApp = () => {
       <Route path="/Trafego" element={
         <LayoutWrapper currentPageName="Trafego">
           <Trafego />
+        </LayoutWrapper>
+      } />
+      <Route path="/GerenciarUsuarios" element={
+        <LayoutWrapper currentPageName="GerenciarUsuarios">
+          <GerenciarUsuarios />
         </LayoutWrapper>
       } />
       <Route path="/PoliticaPrivacidade" element={<PoliticaPrivacidade />} />
