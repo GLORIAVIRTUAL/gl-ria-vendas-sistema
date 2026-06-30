@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Users, Pencil, Check, X, Loader2 } from "lucide-react";
-import { updateUserName } from "@/functions/updateUserName";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function GerenciarUsuarios() {
@@ -21,7 +20,7 @@ export default function GerenciarUsuarios() {
 
   const iniciarEdicao = (usuario) => {
     setEditingId(usuario.id);
-    setNovoNome(usuario.full_name || "");
+    setNovoNome(usuario.display_name || usuario.full_name || "");
   };
 
   const cancelarEdicao = () => {
@@ -36,7 +35,7 @@ export default function GerenciarUsuarios() {
     }
     setSalvando(true);
     try {
-      await updateUserName({ userId, fullName: novoNome.trim() });
+      await base44.entities.User.update(userId, { display_name: novoNome.trim() });
       toast({ title: "✅ Nome atualizado com sucesso!" });
       cancelarEdicao();
       refetch();
@@ -90,7 +89,7 @@ export default function GerenciarUsuarios() {
                       />
                     ) : (
                       <p className="font-semibold text-slate-800 truncate">
-                        {usuario.full_name || "(sem nome)"}
+                        {usuario.display_name || usuario.full_name || "(sem nome)"}
                       </p>
                     )}
                     <p className="text-xs text-slate-500 truncate">{usuario.email}</p>

@@ -161,7 +161,7 @@ export default function Layout({ children, currentPageName }) {
             <RelogioBrasil />
             {user && (
               <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-xs font-semibold text-blue-900">{user.full_name}</p>
+                <p className="text-xs font-semibold text-blue-900">{user.display_name || user.full_name}</p>
                 <p className="text-xs text-blue-600">{user.email}</p>
                 <Button
                   onClick={handleLogout}
