@@ -448,7 +448,7 @@ PARA AGENDAR uma reunião ONLINE, quando tiver todos os dados, inclua no final d
 NOME: nome completo
 EMAIL: email do cliente
 TELEFONE: ${phone}
-DATA: YYYY-MM-DD (apenas datas futuras e em dias úteis, horários 08:00 às 20:00)
+DATA: YYYY-MM-DD (pode ser HOJE ou qualquer dia útil futuro; nunca datas passadas; horários 08:00 às 20:00)
 HORARIO: HH:MM
 [/AGENDAR]
 
@@ -493,10 +493,10 @@ ${history}`;
 
       console.log('📋 Dados extraídos:', { nome, email, telefone, produto, data, horario });
 
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
+      // Data de hoje no fuso de Recife (YYYY-MM-DD) para permitir agendar para HOJE.
+      const hojeRecife = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Recife' });
       const dataAgendamento = new Date(data + 'T00:00:00');
-      const dataValida = !isNaN(dataAgendamento.getTime()) && dataAgendamento > hoje;
+      const dataValida = !isNaN(dataAgendamento.getTime()) && data >= hojeRecife;
       const diaSemanaAgendamento = dataAgendamento.getDay();
       const ehFimDeSemana = diaSemanaAgendamento === 0 || diaSemanaAgendamento === 6;
 
@@ -625,7 +625,7 @@ ${history}`;
         let faltam = [];
         if (!nomeValido) faltam.push('nome completo');
         if (!emailValido) faltam.push('email válido');
-        if (!dataValida) faltam.push('data válida (futura)');
+        if (!dataValida) faltam.push('uma data válida (hoje ou dia útil futuro)');
         if (!horarioValido) faltam.push('horário no formato HH:MM');
         if (ehFimDeSemana) faltam.push('data em dia útil');
 
