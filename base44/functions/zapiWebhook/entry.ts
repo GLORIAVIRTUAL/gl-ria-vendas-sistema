@@ -23,9 +23,13 @@ function telefonesIguais(tel1, tel2) {
 }
 
 // Acumulador de mensagens por telefone (debounce)
-// Permite que o cliente envie várias frases e a IA responda apenas uma vez
-const pendingTimers = new Map();
+// Permite que o cliente envie várias frases e a IA responda apenas uma vez.
+// Guardamos o timestamp da última mensagem de cada telefone; cada execução
+// aguarda a janela com await e só responde se for a execução mais recente.
+const lastMessageAt = new Map();
 const DEBOUNCE_MS = 8000; // espera 8s após a última mensagem antes de responder
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 Deno.serve(async (req) => {
   console.log('🔔 Webhook Z-API recebido:', req.method);
@@ -214,32 +218,28 @@ Deno.serve(async (req) => {
     // A Z-API continua sendo o canal oficial de entrada/saída do WhatsApp.
     // Fluxo: cliente → Z-API → webhook → OpenClaw (HTTP) → resposta → Z-API.
     if (contact.llm_destino === 'openclaw') {
-      console.log('🦅 Contato OpenClaw: agendando resposta via motor OpenClaw (acumulador)...');
+      console.log('🦅 Contato OpenClaw: aguardando acumulador antes de responder...');
 
-      // Mesmo debounce da IA atual: acumula várias mensagens e responde uma vez
-      const existingOC = pendingTimers.get(phone);
-      if (existingOC) {
-        clearTimeout(existingOC);
-        console.log('⏳ Nova mensagem OpenClaw recebida, reiniciando contador...');
+      // Mesmo debounce da IA atual, porém aguardando com await DENTRO da requisição
+      // (setTimeout solto não dispararia após o retorno HTTP da função serverless).
+      lastMessageAt.set(phone, Date.now());
+      await sleep(DEBOUNCE_MS);
+
+      const ultimaMarcaOC = lastMessageAt.get(phone);
+      if (ultimaMarcaOC && Date.now() - ultimaMarcaOC < DEBOUNCE_MS - 200) {
+        console.log('⏳ Chegou mensagem mais nova durante o debounce (OpenClaw), deixando a execução mais recente responder.');
+        return Response.json({ success: true, roteado: 'openclaw', aguardando: true });
       }
+      lastMessageAt.delete(phone);
 
-      const timerOC = setTimeout(async () => {
-        pendingTimers.delete(phone);
-        try {
-          const fresh = await base44.asServiceRole.entities.Contact.filter({ phone });
-          const currentContact = fresh[0] || contact;
-          if (currentContact.llm_destino !== 'openclaw') {
-            console.log('⚠️ Contato não é mais OpenClaw, ignorando.');
-            return;
-          }
-          console.log('🦅 Acumulador concluído, processando resposta do OpenClaw...');
-          await processOpenClawResponse(base44, currentContact, phone);
-        } catch (err) {
-          console.error('❌ Erro no processamento OpenClaw acumulado:', err);
-        }
-      }, DEBOUNCE_MS);
-
-      pendingTimers.set(phone, timerOC);
+      const fresh = await base44.asServiceRole.entities.Contact.filter({ phone });
+      const currentContact = fresh[0] || contact;
+      if (currentContact.llm_destino !== 'openclaw') {
+        console.log('⚠️ Contato não é mais OpenClaw, ignorando.');
+        return Response.json({ success: true });
+      }
+      console.log('🦅 Acumulador concluído, processando resposta do OpenClaw...');
+      await processOpenClawResponse(base44, currentContact, phone);
 
       return Response.json({ success: true, roteado: 'openclaw' });
     }
@@ -250,12 +250,8 @@ Deno.serve(async (req) => {
     if (querHumano && contact.ai_enabled) {
       console.log('🙋 Cliente pediu atendimento humano. Ativando modo humano...');
 
-      // Cancela qualquer resposta de IA pendente
-      const pending = pendingTimers.get(phone);
-      if (pending) {
-        clearTimeout(pending);
-        pendingTimers.delete(phone);
-      }
+      // Cancela qualquer resposta de IA pendente (invalida execuções em debounce)
+      lastMessageAt.set(phone, Date.now());
 
       // Desliga a IA e marca a transferência
       await base44.asServiceRole.entities.Contact.update(contact.id, {
@@ -283,36 +279,37 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, transferido: true });
     }
 
-    // Se IA estiver habilitada, agenda resposta com acumulador (debounce)
+    // Se IA estiver habilitada, responde com acumulador (debounce) DENTRO da requisição.
+    // IMPORTANTE: não usamos setTimeout "solto" porque a função serverless encerra
+    // assim que retorna a resposta HTTP, e o timer nunca dispararia. Em vez disso,
+    // aguardamos o debounce com await antes de retornar, garantindo a resposta.
     if (contact.ai_enabled) {
-      console.log('🤖 Agendando resposta da IA (acumulador)...');
+      console.log('🤖 Aguardando acumulador da IA antes de responder...');
 
-      // Cancela timer anterior se o cliente ainda está digitando/enviando
-      const existing = pendingTimers.get(phone);
-      if (existing) {
-        clearTimeout(existing);
-        console.log('⏳ Nova mensagem recebida, reiniciando contador...');
+      // Marca este telefone como "em processamento" com a hora da última mensagem
+      lastMessageAt.set(phone, Date.now());
+
+      // Aguarda a janela de debounce
+      await sleep(DEBOUNCE_MS);
+
+      // Se chegou outra mensagem durante a espera, esta execução desiste:
+      // a execução mais recente é quem vai responder com o histórico completo.
+      const ultimaMarca = lastMessageAt.get(phone);
+      if (ultimaMarca && Date.now() - ultimaMarca < DEBOUNCE_MS - 200) {
+        console.log('⏳ Chegou mensagem mais nova durante o debounce, deixando a execução mais recente responder.');
+        return Response.json({ success: true, aguardando: true });
       }
+      lastMessageAt.delete(phone);
 
-      const contactId = contact.id;
-      const timer = setTimeout(async () => {
-        pendingTimers.delete(phone);
-        try {
-          // Recarrega o contato atualizado antes de responder
-          const fresh = await base44.asServiceRole.entities.Contact.filter({ phone });
-          const currentContact = fresh[0] || contact;
-          if (!currentContact.ai_enabled) {
-            console.log('⚠️ IA desabilitada para o contato, ignorando.');
-            return;
-          }
-          console.log('🤖 Acumulador concluído, processando resposta da IA...');
-          await processAIResponse(base44, currentContact, phone);
-        } catch (err) {
-          console.error('❌ Erro no processamento acumulado:', err);
-        }
-      }, DEBOUNCE_MS);
-
-      pendingTimers.set(phone, timer);
+      // Recarrega o contato atualizado antes de responder
+      const fresh = await base44.asServiceRole.entities.Contact.filter({ phone });
+      const currentContact = fresh[0] || contact;
+      if (!currentContact.ai_enabled) {
+        console.log('⚠️ IA desabilitada para o contato, ignorando.');
+        return Response.json({ success: true });
+      }
+      console.log('🤖 Acumulador concluído, processando resposta da IA...');
+      await processAIResponse(base44, currentContact, phone);
     }
 
     return Response.json({ success: true });
