@@ -31,6 +31,23 @@ const DEBOUNCE_MS = 8000; // espera 8s após a última mensagem antes de respond
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Debounce robusto baseado na ÚLTIMA mensagem recebida no banco.
+// Cada execução do webhook salva sua mensagem inbound e chama esta função.
+// Após o sleep, busca a mensagem inbound mais recente do contato:
+// - Se for a MINHA mensagem (minhaMsgId), eu sou a execução mais recente → respondo.
+// - Se for outra (mais nova chegou durante a espera), eu desisto e deixo a outra responder.
+// Isso funciona entre instâncias serverless porque o "estado" vive no banco (Messages).
+async function souAExecucaoMaisRecente(base44, contactId, minhaMsgId) {
+  await sleep(DEBOUNCE_MS);
+  const ultimas = await base44.asServiceRole.entities.Message.filter(
+    { contact_id: contactId, direction: 'inbound' },
+    '-created_date',
+    1
+  );
+  const ultimaId = ultimas[0]?.id;
+  return ultimaId === minhaMsgId;
+}
+
 Deno.serve(async (req) => {
   console.log('🔔 Webhook Z-API recebido:', req.method);
 
@@ -199,19 +216,38 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Dedup persistente entre instâncias serverless: se esta mensagem (mesmo
+    // whatsapp_message_id) já foi salva por outra execução, não salva de novo
+    // nem responde — evita pergunta e resposta duplicadas.
+    if (messageId) {
+      const jaSalva = await base44.asServiceRole.entities.Message.filter({
+        contact_id: contact.id,
+        whatsapp_message_id: messageId
+      });
+      if (jaSalva.length > 0) {
+        console.log('⚠️ Mensagem já salva por outra execução (dedup banco):', messageId);
+        return Response.json({ success: true, duplicada: true });
+      }
+    }
+
     console.log('💾 Salvando mensagem no banco...');
 
-    await base44.asServiceRole.entities.Message.create({
+    const inboundMsg = await base44.asServiceRole.entities.Message.create({
       contact_id: contact.id,
       direction: 'inbound',
       sender: 'customer',
       content,
       type: messageType,
       media_url: mediaUrl,
+      whatsapp_message_id: messageId || '',
       status: 'delivered'
     });
 
     console.log('✅ Mensagem salva!');
+
+    // ID da mensagem que ESTA execução está processando. Usado para o debounce:
+    // após o sleep, só responde a execução cuja mensagem é a mais recente do contato.
+    const minhaMsgId = inboundMsg.id;
 
     // ===== ROTEAMENTO OPENCLAW =====
     // O OpenClaw é usado como MOTOR DE AGENTE chamado pelo backend.
@@ -220,20 +256,16 @@ Deno.serve(async (req) => {
     if (contact.llm_destino === 'openclaw') {
       console.log('🦅 Contato OpenClaw: aguardando acumulador antes de responder...');
 
-      // Debounce baseado no BANCO (compartilhado entre instâncias serverless).
-      // Grava um token único desta mensagem; após o sleep, só responde se o token
-      // no banco ainda for o meu (nenhuma mensagem mais nova chegou).
-      const minhaMarcaOC = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      await base44.asServiceRole.entities.Contact.update(contact.id, { debounce_token: minhaMarcaOC });
-      await sleep(DEBOUNCE_MS);
+      // Debounce baseado na última mensagem do banco (ver souAExecucaoMaisRecente).
+      const souRecenteOC = await souAExecucaoMaisRecente(base44, contact.id, minhaMsgId);
+      if (!souRecenteOC) {
+        console.log('⏳ Chegou mensagem mais nova durante o debounce (OpenClaw), deixando a execução mais recente responder.');
+        return Response.json({ success: true, roteado: 'openclaw', aguardando: true });
+      }
 
       const freshOC = await base44.asServiceRole.entities.Contact.filter({ phone });
       const currentContact = freshOC[0] || contact;
 
-      if (currentContact.debounce_token !== minhaMarcaOC) {
-        console.log('⏳ Chegou mensagem mais nova durante o debounce (OpenClaw), deixando a execução mais recente responder.');
-        return Response.json({ success: true, roteado: 'openclaw', aguardando: true });
-      }
       if (currentContact.llm_destino !== 'openclaw') {
         console.log('⚠️ Contato não é mais OpenClaw, ignorando.');
         return Response.json({ success: true });
@@ -285,25 +317,19 @@ Deno.serve(async (req) => {
     if (contact.ai_enabled) {
       console.log('🤖 Aguardando acumulador da IA antes de responder...');
 
-      // Debounce baseado no BANCO (compartilhado entre instâncias serverless).
-      // Cada execução grava um token único; após o sleep, só responde se o token
-      // no banco continua sendo o seu (nenhuma mensagem mais nova chegou).
-      const minhaMarca = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      await base44.asServiceRole.entities.Contact.update(contact.id, { debounce_token: minhaMarca });
-
-      // Aguarda a janela de debounce
-      await sleep(DEBOUNCE_MS);
+      // Debounce baseado na última mensagem do banco (ver souAExecucaoMaisRecente).
+      // Se chegou outra mensagem durante a espera, esta execução desiste:
+      // a execução mais recente é quem vai responder com o histórico completo.
+      const souRecente = await souAExecucaoMaisRecente(base44, contact.id, minhaMsgId);
+      if (!souRecente) {
+        console.log('⏳ Chegou mensagem mais nova durante o debounce, deixando a execução mais recente responder.');
+        return Response.json({ success: true, aguardando: true });
+      }
 
       // Recarrega o contato atualizado antes de responder
       const fresh = await base44.asServiceRole.entities.Contact.filter({ phone });
       const currentContact = fresh[0] || contact;
 
-      // Se chegou outra mensagem durante a espera, esta execução desiste:
-      // a execução mais recente é quem vai responder com o histórico completo.
-      if (currentContact.debounce_token !== minhaMarca) {
-        console.log('⏳ Chegou mensagem mais nova durante o debounce, deixando a execução mais recente responder.');
-        return Response.json({ success: true, aguardando: true });
-      }
       if (!currentContact.ai_enabled) {
         console.log('⚠️ IA desabilitada para o contato, ignorando.');
         return Response.json({ success: true });
