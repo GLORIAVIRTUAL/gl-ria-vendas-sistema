@@ -40,7 +40,7 @@ export default function ChatIA() {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: contacts = [], isLoading: loadingContacts, refetch: refetchContacts } = useQuery({
+  const { data: contacts = [], isLoading: loadingContacts, error: contactsError, refetch: refetchContacts } = useQuery({
     queryKey: ['contacts'],
     queryFn: () => base44.entities.Contact.list('-last_message_at'),
     refetchInterval: 5000,
@@ -266,12 +266,23 @@ export default function ChatIA() {
           </div>
         </div>
         
-        <ContactList 
-          contacts={filteredContacts}
-          selectedContact={selectedContact}
-          onSelectContact={handleSelectContact}
-          unreadCounts={unreadCounts}
-        />
+        {contactsError ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <p className="text-sm font-medium text-red-600 mb-1">Não foi possível carregar as conversas</p>
+            <p className="text-xs text-slate-500 mb-4">Sua sessão pode ter expirado. Recarregue a página.</p>
+            <Button onClick={() => window.location.reload()} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Recarregar página
+            </Button>
+          </div>
+        ) : (
+          <ContactList 
+            contacts={filteredContacts}
+            selectedContact={selectedContact}
+            onSelectContact={handleSelectContact}
+            unreadCounts={unreadCounts}
+          />
+        )}
       </div>
 
       <ChatWindow
