@@ -22,11 +22,11 @@ function telefonesIguais(tel1, tel2) {
   return a === b || a.endsWith(b) || b.endsWith(a);
 }
 
-// Acumulador de mensagens por telefone (debounce)
+// Acumulador de mensagens por telefone (debounce).
 // Permite que o cliente envie várias frases e a IA responda apenas uma vez.
-// Guardamos o timestamp da última mensagem de cada telefone; cada execução
-// aguarda a janela com await e só responde se for a execução mais recente.
-const lastMessageAt = new Map();
+// A marca de debounce é persistida no BANCO (campo debounce_token do Contact),
+// pois cada chamada do webhook pode rodar em uma instância serverless diferente
+// e variáveis em memória não são compartilhadas entre elas.
 const DEBOUNCE_MS = 8000; // espera 8s após a última mensagem antes de responder
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -220,20 +220,20 @@ Deno.serve(async (req) => {
     if (contact.llm_destino === 'openclaw') {
       console.log('🦅 Contato OpenClaw: aguardando acumulador antes de responder...');
 
-      // Mesmo debounce da IA atual, porém aguardando com await DENTRO da requisição
-      // (setTimeout solto não dispararia após o retorno HTTP da função serverless).
-      lastMessageAt.set(phone, Date.now());
+      // Debounce baseado no BANCO (compartilhado entre instâncias serverless).
+      // Grava um token único desta mensagem; após o sleep, só responde se o token
+      // no banco ainda for o meu (nenhuma mensagem mais nova chegou).
+      const minhaMarcaOC = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      await base44.asServiceRole.entities.Contact.update(contact.id, { debounce_token: minhaMarcaOC });
       await sleep(DEBOUNCE_MS);
 
-      const ultimaMarcaOC = lastMessageAt.get(phone);
-      if (ultimaMarcaOC && Date.now() - ultimaMarcaOC < DEBOUNCE_MS - 200) {
+      const freshOC = await base44.asServiceRole.entities.Contact.filter({ phone });
+      const currentContact = freshOC[0] || contact;
+
+      if (currentContact.debounce_token !== minhaMarcaOC) {
         console.log('⏳ Chegou mensagem mais nova durante o debounce (OpenClaw), deixando a execução mais recente responder.');
         return Response.json({ success: true, roteado: 'openclaw', aguardando: true });
       }
-      lastMessageAt.delete(phone);
-
-      const fresh = await base44.asServiceRole.entities.Contact.filter({ phone });
-      const currentContact = fresh[0] || contact;
       if (currentContact.llm_destino !== 'openclaw') {
         console.log('⚠️ Contato não é mais OpenClaw, ignorando.');
         return Response.json({ success: true });
@@ -250,13 +250,12 @@ Deno.serve(async (req) => {
     if (querHumano && contact.ai_enabled) {
       console.log('🙋 Cliente pediu atendimento humano. Ativando modo humano...');
 
-      // Cancela qualquer resposta de IA pendente (invalida execuções em debounce)
-      lastMessageAt.set(phone, Date.now());
-
-      // Desliga a IA e marca a transferência
+      // Desliga a IA e marca a transferência.
+      // Atualiza last_message_at para invalidar qualquer execução de IA em debounce.
       await base44.asServiceRole.entities.Contact.update(contact.id, {
         ai_enabled: false,
-        transferido_humano_at: new Date().toISOString()
+        transferido_humano_at: new Date().toISOString(),
+        last_message_at: new Date().toISOString()
       });
 
       // Mensagem de transferência ao cliente
@@ -286,24 +285,25 @@ Deno.serve(async (req) => {
     if (contact.ai_enabled) {
       console.log('🤖 Aguardando acumulador da IA antes de responder...');
 
-      // Marca este telefone como "em processamento" com a hora da última mensagem
-      lastMessageAt.set(phone, Date.now());
+      // Debounce baseado no BANCO (compartilhado entre instâncias serverless).
+      // Cada execução grava um token único; após o sleep, só responde se o token
+      // no banco continua sendo o seu (nenhuma mensagem mais nova chegou).
+      const minhaMarca = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      await base44.asServiceRole.entities.Contact.update(contact.id, { debounce_token: minhaMarca });
 
       // Aguarda a janela de debounce
       await sleep(DEBOUNCE_MS);
 
-      // Se chegou outra mensagem durante a espera, esta execução desiste:
-      // a execução mais recente é quem vai responder com o histórico completo.
-      const ultimaMarca = lastMessageAt.get(phone);
-      if (ultimaMarca && Date.now() - ultimaMarca < DEBOUNCE_MS - 200) {
-        console.log('⏳ Chegou mensagem mais nova durante o debounce, deixando a execução mais recente responder.');
-        return Response.json({ success: true, aguardando: true });
-      }
-      lastMessageAt.delete(phone);
-
       // Recarrega o contato atualizado antes de responder
       const fresh = await base44.asServiceRole.entities.Contact.filter({ phone });
       const currentContact = fresh[0] || contact;
+
+      // Se chegou outra mensagem durante a espera, esta execução desiste:
+      // a execução mais recente é quem vai responder com o histórico completo.
+      if (currentContact.debounce_token !== minhaMarca) {
+        console.log('⏳ Chegou mensagem mais nova durante o debounce, deixando a execução mais recente responder.');
+        return Response.json({ success: true, aguardando: true });
+      }
       if (!currentContact.ai_enabled) {
         console.log('⚠️ IA desabilitada para o contato, ignorando.');
         return Response.json({ success: true });

@@ -75,6 +75,10 @@
       "type": "string",
       "format": "date-time",
       "description": "Data/hora da \u00faltima mensagem"
+    },
+    "debounce_token": {
+      "type": "string",
+      "description": "Token \u00fanico da \u00faltima mensagem recebida, usado para agrupar mensagens (debounce) entre inst\u00e2ncias serverless"
     }
   },
   "required": [
