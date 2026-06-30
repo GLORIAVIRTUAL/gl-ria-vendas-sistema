@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import MessageBubble from './MessageBubble';
 import TemplateSelector from './TemplateSelector';
+import AudioRecorder from './AudioRecorder';
 import { base44 } from '@/api/base44Client';
 
 const pipelineStages = [
@@ -283,6 +284,8 @@ export default function ChatWindow({
           >
             <Paperclip className="w-5 h-5" />
           </Button>
+
+          <AudioRecorder onRecorded={(file) => setAttachmentFile(file)} isOpenClaw={isOpenClaw} />
 
           <div className="flex-1 relative">
             <Textarea
