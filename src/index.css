@@ -275,6 +275,27 @@ button:focus-visible {
     text-wrap: balance;
   }
 
+  .app-theme .text-white,
+  .app-theme .text-slate-50 {
+    color: rgb(207 250 254) !important;
+  }
+
+  .app-theme h1.text-white,
+  .app-theme h1.text-slate-50,
+  .app-theme h2.text-white,
+  .app-theme h2.text-slate-50 {
+    background-image: linear-gradient(90deg, rgb(103 232 249), rgb(96 165 250));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .app-theme h3.text-white,
+  .app-theme h3.text-slate-50 {
+    color: rgb(165 243 252) !important;
+  }
+
   .app-theme .recharts-cartesian-axis-tick-value,
   .app-theme .recharts-legend-item-text {
     fill: rgb(203 213 225);
