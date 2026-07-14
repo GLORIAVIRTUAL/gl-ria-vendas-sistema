@@ -83,7 +83,7 @@ export default function ContactList({ contacts, selectedContact, onSelectContact
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
         {contacts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8">
+          <div className="flex flex-col items-center justify-center h-full text-slate-400 p-8">
             <MessageSquare className="w-12 h-12 mb-4 opacity-50" />
             <p className="text-center">Nenhuma conversa ainda</p>
           </div>
@@ -96,21 +96,21 @@ export default function ContactList({ contacts, selectedContact, onSelectContact
                 key={contact.id}
                 onClick={() => onSelectContact(contact)}
                 className={cn(
-                  "flex items-center gap-3 p-4 cursor-pointer transition-all border-b border-slate-100",
+                  "flex items-center gap-3 p-4 cursor-pointer transition-all border-b border-slate-700/60 border-l-2 border-l-transparent",
                   isOpenClaw
-                    ? "hover:bg-gradient-to-r hover:from-red-50 hover:to-red-100"
-                    : "hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50",
+                    ? "hover:border-l-red-400 hover:bg-red-500/10"
+                    : "hover:border-l-cyan-300 hover:bg-cyan-400/10",
                   selectedContact?.id === contact.id && (isOpenClaw
-                    ? "bg-gradient-to-r from-red-100 to-red-50 border-l-4 border-l-red-500"
-                    : "bg-gradient-to-r from-blue-100 to-cyan-100 border-l-4 border-l-blue-500")
+                    ? "border-l-red-400 bg-red-500/15 shadow-[inset_12px_0_24px_-20px_rgba(248,113,113,0.8)]"
+                    : "border-l-cyan-300 bg-cyan-400/15 shadow-[inset_12px_0_24px_-20px_rgba(103,232,249,0.8)]")
                 )}
               >
                 <div className="relative">
-                  <Avatar className="h-12 w-12 border-2 border-white shadow-md">
+                  <Avatar className="h-12 w-12 border border-cyan-200/40 bg-slate-900 shadow-[0_0_16px_rgba(34,211,238,0.12)]">
                     <AvatarImage src={contact.profile_picture} />
                     <AvatarFallback className={cn(
-                      "text-white font-semibold",
-                      isOpenClaw ? "bg-gradient-to-br from-red-500 to-red-600" : "bg-gradient-to-br from-blue-500 to-cyan-500"
+                      "font-semibold",
+                      isOpenClaw ? "bg-red-500/20 text-red-100" : "bg-cyan-400/15 text-cyan-100"
                     )}>
                       {(contact.name || contact.phone || '?').charAt(0).toUpperCase()}
                     </AvatarFallback>
@@ -131,7 +131,7 @@ export default function ContactList({ contacts, selectedContact, onSelectContact
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-semibold text-slate-800 truncate">
+                    <h3 className="font-semibold text-slate-100 truncate">
                       {contact.name || contact.phone}
                     </h3>
                     {contact.last_message_at && (
@@ -144,7 +144,7 @@ export default function ContactList({ contacts, selectedContact, onSelectContact
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className={cn(
-                        "text-[10px] px-2 py-0.5 rounded-full text-white font-medium",
+                        "text-[10px] px-2 py-0.5 rounded-full text-white font-semibold ring-1 ring-white/10",
                         isOpenClaw ? "bg-red-500" : (pipelineColors[contact.pipeline_stage] || 'bg-gray-400')
                       )}>
                         {pipelineLabels[contact.pipeline_stage] || 'Novo'}

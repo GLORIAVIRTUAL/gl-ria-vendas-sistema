@@ -132,26 +132,27 @@ export default function ChatWindow({
 
   if (!contact) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-6 shadow-2xl">
+      <div className="flex-1 flex flex-col items-center justify-center bg-slate-950/45">
+        <div className="w-32 h-32 rounded-3xl border border-cyan-300/30 bg-cyan-400/10 flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(34,211,238,0.16)] backdrop-blur-xl">
           <img 
             src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/user_681fe32a55525de555018f29/7457ca111_Untitleddesign14.png" 
             alt="GLÓRIA"
             className="w-24 h-24 object-contain"
           />
         </div>
-        <h2 className="text-2xl font-bold text-slate-700 mb-2">GLÓRIA IA</h2>
-        <p className="text-slate-500">Selecione uma conversa para começar</p>
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-300">Central inteligente</p>
+        <h2 className="font-heading text-2xl font-semibold text-slate-50 mb-2">GLÓRIA IA</h2>
+        <p className="text-slate-400">Selecione uma conversa para começar</p>
       </div>
     );
   }
 
   return (
     <div className={cn(
-      "flex-1 flex flex-col h-full bg-gradient-to-br from-slate-50",
-      isOpenClaw ? "to-red-50" : "to-blue-50"
+      "flex-1 flex flex-col h-full bg-slate-950/45",
+      isOpenClaw ? "shadow-[inset_0_1px_0_rgba(248,113,113,0.12)]" : "shadow-[inset_0_1px_0_rgba(103,232,249,0.12)]"
     )}>
-      <div className="flex items-center justify-between p-4 bg-white border-b border-slate-100 shadow-sm">
+      <div className="flex items-center justify-between p-4 bg-slate-950/80 border-b border-cyan-400/20 shadow-lg backdrop-blur-xl">
         <div className="flex items-center gap-3">
           <Avatar className={cn("h-10 w-10 border-2", isOpenClaw ? "border-red-200" : "border-blue-200")}>
             <AvatarImage src={contact.profile_picture} />
@@ -163,7 +164,7 @@ export default function ChatWindow({
             </AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="font-semibold text-slate-800">{contact.name || contact.phone}</h3>
+            <h3 className="font-semibold text-slate-50">{contact.name || contact.phone}</h3>
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-500">{contact.phone}</span>
               <Badge variant="outline" className={cn(
@@ -178,14 +179,14 @@ export default function ChatWindow({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-100 rounded-full px-3 py-1.5">
+          <div className="flex items-center gap-2 border border-slate-600/60 bg-slate-900/70 rounded-full px-3 py-1.5">
             <User className={cn("w-4 h-4", !contact.ai_enabled ? "text-green-500" : "text-slate-400")} />
             <Switch 
               checked={contact.ai_enabled}
               onCheckedChange={handleAIToggle}
-              className="data-[state=checked]:bg-blue-500"
+              className="data-[state=checked]:bg-cyan-400"
             />
-            <Bot className={cn("w-4 h-4", contact.ai_enabled ? "text-blue-500" : "text-slate-400")} />
+            <Bot className={cn("w-4 h-4", contact.ai_enabled ? "text-cyan-300" : "text-slate-500")} />
           </div>
 
           <DropdownMenu>
@@ -214,7 +215,7 @@ export default function ChatWindow({
                 onClick={handleFinishConversation}
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                ✅ Finalizar Conversa
+                Finalizar conversa
               </DropdownMenuItem>
               <DropdownMenuItem className="text-slate-500" onClick={onClose}>
                 Fechar janela
@@ -244,7 +245,7 @@ export default function ChatWindow({
       </div>
 
       {attachmentFile && (
-        <div className="mx-4 mb-2 p-3 bg-white rounded-lg border border-slate-200 flex items-center gap-3">
+        <div className="mx-4 mb-2 p-3 bg-slate-900/85 rounded-xl border border-cyan-400/20 flex items-center gap-3 backdrop-blur-xl">
           {attachmentFile.type.startsWith('image/') ? (
             <img 
               src={URL.createObjectURL(attachmentFile)} 
@@ -266,7 +267,7 @@ export default function ChatWindow({
         </div>
       )}
 
-      <div className="p-4 bg-white border-t border-slate-100">
+      <div className="p-4 bg-slate-950/85 border-t border-cyan-400/20 backdrop-blur-xl">
         <div className="flex items-end gap-2">
           <input
             type="file"
@@ -279,7 +280,7 @@ export default function ChatWindow({
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-slate-500 hover:text-blue-500"
+            className="text-slate-400 hover:bg-cyan-400/10 hover:text-cyan-300"
             onClick={() => fileInputRef.current?.click()}
           >
             <Paperclip className="w-5 h-5" />
@@ -293,7 +294,7 @@ export default function ChatWindow({
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Digite sua mensagem..."
-              className="min-h-[44px] max-h-32 resize-none pr-12 rounded-2xl border-slate-200 focus:border-blue-400"
+              className="min-h-[44px] max-h-32 resize-none pr-12 rounded-2xl border-slate-600/70 bg-slate-900/70 text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400"
               rows={1}
             />
           </div>
@@ -305,7 +306,7 @@ export default function ChatWindow({
               "rounded-full h-11 w-11 p-0",
               isOpenClaw
                 ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-                : "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+                : "bg-cyan-400 text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.32)] hover:bg-cyan-300"
             )}
           >
             {isSending || isUploading ? (

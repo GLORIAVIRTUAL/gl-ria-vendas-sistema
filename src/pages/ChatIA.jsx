@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, Bell, BellOff, RefreshCw, Info } from 'lucide-react';
+import { Search, Bell, BellOff, RefreshCw, Info, Bot, Radio } from 'lucide-react';
 import ContactList from '../components/chat/ContactList';
 import ChatWindow from '../components/chat/ChatWindow';
 import ContactDetails from '../components/chat/ContactDetails';
@@ -206,18 +206,22 @@ export default function ChatIA() {
   });
 
   return (
-    <div className="h-[calc(100vh-80px)] flex bg-slate-50">
-      <div className="w-80 bg-white border-r border-slate-100 flex flex-col">
-        <div className="p-4 border-b border-slate-100">
+    <div className="h-[calc(100vh-80px)] flex overflow-hidden bg-slate-950/45">
+      <div className="w-80 shrink-0 bg-slate-950/80 border-r border-cyan-400/20 flex flex-col backdrop-blur-xl">
+        <div className="p-4 border-b border-cyan-400/20 bg-slate-900/65">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-slate-800">Conversas IA</h2>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-300">Central de atendimento</p>
+              <h2 className="font-heading text-lg font-semibold text-slate-50">Conversas IA</h2>
+            </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setNotificationsEnabled(!notificationsEnabled)}
                 className={cn(
-                  notificationsEnabled ? "text-blue-500" : "text-slate-400"
+                  "border border-transparent hover:border-cyan-400/30 hover:bg-cyan-400/10",
+                  notificationsEnabled ? "text-cyan-300" : "text-slate-500"
                 )}
               >
                 {notificationsEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
@@ -226,6 +230,7 @@ export default function ChatIA() {
                 variant="ghost"
                 size="icon"
                 onClick={() => refetchContacts()}
+                className="text-slate-400 hover:bg-cyan-400/10 hover:text-cyan-300"
               >
                 <RefreshCw className="w-5 h-5" />
               </Button>
@@ -235,33 +240,33 @@ export default function ChatIA() {
             <Button
               onClick={() => { setLlmFilter('atual'); setSelectedContact(null); }}
               className={cn(
-                "w-full",
+                "w-full border",
                 llmFilter === 'atual'
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                  ? "border-cyan-300/60 bg-cyan-400 text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.3)] hover:bg-cyan-300"
+                  : "border-slate-600/60 bg-slate-900/70 text-slate-300 hover:border-cyan-400/40 hover:bg-cyan-400/10 hover:text-cyan-100"
               )}
             >
-              🤖 IA Atual
+              <Bot className="h-4 w-4" /> IA Atual
             </Button>
             <Button
               onClick={() => { setLlmFilter('openclaw'); setSelectedContact(null); }}
               className={cn(
-                "w-full",
+                "w-full border",
                 llmFilter === 'openclaw'
-                  ? "bg-red-600 hover:bg-red-700 text-white"
-                  : "bg-red-50 hover:bg-red-100 text-red-600"
+                  ? "border-red-400/70 bg-red-500 text-white shadow-[0_0_18px_rgba(239,68,68,0.28)] hover:bg-red-400"
+                  : "border-red-500/30 bg-red-950/25 text-red-300 hover:border-red-400/60 hover:bg-red-500/15"
               )}
             >
-              🦅 OpenClaw
+              <Radio className="h-4 w-4" /> OpenClaw
             </Button>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cyan-300/70" />
             <Input
               placeholder="Buscar conversas..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 border-slate-600/70 bg-slate-950/60 text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-400"
             />
           </div>
         </div>

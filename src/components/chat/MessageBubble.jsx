@@ -73,17 +73,17 @@ export default function MessageBubble({ message, isOpenClaw = false }) {
           ? isAI 
             ? isOpenClaw
               ? "bg-gradient-to-r from-red-500 to-red-600 text-white rounded-br-md"
-              : "bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-br-md"
-            : "bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-br-md"
-          : "bg-white border border-slate-100 rounded-bl-md"
+              : "bg-cyan-400 text-slate-950 shadow-[0_0_16px_rgba(34,211,238,0.16)] rounded-br-md"
+              : "bg-slate-700 text-white rounded-br-md"
+              : "bg-slate-900/85 border border-slate-600/60 text-slate-100 rounded-bl-md backdrop-blur-lg"
       )}>
         {isOutbound && (
           <div className={cn(
             "flex items-center gap-1.5 text-[10px] mb-1",
-            isAI ? (isOpenClaw ? "text-red-100" : "text-blue-100") : "text-slate-300"
+            isAI ? (isOpenClaw ? "text-red-100" : "text-slate-800") : "text-slate-300"
           )}>
             {isAI ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
-            <span>{isAI ? (isOpenClaw ? '🦅 OPENCLAW' : 'IA GLÓRIA') : (message.extracted_data?.sent_by || 'Atendente')}</span>
+            <span>{isAI ? (isOpenClaw ? 'OPENCLAW' : 'IA GLÓRIA') : (message.extracted_data?.sent_by || 'Atendente')}</span>
           </div>
         )}
         {!isOutbound && message.extracted_data?.sender_name && (
@@ -98,7 +98,7 @@ export default function MessageBubble({ message, isOpenClaw = false }) {
         {message.content && (
           <p className={cn(
             "text-sm whitespace-pre-wrap break-words",
-            isOutbound ? "text-white" : "text-slate-700"
+            isOutbound ? (isAI && !isOpenClaw ? "text-slate-950" : "text-white") : "text-slate-100"
           )}>
             {message.content}
           </p>
@@ -106,7 +106,7 @@ export default function MessageBubble({ message, isOpenClaw = false }) {
         
         <div className={cn(
           "flex items-center justify-end gap-1 mt-1",
-          isOutbound ? "text-white/70" : "text-slate-400"
+          isOutbound ? (isAI && !isOpenClaw ? "text-slate-800" : "text-white/70") : "text-slate-400"
         )}>
           <span className="text-[10px]">
             {(() => {

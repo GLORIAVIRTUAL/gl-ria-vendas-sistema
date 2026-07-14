@@ -86,9 +86,9 @@ export default function ContactDetails({ contact, onUpdate, onClose }) {
   if (!contact) return null;
 
   return (
-    <div className="w-80 bg-white border-l border-slate-100 flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b border-slate-100">
-        <h3 className="font-semibold text-slate-800">Detalhes do Contato</h3>
+    <div className="w-80 bg-slate-950/90 border-l border-cyan-400/20 flex flex-col h-full backdrop-blur-xl">
+      <div className="flex items-center justify-between p-4 border-b border-cyan-400/20">
+        <h3 className="font-heading font-semibold text-slate-50">Detalhes do contato</h3>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="w-4 h-4" />
         </Button>
@@ -96,9 +96,9 @@ export default function ContactDetails({ contact, onUpdate, onClose }) {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <div className="flex flex-col items-center text-center">
-          <Avatar className="h-20 w-20 border-4 border-blue-100 mb-3">
+          <Avatar className="h-20 w-20 border-2 border-cyan-300/40 mb-3 shadow-[0_0_24px_rgba(34,211,238,0.18)]">
             <AvatarImage src={contact.profile_picture} />
-            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-2xl">
+            <AvatarFallback className="bg-cyan-400/15 text-cyan-100 text-2xl">
               {(contact.name || contact.phone || '?').charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -106,7 +106,7 @@ export default function ContactDetails({ contact, onUpdate, onClose }) {
             value={editedContact.name || ''}
             onChange={(e) => setEditedContact({ ...editedContact, name: e.target.value })}
             placeholder="Nome do contato"
-            className="text-center font-semibold border-none focus:ring-2 focus:ring-blue-200"
+            className="text-center font-semibold border-cyan-400/20 bg-slate-900/70 text-slate-100 focus:ring-2 focus:ring-cyan-400/40"
           />
         </div>
 
@@ -250,10 +250,10 @@ export default function ContactDetails({ contact, onUpdate, onClose }) {
         </div>
       </div>
 
-      <div className="p-4 border-t border-slate-100">
+      <div className="p-4 border-t border-cyan-400/20">
         <Button 
           onClick={handleSave} 
-          className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+          className="w-full bg-cyan-400 text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.28)] hover:bg-cyan-300"
           disabled={isSaving}
         >
           <Save className="w-4 h-4 mr-2" />

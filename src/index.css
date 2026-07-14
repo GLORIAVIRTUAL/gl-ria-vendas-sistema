@@ -230,6 +230,9 @@ button:focus-visible {
   }
 
   .app-theme .text-slate-900,
+  .app-theme .text-slate-800,
+  .app-theme .text-gray-900,
+  .app-theme .text-gray-800,
   .app-theme .text-blue-900,
   .app-theme .text-purple-900,
   .app-theme .text-green-900,
@@ -238,12 +241,16 @@ button:focus-visible {
   }
 
   .app-theme .text-slate-700,
+  .app-theme .text-gray-700,
+  .app-theme .text-gray-600,
   .app-theme .text-slate-600,
   .app-theme .text-slate-500 {
     color: rgb(203 213 225) !important;
   }
 
+  .app-theme .border-slate-100,
   .app-theme .border-slate-200,
+  .app-theme .border-gray-200,
   .app-theme .border-blue-200,
   .app-theme .border-blue-100,
   .app-theme .border-purple-200,
