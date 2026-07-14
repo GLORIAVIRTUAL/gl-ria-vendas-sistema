@@ -204,7 +204,7 @@ button:focus-visible {
     background-position: center;
     background-size: cover;
     background-attachment: fixed;
-    color: hsl(var(--foreground));
+    color: rgb(203 213 225);
   }
 
   .app-theme [class*="bg-gradient-to-"] {
@@ -241,11 +241,14 @@ button:focus-visible {
   }
 
   .app-theme .text-slate-700,
-  .app-theme .text-gray-700,
+  .app-theme .text-gray-700 {
+    color: rgb(186 230 253) !important;
+  }
+
   .app-theme .text-gray-600,
   .app-theme .text-slate-600,
   .app-theme .text-slate-500 {
-    color: rgb(203 213 225) !important;
+    color: rgb(148 163 184) !important;
   }
 
   .app-theme .border-slate-100,
@@ -323,5 +326,121 @@ button:focus-visible {
   .app-theme .text-purple-700,
   .app-theme .text-orange-600 {
     color: rgb(103 232 249) !important;
+  }
+
+  /* Identidade tipográfica tecnológica aplicada a todo o sistema */
+  .app-theme h1,
+  .app-theme h2 {
+    font-family: var(--font-heading);
+    background-image: linear-gradient(90deg, rgb(103 232 249), rgb(96 165 250), rgb(165 180 252));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent !important;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 26px rgb(34 211 238 / 0.16);
+  }
+
+  .app-theme h3,
+  .app-theme h4,
+  .app-theme [class*="CardTitle"] {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+
+  .app-theme h3.text-slate-900,
+  .app-theme h3.text-slate-800,
+  .app-theme h3.text-white,
+  .app-theme h4.text-slate-900,
+  .app-theme h4.text-slate-800,
+  .app-theme h4.text-white {
+    color: rgb(165 243 252) !important;
+    -webkit-text-fill-color: currentColor;
+    text-shadow: 0 0 14px rgb(34 211 238 / 0.18);
+  }
+
+  .app-theme p.text-slate-900.font-bold,
+  .app-theme p.text-slate-800.font-bold,
+  .app-theme span.text-slate-900.font-bold,
+  .app-theme span.text-slate-800.font-bold {
+    color: rgb(165 243 252) !important;
+    text-shadow: 0 0 14px rgb(34 211 238 / 0.2);
+  }
+
+  .app-theme [data-sidebar="group-label"] {
+    font-family: var(--font-heading);
+    color: rgb(125 211 252) !important;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-shadow: 0 0 12px rgb(34 211 238 / 0.22);
+  }
+
+  .app-theme [data-sidebar="menu-button"],
+  .app-theme [data-sidebar="menu-sub-button"] {
+    font-family: var(--font-heading);
+    color: rgb(186 230 253) !important;
+    letter-spacing: -0.01em;
+  }
+
+  .app-theme [data-sidebar="menu-button"] svg,
+  .app-theme [data-sidebar="menu-sub-button"] svg {
+    color: rgb(125 211 252) !important;
+    filter: drop-shadow(0 0 5px rgb(34 211 238 / 0.22));
+  }
+
+  .app-theme [data-sidebar="menu-button"]:hover,
+  .app-theme [data-sidebar="menu-sub-button"]:hover {
+    color: rgb(207 250 254) !important;
+    text-shadow: 0 0 10px rgb(34 211 238 / 0.25);
+  }
+
+  .app-theme [data-sidebar="menu-button"][data-active="true"],
+  .app-theme [data-sidebar="menu-sub-button"][data-active="true"] {
+    color: rgb(103 232 249) !important;
+    text-shadow: 0 0 12px rgb(34 211 238 / 0.32);
+  }
+
+  .app-theme main .font-bold,
+  .app-theme main .font-semibold {
+    font-family: var(--font-heading);
+  }
+
+  .app-theme main .text-white {
+    color: rgb(207 250 254) !important;
+    text-shadow: 0 0 10px rgb(34 211 238 / 0.14);
+  }
+
+  .app-theme button,
+  .app-theme [role="button"],
+  .app-theme label,
+  .app-theme th {
+    font-family: var(--font-heading);
+    letter-spacing: -0.01em;
+  }
+
+  .app-theme label,
+  .app-theme th {
+    color: rgb(186 230 253);
+    font-weight: 600;
+  }
+
+  .app-theme td,
+  .app-theme small {
+    color: rgb(148 163 184);
+  }
+
+  .app-theme input,
+  .app-theme textarea,
+  .app-theme select {
+    color: rgb(224 242 254);
+  }
+
+  .app-theme input::placeholder,
+  .app-theme textarea::placeholder {
+    color: rgb(100 116 139);
+  }
+
+  .app-theme a:not([data-sidebar="menu-button"]):not([data-sidebar="menu-sub-button"]) {
+    color: rgb(103 232 249);
   }
 }

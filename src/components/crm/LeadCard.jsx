@@ -47,9 +47,9 @@ export default function LeadCard({ lead, produtoConfig, isDragging, onEdit, onEn
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="font-bold text-slate-900 mb-1">{lead.nome_cliente}</h3>
+            <h3 className="mb-1 font-heading font-bold text-cyan-100 drop-shadow-[0_0_9px_rgba(34,211,238,0.18)]">{lead.nome_cliente}</h3>
             {lead.nome_empresa && (
-              <p className="text-sm text-slate-600 flex items-center gap-1">
+              <p className="flex items-center gap-1 text-sm text-slate-300">
                 <Building2 className="w-3 h-3" />
                 {lead.nome_empresa}
               </p>
@@ -89,18 +89,18 @@ export default function LeadCard({ lead, produtoConfig, isDragging, onEdit, onEn
         </div>
 
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-sm text-slate-600">
+          <div className="flex items-center gap-2 text-sm text-slate-300">
             <Mail className="w-4 h-4" />
             <span className="truncate">{lead.email_cliente}</span>
           </div>
           {lead.telefone_cliente && (
-            <div className="flex items-center gap-2 text-sm text-slate-600">
+            <div className="flex items-center gap-2 text-sm text-slate-300">
               <Phone className="w-4 h-4" />
               <span>{lead.telefone_cliente}</span>
             </div>
           )}
           {lead.data_reuniao && (
-            <div className="flex items-center gap-2 text-sm text-slate-600">
+            <div className="flex items-center gap-2 text-sm text-slate-300">
               <Calendar className="w-4 h-4" />
               <span>{format(parseISO(lead.data_reuniao), "dd/MM/yyyy", { locale: ptBR })}</span>
             </div>

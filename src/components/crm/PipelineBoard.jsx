@@ -36,7 +36,7 @@ export default function PipelineBoard({ contacts, onDragEnd, onSelectContact }) 
               stage.color
             )}>
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">{stage.title}</h3>
+                <h3 className="font-heading font-semibold tracking-tight text-cyan-100 drop-shadow-[0_0_9px_rgba(34,211,238,0.18)]">{stage.title}</h3>
                 <Badge variant="secondary" className="bg-white/20 text-white border-none">
                   {getContactsByStage(stage.id).length}
                 </Badge>
@@ -79,7 +79,7 @@ export default function PipelineBoard({ contacts, onDragEnd, onSelectContact }) 
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-slate-800 truncate">
+                              <h4 className="truncate font-heading font-medium text-cyan-100 drop-shadow-[0_0_8px_rgba(34,211,238,0.14)]">
                                 {contact.name || 'Sem nome'}
                               </h4>
                               <p className="text-xs text-slate-500 truncate">{contact.phone}</p>
