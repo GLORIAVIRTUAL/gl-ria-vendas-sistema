@@ -8,7 +8,9 @@ Deno.serve((req) => {
     <title>Agendar Reunião - Glória Vendas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; background-image: url('https://media.base44.com/images/public/68f3ccc3a454aaec766ae684/cdb261cb2_generated_image.png'); background-size: cover; background-position: center; background-attachment: fixed; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-image: url('https://media.base44.com/images/public/68f3ccc3a454aaec766ae684/cdb261cb2_generated_image.png'); background-size: cover; background-position: center; background-attachment: fixed; }
+        h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.025em; }
         input, textarea { color-scheme: dark; }
     </style>
 </head>

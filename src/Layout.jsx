@@ -89,46 +89,46 @@ export default function Layout({ children, currentPageName }) {
 
   const mainNavigationAdmin = [
     { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
-    { title: "📅 Agenda", url: createPageUrl("Agenda"), icon: CalendarCheck },
+    { title: "Agenda", url: createPageUrl("Agenda"), icon: CalendarCheck },
     { title: "CRM / Funil", url: createPageUrl("CRM"), icon: TrendingUp },
-    { title: "🤖 Chat IA", url: createPageUrl("ChatIA"), icon: MessageSquare },
-    { title: "🦅 Clientes OpenClaw", url: createPageUrl("ClientesOpenClaw"), icon: MessageSquare },
-    { title: "📢 Tráfego Pago", url: createPageUrl("Trafego"), icon: Megaphone },
-    { title: "🎯 Pipeline IA", url: createPageUrl("PipelineIA"), icon: Bot },
-    { title: "📊 Dashboard IA", url: createPageUrl("DashboardIA"), icon: LayoutDashboard },
+    { title: "Chat IA", url: createPageUrl("ChatIA"), icon: MessageSquare },
+    { title: "Clientes OpenClaw", url: createPageUrl("ClientesOpenClaw"), icon: Bot },
+    { title: "Tráfego Pago", url: createPageUrl("Trafego"), icon: Megaphone },
+    { title: "Pipeline IA", url: createPageUrl("PipelineIA"), icon: TrendingUp },
+    { title: "Dashboard IA", url: createPageUrl("DashboardIA"), icon: LayoutDashboard },
     { title: "Agendar Reunião", url: createPageUrl("Agendar"), icon: Calendar },
     { title: "Todos Agendamentos", url: createPageUrl("Agendamentos"), icon: List },
     { title: "Negócios Fechados", url: createPageUrl("Negocios"), icon: Video },
-    { title: "👥 Clientes", url: createPageUrl("Clientes"), icon: Users },
-    { title: "🤝 Afiliados", url: createPageUrl("Afiliados"), icon: Users },
-    { title: "📧 Emails", url: createPageUrl("Emails"), icon: Mail },
+    { title: "Clientes", url: createPageUrl("Clientes"), icon: Users },
+    { title: "Afiliados", url: createPageUrl("Afiliados"), icon: Users },
+    { title: "Emails", url: createPageUrl("Emails"), icon: Mail },
   ];
 
   const configNavigationAdmin = [
-    { title: "🤖 Configurar IA", url: createPageUrl("ConfiguracoesIA") },
-    { title: "📦 Importar Produtos", url: createPageUrl("ImportarProdutos") },
-    { title: "💬 Gateway WhatsApp", url: createPageUrl("GerenciarWhatsApp") },
-    { title: "📧 Disparos Email", url: createPageUrl("DisparosEmail") },
-    { title: "📱 Disparos WhatsApp", url: createPageUrl("DisparosWhatsApp") },
-    { title: "🧪 Testar WhatsApp", url: createPageUrl("TesteWhatsApp") },
-    { title: "⏰ Configurar Cron Job", url: createPageUrl("ConfigurarCron") },
-    { title: "📅 Google Calendar", url: createPageUrl("ConfigurarGoogleCalendar") },
-    { title: "🌐 Código para Site", url: createPageUrl("CodigoEmbed") },
-    { title: "📚 API / Chatbot", url: createPageUrl("APIDocumentacao") },
-    { title: "🔧 Testar Stripe", url: createPageUrl("TesteStripe") },
-    { title: "🔗 Testar Webhook", url: createPageUrl("TesteWebhook") },
-    { title: "➕ Criar Conta Afiliado", url: createPageUrl("CriarContaAfiliado") },
-    { title: "👤 Gerenciar Usuários", url: createPageUrl("GerenciarUsuarios") },
+    { title: "Configurar IA", url: createPageUrl("ConfiguracoesIA"), icon: Bot },
+    { title: "Importar Produtos", url: createPageUrl("ImportarProdutos"), icon: List },
+    { title: "Gateway WhatsApp", url: createPageUrl("GerenciarWhatsApp"), icon: MessageSquare },
+    { title: "Disparos Email", url: createPageUrl("DisparosEmail"), icon: Mail },
+    { title: "Disparos WhatsApp", url: createPageUrl("DisparosWhatsApp"), icon: MessageSquare },
+    { title: "Testar WhatsApp", url: createPageUrl("TesteWhatsApp"), icon: TestTube },
+    { title: "Configurar Cron Job", url: createPageUrl("ConfigurarCron"), icon: Clock },
+    { title: "Google Calendar", url: createPageUrl("ConfigurarGoogleCalendar"), icon: Calendar },
+    { title: "Código para Site", url: createPageUrl("CodigoEmbed"), icon: Code },
+    { title: "API / Chatbot", url: createPageUrl("APIDocumentacao"), icon: Bot },
+    { title: "Testar Stripe", url: createPageUrl("TesteStripe"), icon: TestTube },
+    { title: "Testar Webhook", url: createPageUrl("TesteWebhook"), icon: Code },
+    { title: "Criar Conta Afiliado", url: createPageUrl("CriarContaAfiliado"), icon: Users },
+    { title: "Gerenciar Usuários", url: createPageUrl("GerenciarUsuarios"), icon: Users },
   ];
 
   const navigationItemsAfiliado = [
-    { title: "📊 Meu Dashboard", url: createPageUrl("DashboardAfiliado"), icon: LayoutDashboard },
-    { title: "📅 Minha Agenda", url: createPageUrl("AgendaAfiliado"), icon: CalendarCheck },
-    { title: "🎯 Meu CRM", url: createPageUrl("CRMAfiliado"), icon: TrendingUp },
-    { title: "📅 Agendar Reunião", url: createPageUrl("AgendarAfiliado"), icon: Calendar },
-    { title: "📋 Meus Agendamentos", url: createPageUrl("AgendamentosAfiliado"), icon: List },
-    { title: "💰 Meus Negócios", url: createPageUrl("NegociosAfiliado"), icon: Video },
-    { title: "👥 Meus Clientes", url: createPageUrl("ClientesAfiliado"), icon: Users },
+    { title: "Meu Dashboard", url: createPageUrl("DashboardAfiliado"), icon: LayoutDashboard },
+    { title: "Minha Agenda", url: createPageUrl("AgendaAfiliado"), icon: CalendarCheck },
+    { title: "Meu CRM", url: createPageUrl("CRMAfiliado"), icon: TrendingUp },
+    { title: "Agendar Reunião", url: createPageUrl("AgendarAfiliado"), icon: Calendar },
+    { title: "Meus Agendamentos", url: createPageUrl("AgendamentosAfiliado"), icon: List },
+    { title: "Meus Negócios", url: createPageUrl("NegociosAfiliado"), icon: Video },
+    { title: "Meus Clientes", url: createPageUrl("ClientesAfiliado"), icon: Users },
   ];
 
   const handleLogout = () => {
@@ -207,7 +207,7 @@ export default function Layout({ children, currentPageName }) {
                             className="hover:bg-slate-100 transition-all duration-200 rounded-xl mb-1 px-4 py-3"
                           >
                             <Settings className="w-5 h-5" />
-                            <span className="font-medium flex-1">⚙️ Configurações</span>
+                            <span className="font-medium flex-1">Configurações</span>
                             {configOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
@@ -221,6 +221,7 @@ export default function Layout({ children, currentPageName }) {
                               }`}
                             >
                               <Link to={item.url} className="flex items-center gap-2 px-3 py-2">
+                                <item.icon className="h-4 w-4 text-cyan-300" />
                                 <span>{item.title}</span>
                               </Link>
                             </SidebarMenuButton>

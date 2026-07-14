@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -154,12 +156,19 @@ button:focus-visible {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.025em;
   }
 }
 
 @layer base {
   :root,
   .dark {
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
     --background: 222 47% 5%;
     --foreground: 210 40% 98%;
     --card: 222 47% 7%;
@@ -247,6 +256,16 @@ button:focus-visible {
   .app-theme textarea,
   .app-theme select {
     color-scheme: dark;
+  }
+
+  .app-theme svg {
+    stroke-width: 1.75;
+  }
+
+  .app-theme h1,
+  .app-theme h2,
+  .app-theme h3 {
+    text-wrap: balance;
   }
 
   .app-theme .recharts-cartesian-axis-tick-value,
