@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -371,7 +370,7 @@ Caso tenha dúvidas, estamos à disposição! 😊`;
   };
 
   const mesesDisponiveis = useMemo(() => {
-    const meses = new Set();
+    const meses = new Set([format(new Date(), 'yyyy-MM')]);
     negocios.forEach(neg => {
       if (neg.created_date) {
         const mes = format(parseISO(neg.created_date), 'yyyy-MM');
