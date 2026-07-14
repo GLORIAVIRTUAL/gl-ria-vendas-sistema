@@ -156,3 +156,125 @@ button:focus-visible {
     @apply bg-background text-foreground;
   }
 }
+
+@layer base {
+  :root,
+  .dark {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 7%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 7%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 187 85% 53%;
+    --primary-foreground: 222 47% 7%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 70%;
+    --accent: 187 70% 18%;
+    --accent-foreground: 186 100% 90%;
+    --border: 215 25% 35%;
+    --input: 215 25% 40%;
+    --ring: 187 85% 53%;
+    --sidebar-background: 222 47% 7%;
+    --sidebar-foreground: 215 20% 85%;
+    --sidebar-primary: 187 85% 53%;
+    --sidebar-primary-foreground: 222 47% 7%;
+    --sidebar-accent: 187 70% 14%;
+    --sidebar-accent-foreground: 186 100% 90%;
+    --sidebar-border: 215 25% 28%;
+    --sidebar-ring: 187 85% 53%;
+  }
+}
+
+@layer components {
+  .app-theme {
+    background-color: hsl(var(--background));
+    background-image: url('https://media.base44.com/images/public/68f3ccc3a454aaec766ae684/cdb261cb2_generated_image.png');
+    background-position: center;
+    background-size: cover;
+    background-attachment: fixed;
+    color: hsl(var(--foreground));
+  }
+
+  .app-theme [class*="bg-gradient-to-"] {
+    background-color: rgb(2 6 23 / 0.62) !important;
+    background-image: none !important;
+    backdrop-filter: blur(18px);
+  }
+
+  .app-theme button[class*="bg-gradient-to-"],
+  .app-theme a[class*="bg-gradient-to-"] {
+    background-color: rgb(34 211 238) !important;
+    color: rgb(2 6 23) !important;
+  }
+
+  .app-theme .bg-white,
+  .app-theme .bg-slate-50,
+  .app-theme .bg-blue-50,
+  .app-theme .bg-purple-50,
+  .app-theme .bg-green-50,
+  .app-theme .bg-orange-50,
+  .app-theme .bg-yellow-50 {
+    background-color: rgb(15 23 42 / 0.68) !important;
+  }
+
+  .app-theme .text-slate-900,
+  .app-theme .text-blue-900,
+  .app-theme .text-purple-900,
+  .app-theme .text-green-900,
+  .app-theme .text-orange-900 {
+    color: rgb(248 250 252) !important;
+  }
+
+  .app-theme .text-slate-700,
+  .app-theme .text-slate-600,
+  .app-theme .text-slate-500 {
+    color: rgb(203 213 225) !important;
+  }
+
+  .app-theme .border-slate-200,
+  .app-theme .border-blue-200,
+  .app-theme .border-blue-100,
+  .app-theme .border-purple-200,
+  .app-theme .border-green-200,
+  .app-theme .border-orange-200 {
+    border-color: rgb(100 116 139 / 0.45) !important;
+  }
+
+  .app-theme input,
+  .app-theme textarea,
+  .app-theme select {
+    color-scheme: dark;
+  }
+
+  .app-theme .recharts-cartesian-axis-tick-value,
+  .app-theme .recharts-legend-item-text {
+    fill: rgb(203 213 225);
+    color: rgb(203 213 225) !important;
+  }
+
+  .app-theme .border-l-blue-500,
+  .app-theme .border-l-green-500,
+  .app-theme .border-l-purple-500,
+  .app-theme .border-l-orange-500 {
+    border-left-color: rgb(34 211 238) !important;
+  }
+
+  .app-theme .bg-blue-100,
+  .app-theme .bg-green-100,
+  .app-theme .bg-purple-100,
+  .app-theme .bg-orange-100 {
+    background-color: rgb(34 211 238 / 0.14) !important;
+  }
+
+  .app-theme .text-blue-600,
+  .app-theme .text-blue-700,
+  .app-theme .text-green-600,
+  .app-theme .text-purple-600,
+  .app-theme .text-purple-700,
+  .app-theme .text-orange-600 {
+    color: rgb(103 232 249) !important;
+  }
+}

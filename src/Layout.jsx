@@ -58,11 +58,11 @@ function RelogioBrasil() {
   }, []);
 
   return (
-    <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
-      <Clock className="w-4 h-4 text-blue-600 animate-pulse" />
+    <div className="flex items-center gap-2 rounded-lg border border-cyan-400/30 bg-white/5 px-4 py-2 backdrop-blur-md">
+      <Clock className="w-4 h-4 text-cyan-300 animate-pulse" />
       <div className="text-sm">
-        <p className="font-semibold text-blue-900 capitalize">{horaFormatada}</p>
-        <p className="text-xs text-blue-600">Horário de Recife, Brasil (GMT-3)</p>
+        <p className="font-semibold text-slate-100 capitalize">{horaFormatada}</p>
+        <p className="text-xs text-cyan-200/80">Horário de Recife, Brasil (GMT-3)</p>
       </div>
     </div>
   );
@@ -82,7 +82,7 @@ export default function Layout({ children, currentPageName }) {
   });
 
   if (isPublicPage) {
-    return <>{children}</>;
+    return <div className="app-theme min-h-screen">{children}</div>;
   }
 
   const isAfiliado = user?.tipo_conta === 'afiliado';
@@ -137,14 +137,14 @@ export default function Layout({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="app-theme min-h-screen flex w-full">
         <ReminderAlert />
         <CompromissoAlert />
         <EmailNotification />
         <NovasMensagensAlert />
         
-        <Sidebar className="border-r border-slate-200">
-          <SidebarHeader className="border-b border-slate-200 p-6">
+        <Sidebar className="border-r border-slate-500/30 bg-slate-950/75 backdrop-blur-xl">
+          <SidebarHeader className="border-b border-slate-500/30 p-6">
             <div className="flex items-center gap-3 mb-4">
               <img 
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f3ccc3a454aaec766ae684/2f46531d6_Untitleddesign34.png"
@@ -152,7 +152,7 @@ export default function Layout({ children, currentPageName }) {
                 className="w-16 h-16 rounded-xl object-contain shadow-md"
               />
               <div>
-                <h2 className="font-bold text-slate-600 text-lg">Glória Vendas</h2>
+                <h2 className="font-bold text-white text-lg">Glória Vendas</h2>
                 <p className="text-xs text-slate-500">
                   {isAfiliado ? '🤝 Painel do Afiliado' : 'Sistema de Vendas'}
                 </p>
@@ -160,9 +160,9 @@ export default function Layout({ children, currentPageName }) {
             </div>
             <RelogioBrasil />
             {user && (
-              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-xs font-semibold text-blue-900">{user.display_name || user.full_name}</p>
-                <p className="text-xs text-blue-600">{user.email}</p>
+              <div className="mt-3 rounded-lg border border-cyan-400/30 bg-white/5 p-3 backdrop-blur-md">
+                <p className="text-xs font-semibold text-slate-100">{user.display_name || user.full_name}</p>
+                <p className="text-xs text-cyan-200/80">{user.email}</p>
                 <Button
                   onClick={handleLogout}
                   variant="outline"
@@ -187,8 +187,8 @@ export default function Layout({ children, currentPageName }) {
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton 
                         asChild 
-                        className={`hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 rounded-xl mb-1 ${
-                          location.pathname === item.url ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 hover:text-white shadow-md' : ''
+                        className={`rounded-xl mb-1 transition-all duration-200 hover:bg-white/10 hover:text-cyan-200 ${
+                          location.pathname === item.url ? 'border border-cyan-400/40 bg-cyan-400/15 text-cyan-100 shadow-[0_0_16px_rgba(34,211,238,0.22)] hover:bg-cyan-400/20 hover:text-white' : 'text-slate-300'
                         }`}
                       >
                         <Link to={item.url} className="flex items-center gap-3 px-4 py-3">
@@ -236,7 +236,7 @@ export default function Layout({ children, currentPageName }) {
         </Sidebar>
 
         <main className="flex-1 flex flex-col">
-          <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 py-4 lg:hidden sticky top-0 z-10">
+          <header className="sticky top-0 z-10 border-b border-slate-500/30 bg-slate-950/80 px-6 py-4 backdrop-blur-xl lg:hidden">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200" />
@@ -245,7 +245,7 @@ export default function Layout({ children, currentPageName }) {
                   alt="Glória Vendas"
                   className="w-10 h-10 rounded object-contain"
                 />
-                <h1 className="text-xl font-bold text-slate-600">Glória Vendas</h1>
+                <h1 className="text-xl font-bold text-white">Glória Vendas</h1>
               </div>
               {user && (
                 <Button
@@ -264,7 +264,7 @@ export default function Layout({ children, currentPageName }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto bg-slate-950/35">
             {children}
           </div>
         </main>
