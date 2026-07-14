@@ -269,7 +269,12 @@ button:focus-visible {
   }
 
   .app-theme svg {
-    stroke-width: 1.75;
+    display: none !important;
+  }
+
+  .app-theme div:has(> svg:only-child),
+  .app-theme span:has(> svg:only-child) {
+    display: none !important;
   }
 
   .app-theme h1,

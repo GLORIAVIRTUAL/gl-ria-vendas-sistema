@@ -9,6 +9,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import VisualSymbolCleaner from '@/components/VisualSymbolCleaner';
 
 // Add page imports here
 import CodigoEmbed from '@/pages/CodigoEmbed';
@@ -103,6 +104,7 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <NavigationTracker />
+          <VisualSymbolCleaner />
           <AuthenticatedApp />
         </Router>
         <Toaster />
