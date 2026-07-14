@@ -304,7 +304,7 @@ export default function Agenda() {
                           <p className={`font-heading text-2xl font-bold ${isHoje ? 'text-cyan-200 drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]' : 'text-slate-100'}`}>
                             {format(dia, 'dd')}
                           </p>
-                          <Badge className={isHoje ? 'bg-white text-purple-600' : 'bg-slate-200 text-slate-700'}>
+                          <Badge className={isHoje ? 'border border-cyan-300/40 bg-cyan-950/80 text-cyan-100' : 'border border-slate-500/50 bg-slate-900/90 text-slate-100'}>
                             {compromissosDoDia.length}
                           </Badge>
                         </div>
