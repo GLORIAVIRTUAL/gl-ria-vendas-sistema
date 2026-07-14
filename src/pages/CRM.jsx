@@ -21,12 +21,12 @@ import NovoLeadDialog from "../components/crm/NovoLeadDialog";
 import EditLeadDialog from "../components/crm/EditLeadDialog";
 
 const estagios = [
-  { id: "Reuniao_Marcada", nome: "Reunião Marcada", cor: "bg-blue-500", icone: Calendar },
-  { id: "Em_Avaliacao", nome: "Em Avaliação", cor: "bg-yellow-500", icone: TrendingUp },
-  { id: "Negocio_Fechado", nome: "Negócio Fechado", cor: "bg-green-500", icone: DollarSign },
-  { id: "Implantacao", nome: "Implantação", cor: "bg-purple-500", icone: Package },
-  { id: "Inicio_de_Uso", nome: "Início de Uso", cor: "bg-orange-500", icone: Users },
-  { id: "Estavel", nome: "Estável", cor: "bg-emerald-500", icone: ChevronRight }
+  { id: "Reuniao_Marcada", nome: "Reunião Marcada", cor: "border border-blue-400/30 bg-blue-400/10 text-blue-200 backdrop-blur-xl", icone: Calendar },
+  { id: "Em_Avaliacao", nome: "Em Avaliação", cor: "border border-amber-300/30 bg-amber-300/10 text-amber-200 backdrop-blur-xl", icone: TrendingUp },
+  { id: "Negocio_Fechado", nome: "Negócio Fechado", cor: "border border-emerald-400/30 bg-emerald-400/10 text-emerald-200 backdrop-blur-xl", icone: DollarSign },
+  { id: "Implantacao", nome: "Implantação", cor: "border border-violet-400/30 bg-violet-400/10 text-violet-200 backdrop-blur-xl", icone: Package },
+  { id: "Inicio_de_Uso", nome: "Início de Uso", cor: "border border-orange-400/30 bg-orange-400/10 text-orange-200 backdrop-blur-xl", icone: Users },
+  { id: "Estavel", nome: "Estável", cor: "border border-cyan-400/30 bg-cyan-400/10 text-cyan-200 backdrop-blur-xl", icone: ChevronRight }
 ];
 
 const produtoConfig = {
@@ -273,7 +273,7 @@ Qualquer dúvida, estou à disposição!`;
                       } transition-colors duration-200`}
                     >
                       <Card className="h-full shadow-lg border-0">
-                        <CardHeader className={`${estagio.cor} text-white rounded-t-lg`}>
+                        <CardHeader className={`${estagio.cor} rounded-t-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]`}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Icon className="w-5 h-5" />
@@ -281,7 +281,7 @@ Qualquer dúvida, estou à disposição!`;
                                 {estagio.nome}
                               </CardTitle>
                             </div>
-                            <Badge variant="secondary" className="bg-white/20 text-white border-0">
+                            <Badge variant="secondary" className="border border-white/10 bg-slate-950/30 text-inherit">
                               {leadsDoEstagio.length}
                             </Badge>
                           </div>
