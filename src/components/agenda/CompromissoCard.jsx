@@ -22,7 +22,7 @@ export default function CompromissoCard({ compromisso, isDragging, onMarcarConcl
       <CardContent className="p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <h3 className={`font-bold text-sm text-slate-900 line-clamp-2 ${isConcluido ? 'line-through' : ''}`}>
+            <h3 className={`line-clamp-2 font-heading text-sm font-bold tracking-tight text-cyan-100 drop-shadow-[0_0_8px_rgba(34,211,238,0.16)] ${isConcluido ? 'line-through' : ''}`}>
               {compromisso.titulo}
             </h3>
           </div>
@@ -43,13 +43,13 @@ export default function CompromissoCard({ compromisso, isDragging, onMarcarConcl
           </Button>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-slate-600">
+        <div className="flex items-center gap-2 text-xs font-medium text-slate-300">
           <Clock className="w-3 h-3" />
           <span>{compromisso.horario}</span>
         </div>
 
         {compromisso.descricao && (
-          <p className="text-xs text-slate-600 line-clamp-2">
+          <p className="line-clamp-2 text-xs leading-relaxed text-slate-300/80">
             {compromisso.descricao}
           </p>
         )}

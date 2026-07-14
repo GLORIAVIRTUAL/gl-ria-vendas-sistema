@@ -191,10 +191,11 @@ export default function Agenda() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
-              📅 Minha Agenda
+            <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-white drop-shadow-[0_0_18px_rgba(34,211,238,0.28)] md:text-4xl">
+              <CalendarIcon className="h-8 w-8 text-cyan-300 md:h-10 md:w-10" />
+              Minha Agenda
             </h1>
-            <p className="text-slate-600">
+            <p className="font-medium tracking-wide text-cyan-100/70">
               Organize seus compromissos por dia da semana
             </p>
           </div>
@@ -212,28 +213,28 @@ export default function Agenda() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-6 bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg">
+          <Card className="border border-cyan-400/25 bg-cyan-400/5 p-6 text-cyan-100 shadow-[0_0_28px_rgba(34,211,238,0.08)] backdrop-blur-xl">
             <div className="flex items-center justify-between mb-2">
               <CalendarIcon className="w-8 h-8" />
             </div>
             <p className="text-sm opacity-90 mb-1">Total de Compromissos</p>
-            <p className="text-3xl font-bold">{totalCompromissos}</p>
+            <p className="font-heading text-3xl font-bold text-cyan-200 drop-shadow-[0_0_12px_rgba(34,211,238,0.32)]">{totalCompromissos}</p>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-orange-500 to-red-600 text-white shadow-lg">
+          <Card className="border border-amber-400/25 bg-amber-400/5 p-6 text-amber-100 shadow-[0_0_28px_rgba(251,191,36,0.08)] backdrop-blur-xl">
             <div className="flex items-center justify-between mb-2">
               <CalendarIcon className="w-8 h-8" />
             </div>
             <p className="text-sm opacity-90 mb-1">Pendentes</p>
-            <p className="text-3xl font-bold">{compromissosPendentes}</p>
+            <p className="font-heading text-3xl font-bold text-amber-200 drop-shadow-[0_0_12px_rgba(251,191,36,0.28)]">{compromissosPendentes}</p>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg">
+          <Card className="border border-emerald-400/25 bg-emerald-400/5 p-6 text-emerald-100 shadow-[0_0_28px_rgba(52,211,153,0.08)] backdrop-blur-xl">
             <div className="flex items-center justify-between mb-2">
               <Check className="w-8 h-8" />
             </div>
             <p className="text-sm opacity-90 mb-1">Concluídos</p>
-            <p className="text-3xl font-bold">{compromissosConcluidos}</p>
+            <p className="font-heading text-3xl font-bold text-emerald-200 drop-shadow-[0_0_12px_rgba(52,211,153,0.28)]">{compromissosConcluidos}</p>
           </Card>
         </div>
 
@@ -250,7 +251,7 @@ export default function Agenda() {
             </Button>
             
             <div className="text-center">
-              <p className="text-lg font-bold text-slate-900">
+              <p className="font-heading text-lg font-bold tracking-tight text-cyan-100 drop-shadow-[0_0_10px_rgba(34,211,238,0.18)]">
                 {format(diasDaSemana[0], "dd 'de' MMMM", { locale: ptBR })} - {format(diasDaSemana[6], "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
               </p>
               <Button
@@ -288,19 +289,19 @@ export default function Agenda() {
                     <Card
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`min-h-[600px] overflow-hidden transition-all ${
-                        snapshot.isDraggingOver ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-                      } ${isHoje ? 'ring-2 ring-purple-500' : ''}`}
+                      className={`min-h-[600px] overflow-hidden border-slate-500/25 bg-slate-950/45 transition-all backdrop-blur-xl ${
+                        snapshot.isDraggingOver ? 'ring-2 ring-cyan-400 bg-cyan-400/10' : ''
+                      } ${isHoje ? 'ring-2 ring-cyan-400 shadow-[0_0_24px_rgba(34,211,238,0.16)]' : ''}`}
                     >
                       <div 
-                        className={`p-4 border-b cursor-pointer hover:opacity-80 transition-opacity ${isHoje ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : 'bg-slate-50'}`}
+                        className={`cursor-pointer border-b p-4 transition-colors ${isHoje ? 'border-cyan-400/30 bg-cyan-400/10' : 'border-slate-500/25 bg-white/[0.03] hover:bg-white/[0.06]'}`}
                         onClick={() => handleAbrirDiaFullscreen(dataStr)}
                       >
-                        <p className={`text-xs font-semibold uppercase ${isHoje ? 'text-white' : 'text-slate-600'}`}>
+                        <p className={`font-heading text-xs font-semibold uppercase tracking-[0.12em] ${isHoje ? 'text-cyan-200' : 'text-slate-300'}`}>
                           {format(dia, 'EEEE', { locale: ptBR })}
                         </p>
                         <div className="flex items-center justify-between mt-1">
-                          <p className={`text-2xl font-bold ${isHoje ? 'text-white' : 'text-slate-900'}`}>
+                          <p className={`font-heading text-2xl font-bold ${isHoje ? 'text-cyan-200 drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]' : 'text-slate-100'}`}>
                             {format(dia, 'dd')}
                           </p>
                           <Badge className={isHoje ? 'bg-white text-purple-600' : 'bg-slate-200 text-slate-700'}>
@@ -308,7 +309,7 @@ export default function Agenda() {
                           </Badge>
                         </div>
                         {isHoje && (
-                          <Badge className="bg-white/20 text-white text-xs mt-2">
+                          <Badge className="mt-2 border border-cyan-300/25 bg-cyan-300/10 text-xs font-semibold tracking-wide text-cyan-200">
                             🔥 HOJE
                           </Badge>
                         )}
