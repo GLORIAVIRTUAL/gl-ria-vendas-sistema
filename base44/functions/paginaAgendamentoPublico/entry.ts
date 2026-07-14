@@ -8,11 +8,12 @@ Deno.serve((req) => {
     <title>Agendar Reunião - Glória Vendas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; }
+        body { font-family: system-ui, -apple-system, sans-serif; background-image: url('https://media.base44.com/images/public/68f3ccc3a454aaec766ae684/cdb261cb2_generated_image.png'); background-size: cover; background-position: center; background-attachment: fixed; }
+        input, textarea { color-scheme: dark; }
     </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen p-3 sm:p-4">
-    <div id="app" class="max-w-2xl mx-auto py-4 sm:py-8"></div>
+<body class="min-h-screen bg-slate-950 p-3 text-white sm:p-6">
+    <div id="app" class="mx-auto max-w-3xl py-4 sm:py-8"></div>
     
     <script>
         let etapa = 1;
@@ -31,24 +32,24 @@ Deno.serve((req) => {
             
             if (formData.sucesso) {
                 app.innerHTML = \`
-                    <div class="bg-white rounded-xl shadow-2xl p-8 text-center">
+                    <div class="rounded-2xl border border-slate-500/60 bg-slate-950/80 p-8 text-center text-white shadow-2xl backdrop-blur-xl">
                         <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                             <span class="text-4xl">🎉</span>
                         </div>
-                        <h1 class="text-3xl font-bold text-slate-900 mb-3">
+                        <h1 class="mb-3 text-3xl font-bold text-white">
                             Reunião Agendada com Sucesso!
                         </h1>
-                        <p class="text-lg text-slate-600 mb-6">
+                        <p class="mb-6 text-lg text-slate-300">
                             Enviamos um email de confirmação com todos os detalhes.
                         </p>
-                        <div class="bg-blue-50 rounded-lg p-6 mb-6">
-                            <p class="text-slate-700"><strong>Cliente:</strong> \${formData.nome_cliente}</p>
-                            <p class="text-slate-700"><strong>Data:</strong> \${new Date(formData.data).toLocaleDateString('pt-BR')}</p>
-                            <p class="text-slate-700"><strong>Horário:</strong> \${formData.horario}</p>
+                        <div class="mb-6 rounded-xl border border-cyan-400/40 bg-white/10 p-6 shadow-[0_0_20px_rgba(34,211,238,0.18)]">
+                            <p class="text-slate-200"><strong>Cliente:</strong> \${formData.nome_cliente}</p>
+                            <p class="text-slate-200"><strong>Data:</strong> \${new Date(formData.data).toLocaleDateString('pt-BR')}</p>
+                            <p class="text-slate-200"><strong>Horário:</strong> \${formData.horario}</p>
                         </div>
                         \${formData.linkReuniao ? \`
                             <a href="\${formData.linkReuniao}" target="_blank" 
-                               class="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold">
+                               class="inline-block rounded-lg bg-cyan-400 px-8 py-3 font-semibold text-slate-950 shadow-[0_0_20px_rgba(34,211,238,0.65)] hover:bg-cyan-300">
                                 🎥 Acessar Link da Reunião
                             </a>
                         \` : ''}
@@ -58,31 +59,30 @@ Deno.serve((req) => {
             }
 
             app.innerHTML = \`
-                <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+                <div class="overflow-hidden rounded-2xl border border-slate-500/60 bg-slate-950/75 text-white shadow-2xl backdrop-blur-xl">
                     <!-- Header -->
-                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-5 sm:p-8 text-center">
-                        <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68f3ccc3a454aaec766ae684/973791adc_Untitleddesign14.png"
-                             alt="Glória" class="w-32 sm:w-48 h-auto mx-auto mb-3 sm:mb-4">
-                        <h1 class="text-xl sm:text-3xl font-bold mb-1 sm:mb-2">Agende sua Reunião</h1>
-                        <p class="text-sm sm:text-base opacity-90">Preencha os dados para marcar um horário</p>
+                    <div class="border-b border-slate-600/60 bg-white/5 p-6 text-left sm:p-8">
+                        <p class="mb-2 text-3xl font-semibold tracking-wide text-white sm:text-4xl">GLÓRIA</p>
+                        <h1 class="mb-1 text-2xl font-semibold text-white sm:text-3xl">Agende sua Reunião</h1>
+                        <p class="text-sm text-slate-300 sm:text-base">Preencha os dados para marcar um horário</p>
                     </div>
 
                     <!-- Steps -->
-                    <div class="flex justify-center items-center gap-2 sm:gap-4 p-4 sm:p-6 bg-slate-50 border-b">
+                    <div class="flex items-center justify-center gap-3 border-b border-slate-600/60 bg-white/5 p-4 sm:gap-5 sm:p-6">
                         \${[1,2].map(step => \`
                             <div class="flex items-center gap-2 \${etapa >= step ? 'opacity-100' : 'opacity-40'}">
-                                <div class="\${etapa >= step ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'} w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold">
+                                <div class="\${etapa >= step ? 'border-cyan-300 bg-cyan-400 text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.75)]' : 'border-slate-500 bg-slate-900/70 text-slate-400'} flex h-9 w-9 items-center justify-center rounded-full border font-bold sm:h-10 sm:w-10">
                                     \${etapa > step ? '✓' : step}
                                 </div>
                             </div>
-                        \`).join('<div class="w-8 sm:w-12 h-1 bg-slate-200 rounded"></div>')}
+                        \`).join('<div class="h-px w-12 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9)] sm:w-20"></div>')}
                     </div>
 
                     <!-- Form -->
                     <div class="p-5 sm:p-8">
-                        <div id="erro" class="hidden mb-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded"></div>
+                        <div id="erro" class="mb-4 hidden rounded-lg border border-red-400/50 bg-red-950/70 px-4 py-3 text-red-100"></div>
                         <div id="loading" class="hidden text-center py-4">
-                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                            <div class="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-cyan-300"></div>
                         </div>
                         <div id="form-content"></div>
                     </div>
@@ -98,24 +98,24 @@ Deno.serve((req) => {
             if (etapa === 1) {
                 content.innerHTML = \`
                     <div class="space-y-4">
-                        <h2 class="text-lg sm:text-xl font-bold mb-4">👤 Seus Dados</h2>
+                        <h2 class="mb-4 text-lg font-semibold text-white sm:text-xl">Seus Dados</h2>
                         <div>
                             <label class="block text-sm font-medium mb-2">Nome Completo *</label>
                             <input type="text" id="nome" value="\${formData.nome_cliente}" 
-                                   class="w-full px-4 py-3 text-base border rounded-lg" placeholder="João Silva">
+                                   class="w-full rounded-lg border border-slate-400/70 bg-slate-900/45 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/60 focus:shadow-[0_0_15px_rgba(34,211,238,0.55)]" placeholder="João Silva">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Email *</label>
                             <input type="email" id="email" value="\${formData.email_cliente}"
-                                   class="w-full px-4 py-3 text-base border rounded-lg" placeholder="joao@email.com">
+                                   class="w-full rounded-lg border border-slate-400/70 bg-slate-900/45 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/60 focus:shadow-[0_0_15px_rgba(34,211,238,0.55)]" placeholder="joao@email.com">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-2">Telefone</label>
                             <input type="tel" id="telefone" value="\${formData.telefone_cliente}"
-                                   class="w-full px-4 py-3 text-base border rounded-lg" placeholder="(11) 99999-9999">
+                                   class="w-full rounded-lg border border-slate-400/70 bg-slate-900/45 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/60 focus:shadow-[0_0_15px_rgba(34,211,238,0.55)]" placeholder="(11) 99999-9999">
                         </div>
                         <button onclick="proximaEtapa()" 
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-lg font-semibold text-base">
+                                class="w-full rounded-lg bg-cyan-400 py-3.5 text-base font-semibold text-slate-950 shadow-[0_0_20px_rgba(34,211,238,0.65)] transition hover:bg-cyan-300">
                             Próximo: Data e Hora
                         </button>
                     </div>
@@ -123,12 +123,12 @@ Deno.serve((req) => {
             } else if (etapa === 2) {
                 content.innerHTML = \`
                     <div class="space-y-4">
-                        <h2 class="text-lg sm:text-xl font-bold mb-4">📅 Data e Horário</h2>
+                        <h2 class="mb-4 text-lg font-semibold text-white sm:text-xl">Data e Horário</h2>
                         <div>
                             <label class="block text-sm font-medium mb-2">Data *</label>
                             <input type="date" id="data" value="\${formData.data}" onchange="verificarHorarios()"
                                    min="\${new Date().toISOString().split('T')[0]}"
-                                   class="w-full px-4 py-3 text-base border rounded-lg">
+                                   class="w-full rounded-lg border border-slate-400/70 bg-slate-900/45 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/60">
                         </div>
                         <div id="horarios-container" class="hidden">
                             <label class="block text-sm font-medium mb-2">Horário *</label>
@@ -137,15 +137,15 @@ Deno.serve((req) => {
                         <div>
                             <label class="block text-sm font-medium mb-2">Observações</label>
                             <textarea id="observacoes" rows="3" 
-                                      class="w-full px-4 py-3 text-base border rounded-lg">\${formData.observacoes}</textarea>
+                                      class="w-full rounded-lg border border-slate-400/70 bg-slate-900/45 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/60">\${formData.observacoes}</textarea>
                         </div>
                         <div class="flex flex-col sm:flex-row gap-3">
                             <button onclick="voltarEtapa()" 
-                                    class="flex-1 border border-slate-300 py-3.5 rounded-lg font-semibold text-base">
+                                    class="flex-1 rounded-lg border border-slate-400 bg-transparent py-3.5 text-base font-semibold text-white transition hover:bg-white/10">
                                 Voltar
                             </button>
                             <button onclick="finalizarAgendamento()" 
-                                    class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3.5 rounded-lg font-semibold text-base">
+                                    class="flex-1 rounded-lg bg-cyan-400 py-3.5 text-base font-semibold text-slate-950 shadow-[0_0_20px_rgba(34,211,238,0.65)] transition hover:bg-cyan-300">
                                 ✓ Confirmar Agendamento
                             </button>
                         </div>
@@ -197,7 +197,7 @@ Deno.serve((req) => {
                 
                 grid.innerHTML = horariosDisponiveis.map(h => \`
                     <button onclick="selecionarHorario('\${h}')" 
-                            class="\${formData.horario === h ? 'bg-blue-600 text-white' : 'bg-slate-100 hover:bg-slate-200'} px-2 py-3 rounded-lg font-mono font-semibold text-sm sm:text-base">
+                            class="\${formData.horario === h ? 'border-cyan-300 bg-cyan-400/20 text-cyan-200 shadow-[0_0_12px_rgba(34,211,238,0.6)]' : 'border-slate-500 bg-slate-900/50 text-slate-200 hover:border-cyan-300/70'} rounded-lg border px-2 py-3 font-mono text-sm font-semibold transition sm:text-base">
                         \${h}
                     </button>
                 \`).join('');
