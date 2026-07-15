@@ -12,9 +12,9 @@ import { ptBR } from "date-fns/locale";
 import { Clock, Check, Pencil, Trash2, Bell, Plus, Calendar } from "lucide-react";
 
 const prioridadeCor = {
-  Baixa: "bg-blue-100 text-blue-700 border-blue-200",
-  Media: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  Alta: "bg-red-100 text-red-700 border-red-200"
+  Baixa: "border-cyan-400/40 bg-cyan-400/15 text-cyan-200",
+  Media: "border-amber-400/40 bg-amber-400/15 text-amber-200",
+  Alta: "border-red-400/40 bg-red-400/15 text-red-200"
 };
 
 export default function DiaFullscreenDialog({ open, onOpenChange, data, compromissos, onMarcarConcluido, onEditar, onExcluir, onAdicionarCompromisso }) {
@@ -26,13 +26,13 @@ export default function DiaFullscreenDialog({ open, onOpenChange, data, compromi
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="border-b pb-4">
+        <DialogHeader className="border-b border-slate-600 pb-4">
           <div className="flex items-center justify-between">
             <div>
-              <DialogTitle className="text-3xl font-bold text-slate-900 uppercase mb-1">
+              <DialogTitle className="mb-1 text-3xl font-bold uppercase text-cyan-100">
                 {diaSemana}
               </DialogTitle>
-              <p className="text-lg text-slate-600 flex items-center gap-2">
+              <p className="flex items-center gap-2 text-lg text-slate-300">
                 <Calendar className="w-5 h-5" />
                 {diaFormatado}
               </p>
@@ -49,7 +49,7 @@ export default function DiaFullscreenDialog({ open, onOpenChange, data, compromi
               <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Calendar className="w-10 h-10 text-slate-400" />
               </div>
-              <p className="text-xl text-slate-400 mb-4">Nenhum compromisso neste dia</p>
+              <p className="mb-4 text-xl text-slate-300">Nenhum compromisso neste dia</p>
               <Button
                 onClick={() => {
                   onAdicionarCompromisso(data);
@@ -83,21 +83,21 @@ export default function DiaFullscreenDialog({ open, onOpenChange, data, compromi
                   return (
                     <Card
                       key={compromisso.id}
-                      className={`transition-all duration-200 hover:shadow-lg ${isConcluido ? 'opacity-60' : ''}`}
+                      className={`border-slate-600 bg-slate-950/55 transition-all duration-200 hover:border-cyan-400/40 hover:shadow-lg ${isConcluido ? 'border-green-400/30' : ''}`}
                       style={{ borderLeft: `4px solid ${compromisso.cor || '#3b82f6'}` }}
                     >
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between gap-4 mb-4">
                           <div className="flex-1">
-                            <h3 className={`text-2xl font-bold text-slate-900 mb-2 ${isConcluido ? 'line-through' : ''}`}>
+                            <h3 className={`mb-2 text-2xl font-bold text-cyan-100 ${isConcluido ? 'line-through text-slate-300' : ''}`}>
                               {compromisso.titulo}
                             </h3>
-                            <div className="flex items-center gap-3 text-slate-600 mb-3">
+                            <div className="mb-3 flex items-center gap-3 text-cyan-200">
                               <Clock className="w-5 h-5" />
                               <span className="text-lg font-semibold">{compromisso.horario}</span>
                             </div>
                             {compromisso.descricao && (
-                              <p className="text-slate-600 mt-2">{compromisso.descricao}</p>
+                              <p className="mt-2 text-slate-300">{compromisso.descricao}</p>
                             )}
                           </div>
                           <Button
@@ -120,33 +120,33 @@ export default function DiaFullscreenDialog({ open, onOpenChange, data, compromi
                           </Badge>
                           
                           {compromisso.recorrente && (
-                            <Badge className="bg-purple-100 text-purple-700 border-purple-200">
+                            <Badge className="border-purple-400/40 bg-purple-400/15 text-purple-200">
                               🔄 {compromisso.tipo_recorrencia}
                             </Badge>
                           )}
                           
                           {compromisso.notificar_whatsapp && (
-                            <Badge className="bg-green-100 text-green-700 border-green-200">
+                            <Badge className="border-green-400/40 bg-green-400/15 text-green-200">
                               <Bell className="w-4 h-4 mr-1" />
                               WhatsApp
                             </Badge>
                           )}
 
                           {isConcluido && (
-                            <Badge className="bg-green-100 text-green-700">
+                            <Badge className="border-green-400/40 bg-green-400/15 text-green-200">
                               ✓ Concluído
                             </Badge>
                           )}
                         </div>
 
-                        <div className="flex gap-2 pt-4 border-t">
+                        <div className="flex gap-2 border-t border-slate-600 pt-4">
                           <Button
                             variant="outline"
                             onClick={() => {
                               onEditar(compromisso);
                               onOpenChange(false);
                             }}
-                            className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+                            className="flex-1 border-cyan-400/50 bg-cyan-400/10 text-cyan-200 hover:bg-cyan-400/20 hover:text-cyan-100"
                           >
                             <Pencil className="w-4 h-4 mr-2" />
                             Editar
@@ -157,7 +157,7 @@ export default function DiaFullscreenDialog({ open, onOpenChange, data, compromi
                               onExcluir(compromisso.id);
                               onOpenChange(false);
                             }}
-                            className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                            className="flex-1 border-red-400/50 bg-red-400/10 text-red-300 hover:bg-red-400/20 hover:text-red-200"
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
                             Excluir
