@@ -161,12 +161,12 @@ export default function EmailNotification() {
                   </Button>
                 </div>
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleDismiss(email)}
-                  className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50"
+                  className="absolute right-2 top-2 h-7 border-cyan-400/40 bg-slate-950/70 px-2 text-xs text-cyan-200 hover:bg-cyan-400/15 hover:text-cyan-100"
                 >
-                  <X className="h-4 w-4" />
+                  Fechar
                 </Button>
               </div>
             </Alert>

@@ -196,11 +196,11 @@ export default function Dashboard() {
                           className="flex-1"
                           placeholder="Nome do usuário"
                         />
-                        <Button size="sm" onClick={() => handleSaveUser(user.id)} className="bg-green-600 hover:bg-green-700">
-                          <Save className="w-4 h-4" />
+                        <Button size="sm" onClick={() => handleSaveUser(user.id)} className="bg-green-600 text-white hover:bg-green-700">
+                          Salvar
                         </Button>
                         <Button size="sm" variant="outline" onClick={() => setEditingUserId(null)}>
-                          <X className="w-4 h-4" />
+                          Cancelar
                         </Button>
                       </div>
                     ) : (
@@ -212,8 +212,8 @@ export default function Dashboard() {
                             {user.role === 'admin' ? 'Admin' : 'Usuário'}
                           </span>
                         </div>
-                        <Button size="sm" variant="ghost" onClick={() => handleEditUser(user)}>
-                          <Pencil className="w-4 h-4" />
+                        <Button size="sm" variant="outline" onClick={() => handleEditUser(user)}>
+                          Editar
                         </Button>
                       </>
                     )}
@@ -265,13 +265,13 @@ export default function Dashboard() {
                     <div key={ag.id} className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100 hover:shadow-md transition-shadow">
                       <div className="flex items-start justify-between mb-2">
                         <p className="font-semibold text-slate-900">{ag.nome_cliente}</p>
-                        <a 
-                          href={ag.link_reuniao} 
-                          target="_blank" 
+                        <a
+                          href={ag.link_reuniao}
+                          target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-700 text-sm"
+                          className="rounded-md border border-cyan-400/40 px-2 py-1 text-xs font-semibold text-cyan-200 hover:bg-cyan-400/15 hover:text-cyan-100"
                         >
-                          ↗
+                          Abrir
                         </a>
                       </div>
                       <p className="text-sm text-slate-600 mb-1">{ag.email_cliente}</p>

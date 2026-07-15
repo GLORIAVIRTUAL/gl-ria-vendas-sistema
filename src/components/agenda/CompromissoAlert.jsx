@@ -185,12 +185,12 @@ export default function CompromissoAlert() {
               </div>
             </div>
             <Button
-              size="icon"
-              variant="ghost"
+              size="sm"
+              variant="outline"
               onClick={() => fecharAlerta(alerta.id)}
-              className="text-white hover:bg-white/20 rounded-full"
+              className="border-white/40 bg-white/10 text-white hover:bg-white/20 hover:text-white"
             >
-              <X className="w-4 h-4" />
+              Fechar
             </Button>
           </div>
         </Alert>

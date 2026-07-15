@@ -202,9 +202,9 @@ export default function NovasMensagensAlert() {
           </div>
           <button
             onClick={handleClose}
-            className="text-white/80 hover:text-white transition-colors"
+            className="rounded-md border border-white/40 bg-white/10 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/20"
           >
-            <X className="w-5 h-5" />
+            Fechar
           </button>
         </div>
       </div>
@@ -240,9 +240,9 @@ export default function NovasMensagensAlert() {
           </div>
           <button
             onClick={handleClose}
-            className="text-white/80 hover:text-white transition-colors"
+            className="rounded-md border border-white/40 bg-white/10 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/20"
           >
-            <X className="w-5 h-5" />
+            Fechar
           </button>
         </div>
       </div>

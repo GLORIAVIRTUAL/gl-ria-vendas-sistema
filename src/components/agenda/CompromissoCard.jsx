@@ -27,19 +27,19 @@ export default function CompromissoCard({ compromisso, isDragging, onMarcarConcl
             </h3>
           </div>
           <Button
-            size="icon"
-            variant="ghost"
+            size="sm"
+            variant="outline"
             onClick={(e) => {
               e.stopPropagation();
               onMarcarConcluido(compromisso);
             }}
-            className={`h-6 w-6 flex-shrink-0 ${
-              isConcluido 
-                ? 'text-green-600 hover:text-green-700' 
-                : 'text-slate-400 hover:text-green-600'
+            className={`h-7 flex-shrink-0 px-2 text-[10px] font-bold ${
+              isConcluido
+                ? 'border-green-400/50 bg-green-400/15 text-green-300 hover:bg-green-400/25 hover:text-green-200'
+                : 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200 hover:bg-cyan-400/25 hover:text-cyan-100'
             }`}
           >
-            <Check className="w-4 h-4" />
+            {isConcluido ? 'Reabrir' : 'Concluir'}
           </Button>
         </div>
 

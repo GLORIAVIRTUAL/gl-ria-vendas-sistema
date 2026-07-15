@@ -101,16 +101,16 @@ export default function DiaFullscreenDialog({ open, onOpenChange, data, compromi
                             )}
                           </div>
                           <Button
-                            size="icon"
-                            variant="ghost"
+                            size="sm"
+                            variant="outline"
                             onClick={() => onMarcarConcluido(compromisso)}
-                            className={`h-10 w-10 ${
-                              isConcluido 
-                                ? 'text-green-600 hover:text-green-700' 
-                                : 'text-slate-400 hover:text-green-600'
+                            className={`font-bold ${
+                              isConcluido
+                                ? 'border-green-400/50 bg-green-400/15 text-green-300 hover:bg-green-400/25 hover:text-green-200'
+                                : 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200 hover:bg-cyan-400/25 hover:text-cyan-100'
                             }`}
                           >
-                            <Check className="w-6 h-6" />
+                            {isConcluido ? 'Reabrir' : 'Concluir'}
                           </Button>
                         </div>
 
