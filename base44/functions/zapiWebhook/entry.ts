@@ -276,8 +276,25 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, roteado: 'openclaw' });
     }
 
-    // ===== DETECTA PEDIDO DE ATENDIMENTO HUMANO =====
-    const querHumano = messageType === 'text' && /\b(humano|atendente|pessoa|falar com algu[ée]m|atendimento humano|quero falar com|suporte humano|gente de verdade|n[aã]o quero rob[ôo]|sem rob[ôo])\b/i.test(content);
+    // ===== DETECTA PEDIDO EXPLÍCITO DE ATENDIMENTO HUMANO =====
+    // Termos isolados como "atendente", "humano" ou nomes de profissões não transferem.
+    // A transferência só ocorre quando há uma solicitação clara do cliente.
+    const textoHumano = content
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+
+    const padroesPedidoHumano = [
+      /\b(quero|gostaria|preciso|prefiro)\s+(falar|conversar|ser atendid[oa])\s+(com|por)\s+(um[ao]?\s+)?(humano|atendente|pessoa)\b/,
+      /\b(quero|gostaria|preciso|prefiro)\s+(um[ao]?\s+)?(humano|atendente|pessoa)\b/,
+      /\b(tem como|posso|poderia)\s+(eu\s+)?(falar|conversar)\s+com\s+(um[ao]?\s+)?(humano|atendente|pessoa)\b/,
+      /\b(me\s+)?(transfira|transfere|passe|passa|encaminhe|encaminha|chame|chama|coloque|coloca)\s*(me)?\s*(para|pra|com)?\s*(um[ao]?\s+)?(humano|atendente|pessoa)\b/,
+      /\b(atendimento humano|suporte humano)\s*(por favor|pfv|por gentileza)?\s*[.!?]*$/,
+      /\b(nao quero|sem)\s+(falar com\s+)?(robo|ia|assistente virtual)\b/
+    ];
+
+    const querHumano = messageType === 'text' && padroesPedidoHumano.some((padrao) => padrao.test(textoHumano));
 
     if (querHumano && contact.ai_enabled) {
       console.log('🙋 Cliente pediu atendimento humano. Ativando modo humano...');
