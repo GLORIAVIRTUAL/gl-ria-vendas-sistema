@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import FilterSelect from "@/components/prospeccao/FilterSelect";
 import MunicipalitySelect from "@/components/prospeccao/MunicipalitySelect";
-import { atividades, faturamentos, funcionarios, matrizes, portes, resultados, segments, situacoes, ufs } from "@/lib/kipflowFilterOptions";
+import { atividades, atividadesEspecificas, faturamentos, funcionarios, matrizes, portes, resultados, segments, situacoes, ufs } from "@/lib/kipflowFilterOptions";
 
-const initial = { cnpj: "", nome: "", cnae: "", municipio: "", uf: "", segmento: "", porte: "", faixaFaturamento: "", faixaFuncionarios: "", situacaoCadastral: "ATIVA", matriz: "", resultSize: "20" };
+const initial = { cnpj: "", nome: "", cnae: "", cnaeEspecifico: "", municipio: "", uf: "", segmento: "", porte: "", faixaFaturamento: "", faixaFuncionarios: "", situacaoCadastral: "ATIVA", matriz: "", resultSize: "20" };
 
 export default function ProspectSearchForm({ onSearch, loading }) {
   const [filters, setFilters] = useState(initial);
@@ -21,7 +21,8 @@ export default function ProspectSearchForm({ onSearch, loading }) {
       <div className="grid gap-3 md:grid-cols-3">
         <Input value={filters.cnpj} onChange={(event) => set("cnpj", event.target.value)} placeholder="CNPJ" />
         <Input value={filters.nome} onChange={(event) => set("nome", event.target.value)} placeholder="Razão social ou nome" />
-        <Input list="atividades-kipflow" value={filters.cnae} onChange={(event) => set("cnae", event.target.value)} placeholder="Atividade ou CNAE" />
+        <Input list="atividades-kipflow" value={filters.cnae} onChange={(event) => set("cnae", event.target.value)} placeholder="Área geral ou CNAE" />
+        <FilterSelect value={filters.cnaeEspecifico} onChange={(value) => set("cnaeEspecifico", value)} placeholder="Atividade específica" options={atividadesEspecificas} />
         <FilterSelect value={filters.uf} onChange={(value) => setFilters((current) => ({ ...current, uf: value, municipio: "" }))} placeholder="Todos os estados" options={ufs} />
         <MunicipalitySelect uf={filters.uf} value={filters.municipio} onChange={(value) => set("municipio", value)} />
         <FilterSelect value={filters.segmento} onChange={(value) => set("segmento", value)} placeholder="Todos os segmentos" options={segments} />
