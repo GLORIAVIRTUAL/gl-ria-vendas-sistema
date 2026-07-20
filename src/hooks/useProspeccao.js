@@ -16,7 +16,8 @@ export default function useProspeccao() {
   const search = async (filters) => {
     setSearching(true);
     try {
-      const response = await kipflowSearch({ filters, page: 0, size: 20 });
+      const { resultSize, ...searchFilters } = filters;
+      const response = await kipflowSearch({ filters: searchFilters, page: 0, size: Number(resultSize) || 20 });
       const payload = response.data;
       if (payload?.error) throw new Error(payload.error);
       setResults((payload?.data || []).map(normalizeCompany));
