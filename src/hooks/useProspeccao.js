@@ -9,11 +9,13 @@ export default function useProspeccao() {
   const queryClient = useQueryClient();
   const [results, setResults] = useState([]);
   const [pagination, setPagination] = useState(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const [searching, setSearching] = useState(false);
   const [busyId, setBusyId] = useState("");
   const { data: prospects = [], isLoading } = useQuery({ queryKey: ["prospects"], queryFn: () => base44.entities.Prospect.list("-created_date") });
 
   const search = async (filters) => {
+    setHasSearched(true);
     setSearching(true);
     try {
       const { resultSize, ...searchFilters } = filters;
@@ -47,5 +49,5 @@ export default function useProspeccao() {
   const markContacted = async (prospect) => { await base44.entities.Prospect.update(prospect.id, { status: "contatado" }); await queryClient.invalidateQueries({ queryKey: ["prospects"] }); };
   const sendWhatsApp = async (prospect, mensagem) => { setBusyId(prospect.id); try { await base44.functions.invoke("whatsapp/sendMessage", { telefone: prospect.whatsapp || prospect.telefone, mensagem }); await markContacted(prospect); toast.success("WhatsApp enviado."); } finally { setBusyId(""); } };
   const sendEmail = async (prospect, assunto, corpo) => { setBusyId(prospect.id); try { await base44.functions.invoke("email/sendEmail", { email_destinatario: prospect.email, assunto, corpo: corpo.replace(/\n/g, "<br>") }); await markContacted(prospect); toast.success("E-mail enviado."); } finally { setBusyId(""); } };
-  return { results, pagination, prospects, isLoading, searching, busyId, search, save, addCRM, sendWhatsApp, sendEmail };
+  return { results, pagination, hasSearched, prospects, isLoading, searching, busyId, search, save, addCRM, sendWhatsApp, sendEmail };
 }
