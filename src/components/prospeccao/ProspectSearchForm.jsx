@@ -4,10 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import FilterSelect from "@/components/prospeccao/FilterSelect";
 import MunicipalitySelect from "@/components/prospeccao/MunicipalitySelect";
-import { atividades, atividadesEspecificasPorCnae, contatosDisponiveis, faturamentos, funcionarios, matrizes, portes, resultados, segments, situacoes, ufs } from "@/lib/kipflowFilterOptions";
+import { atividades, atividadesEspecificasPorCnae, contatosDisponiveis, faturamentos, funcionarios, matrizes, portes, resultados, segments, situacoes, sociosDisponiveis, ufs } from "@/lib/kipflowFilterOptions";
 import { atividadesDetalhadasPorAtividade } from "@/lib/kipflowDetailedActivities";
 
-const initial = { cnpj: "", nome: "", cnae: "", cnaeEspecifico: "", cnaeDetalhado: "", municipio: "", uf: "", segmento: "", porte: "", faixaFaturamento: "", faixaFuncionarios: "", situacaoCadastral: "ATIVA", matriz: "", contatoDisponivel: "", resultSize: "20" };
+const initial = { cnpj: "", nome: "", cnae: "", cnaeEspecifico: "", cnaeDetalhado: "", municipio: "", uf: "", segmento: "", porte: "", faixaFaturamento: "", faixaFuncionarios: "", situacaoCadastral: "ATIVA", matriz: "", contatoDisponivel: "", sociosInformados: "", resultSize: "20" };
 
 export default function ProspectSearchForm({ onSearch, loading }) {
   const [filters, setFilters] = useState(initial);
@@ -38,6 +38,7 @@ export default function ProspectSearchForm({ onSearch, loading }) {
         <FilterSelect value={filters.situacaoCadastral} onChange={(value) => set("situacaoCadastral", value)} placeholder="Todas as situações" options={situacoes} />
         <FilterSelect value={filters.matriz} onChange={(value) => set("matriz", value)} placeholder="Matrizes e filiais" options={matrizes} />
         <FilterSelect value={filters.contatoDisponivel} onChange={(value) => set("contatoDisponivel", value)} placeholder="Com ou sem contato" options={contatosDisponiveis} />
+        <FilterSelect value={filters.sociosInformados} onChange={(value) => set("sociosInformados", value)} placeholder="Com ou sem sócios informados" options={sociosDisponiveis} />
         <FilterSelect value={filters.resultSize} onChange={(value) => set("resultSize", value)} placeholder="Quantidade de resultados" options={resultados} />
       </div>
       <datalist id="atividades-kipflow">{atividades.map((value) => <option key={value} value={value} />)}</datalist>

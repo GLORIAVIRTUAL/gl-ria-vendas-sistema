@@ -7,6 +7,12 @@ const formatDate = (value) => {
   return year && month && day ? `${day}/${month}/${year}` : value;
 };
 
+const getPartnerPhones = (partner) => {
+  const phones = partner.telefones_socio || partner.telefones || partner.phones || [];
+  const values = Array.isArray(phones) ? phones : [phones];
+  return values.map((phone) => typeof phone === "string" ? phone : phone.telefone_completo || phone.telefone || phone.numero).filter(Boolean);
+};
+
 export default function ProspectDetails({ prospect }) {
   const source = prospect.dados_kipflow || {};
   const partners = Array.isArray(source.socios) ? source.socios : [];
@@ -29,7 +35,7 @@ export default function ProspectDetails({ prospect }) {
     </div>
     <div className="rounded-lg border border-slate-500/30 bg-slate-950/35 p-3 text-sm text-slate-300">
       <strong>Sócios e administradores:</strong>
-      {partners.length ? <ul className="mt-2 space-y-1">{partners.map((partner, index) => <li key={`${partner.cnpj_cpf_socio || partner.cpf || index}-${partner.nome_socio || partner.nome || index}`}>{partner.nome_socio || partner.nome || "Nome não informado"}{(partner.qualificacao_socio || partner.qualificacao) ? ` — ${partner.qualificacao_socio || partner.qualificacao}` : ""}</li>)}</ul> : <p className="mt-1 text-slate-400">Não informados</p>}
+      {partners.length ? <ul className="mt-2 space-y-2">{partners.map((partner, index) => { const phones = getPartnerPhones(partner); return <li key={`${partner.cnpj_cpf_socio || partner.cpf || index}-${partner.nome_socio || partner.nome || index}`}><p>{partner.nome_socio || partner.nome || "Nome não informado"}{(partner.qualificacao_socio || partner.qualificacao) ? ` — ${partner.qualificacao_socio || partner.qualificacao}` : ""}</p>{phones.length ? <p className="text-cyan-200">Telefone: {phones.join(", ")}</p> : null}</li>; })}</ul> : <p className="mt-1 text-slate-400">Não informados</p>}
     </div>
   </div>;
 }

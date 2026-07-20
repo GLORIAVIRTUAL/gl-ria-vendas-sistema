@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     if (filters.situacaoCadastral) conditions.push({ situacao_cadastral: filters.situacaoCadastral });
 
     const filtrosInformados = conditions.filter((item) => !('situacao_cadastral' in item));
-    if (filtrosInformados.length === 0 && filters.contatoDisponivel !== 'SIM') {
+    if (filtrosInformados.length === 0 && filters.contatoDisponivel !== 'SIM' && filters.sociosInformados !== 'SIM') {
       return Response.json({ error: 'Informe pelo menos um filtro além da situação cadastral' }, { status: 400 });
     }
 
@@ -45,6 +45,41 @@ Deno.serve(async (req) => {
 
     const data = await response.json();
     if (!response.ok) return Response.json({ error: data.message || data.error || 'Erro na consulta Kipflow' }, { status: response.status });
+    if (filters.debugSocios === true) {
+      const sample = Array.isArray(data.data) ? data.data[0] || {} : {};
+      return Response.json({ partnerFields: Object.fromEntries(Object.entries(sample).filter(([key]) => /socio|quadro|administr|qsa/i.test(key))) });
+    }
+
+    if (filters.sociosInformados === 'SIM') {
+      const companies = Array.isArray(data.data) ? data.data : [];
+      const hasName = (partner) => Boolean(String(partner?.nome_socio || partner?.nome || '').trim());
+      const enrichPartner = async (partner) => {
+        const document = String(partner.cnpj_cpf_socio || partner.cpf_cnpj_socio || partner.cpf || '').replace(/\D/g, '');
+        if (document.length !== 11) return partner;
+        try {
+          const personResponse = await fetch(`https://api.kipflow.io/people/v1/search?cpf=${document}`, { headers: { 'X-API-Key': apiKey } });
+          if (!personResponse.ok) return partner;
+          const payload = await personResponse.json();
+          const person = payload?.data || payload || {};
+          const partnerPhones = person.telefones || person.phones || person.contatos?.telefones || [];
+          return partnerPhones.length ? { ...partner, telefones_socio: partnerPhones } : partner;
+        } catch (_) {
+          return partner;
+        }
+      };
+      const matched = [];
+      for (const company of companies) {
+        const partners = Array.isArray(company.socios) ? company.socios.filter(hasName) : [];
+        if (!partners.length) continue;
+        const enrichedPartners = [];
+        for (let index = 0; index < partners.length; index += 4) {
+          enrichedPartners.push(...await Promise.all(partners.slice(index, index + 4).map(enrichPartner)));
+        }
+        matched.push({ ...company, socios: enrichedPartners });
+      }
+      data.data = matched;
+      data.pagination = { ...(data.pagination || {}), total: matched.length };
+    }
 
     if (filters.contatoDisponivel === 'SIM') {
       const companies = Array.isArray(data.data) ? data.data : [];
