@@ -39,16 +39,14 @@ Deno.serve(async (req) => {
         $filter: { $and: conditions },
         $page: Math.max(0, Number(page) || 0),
         $size: Math.min(50, Math.max(1, Number(size) || 20)),
-        datasets: ['basic', 'complete', 'address']
+        datasets: filters.sociosInformados === 'SIM'
+          ? ['basic', 'complete', 'address', 'partners']
+          : ['basic', 'complete', 'address']
       })
     });
 
     const data = await response.json();
     if (!response.ok) return Response.json({ error: data.message || data.error || 'Erro na consulta Kipflow' }, { status: response.status });
-    if (filters.debugSocios === true) {
-      const sample = Array.isArray(data.data) ? data.data[0] || {} : {};
-      return Response.json({ partnerFields: Object.fromEntries(Object.entries(sample).filter(([key]) => /socio|quadro|administr|qsa/i.test(key))) });
-    }
 
     if (filters.sociosInformados === 'SIM') {
       const companies = Array.isArray(data.data) ? data.data : [];
