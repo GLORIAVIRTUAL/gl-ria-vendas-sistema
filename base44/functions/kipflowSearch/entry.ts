@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
     const conditions = [];
     if (filters.cnpj) conditions.push({ cnpj: Number(String(filters.cnpj).replace(/\D/g, '')) });
     if (filters.nome) conditions.push({ razao_social: { $fuzzy: filters.nome.trim().toUpperCase() } });
-    const cnaeQuery = filters.cnaeEspecifico || filters.cnae;
+    const cnaeQuery = filters.cnaeDetalhado || filters.cnaeEspecifico || filters.cnae;
     if (cnaeQuery) conditions.push({ cnae_principal_desc_subclasse: { $fuzzy: cnaeQuery.trim().toUpperCase() } });
     if (filters.segmento) conditions.push({ segmento: filters.segmento });
     if (filters.porte) conditions.push({ porte: filters.porte });
