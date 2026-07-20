@@ -1,4 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import nodemailer from 'npm:nodemailer@6.9.16';
 
 Deno.serve(async (req) => {
   try {
@@ -20,12 +21,23 @@ Deno.serve(async (req) => {
 
     console.log('📧 Enviando email para:', email_destinatario);
 
-    // Envia o email usando a integração Core.SendEmail
-    const resultado = await base44.integrations.Core.SendEmail({
-      from_name: 'Glória Vendas',
+    const gmailEmail = (Deno.env.get('GMAIL_EMAIL') || '').trim();
+    const gmailPassword = (Deno.env.get('GMAIL_APP_PASSWORD') || '').trim();
+    if (!gmailEmail || !gmailPassword) {
+      return Response.json({ error: 'Gmail não configurado' }, { status: 500 });
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: gmailEmail, pass: gmailPassword }
+    });
+
+    await transporter.sendMail({
+      from: `Glória Vendas <${gmailEmail}>`,
       to: email_destinatario,
       subject: assunto,
-      body: corpo
+      html: corpo,
+      text: corpo.replace(/<[^>]*>/g, '')
     });
 
     console.log('✅ Email enviado com sucesso!');

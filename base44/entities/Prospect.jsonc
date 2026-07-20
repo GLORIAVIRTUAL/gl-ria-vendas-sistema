@@ -1,0 +1,158 @@
+{
+  "name": "Prospect",
+  "type": "object",
+  "properties": {
+    "cnpj": {
+      "type": "string",
+      "description": "CNPJ da empresa"
+    },
+    "razao_social": {
+      "type": "string",
+      "description": "Raz\u00e3o social"
+    },
+    "nome_fantasia": {
+      "type": "string",
+      "description": "Nome fantasia"
+    },
+    "situacao_cadastral": {
+      "type": "string",
+      "description": "Situa\u00e7\u00e3o cadastral"
+    },
+    "segmento": {
+      "type": "string",
+      "description": "Segmento empresarial"
+    },
+    "ramo_atividade": {
+      "type": "string",
+      "description": "Ramo de atividade"
+    },
+    "cnae": {
+      "type": "string",
+      "description": "CNAE principal"
+    },
+    "porte": {
+      "type": "string",
+      "description": "Porte da empresa"
+    },
+    "faturamento": {
+      "type": "number",
+      "description": "Faturamento estimado"
+    },
+    "faixa_funcionarios": {
+      "type": "string",
+      "description": "Faixa de funcion\u00e1rios"
+    },
+    "capital_social": {
+      "type": "number",
+      "description": "Capital social"
+    },
+    "email": {
+      "type": "string",
+      "description": "E-mail principal"
+    },
+    "telefone": {
+      "type": "string",
+      "description": "Telefone principal"
+    },
+    "whatsapp": {
+      "type": "string",
+      "description": "WhatsApp principal"
+    },
+    "site": {
+      "type": "string",
+      "description": "Site principal"
+    },
+    "linkedin": {
+      "type": "string",
+      "description": "LinkedIn da empresa"
+    },
+    "instagram": {
+      "type": "string",
+      "description": "Instagram da empresa"
+    },
+    "endereco": {
+      "type": "string",
+      "description": "Endere\u00e7o completo"
+    },
+    "municipio": {
+      "type": "string",
+      "description": "Munic\u00edpio"
+    },
+    "uf": {
+      "type": "string",
+      "description": "Estado"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "salvo",
+        "no_crm",
+        "contatado"
+      ],
+      "default": "salvo",
+      "description": "Etapa da prospec\u00e7\u00e3o"
+    },
+    "crm_lead_id": {
+      "type": "string",
+      "description": "Lead criado no CRM"
+    },
+    "dados_kipflow": {
+      "type": "object",
+      "description": "Dados completos retornados pelo Kipflow"
+    }
+  },
+  "required": [
+    "cnpj",
+    "razao_social"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

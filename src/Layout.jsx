@@ -91,6 +91,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
     { title: "Agenda", url: createPageUrl("Agenda"), icon: CalendarCheck },
     { title: "CRM / Funil", url: createPageUrl("CRM"), icon: TrendingUp },
+    { title: "Prospecção", url: "/Prospeccao", icon: Users },
     { title: "Chat IA", url: createPageUrl("ChatIA"), icon: MessageSquare },
     { title: "Clientes OpenClaw", url: createPageUrl("ClientesOpenClaw"), icon: Bot },
     { title: "Tráfego Pago", url: createPageUrl("Trafego"), icon: Megaphone },

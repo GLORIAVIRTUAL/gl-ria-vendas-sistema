@@ -18,6 +18,7 @@ import TermosServico from '@/pages/TermosServico';
 import ClientesOpenClaw from '@/pages/ClientesOpenClaw';
 import Trafego from '@/pages/Trafego';
 import GerenciarUsuarios from '@/pages/GerenciarUsuarios';
+import Prospeccao from '@/pages/Prospeccao';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -87,6 +88,11 @@ const AuthenticatedApp = () => {
       <Route path="/GerenciarUsuarios" element={
         <LayoutWrapper currentPageName="GerenciarUsuarios">
           <GerenciarUsuarios />
+        </LayoutWrapper>
+      } />
+      <Route path="/Prospeccao" element={
+        <LayoutWrapper currentPageName="Prospeccao">
+          <Prospeccao />
         </LayoutWrapper>
       } />
       <Route path="/PoliticaPrivacidade" element={<PoliticaPrivacidade />} />
