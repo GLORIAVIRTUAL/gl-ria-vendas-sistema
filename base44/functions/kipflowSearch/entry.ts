@@ -22,14 +22,10 @@ Deno.serve(async (req) => {
     if (filters.faturamentoMax) conditions.push({ faturamento: { $lte: Number(filters.faturamentoMax) } });
     if (filters.matriz === 'TRUE') conditions.push({ matriz: true });
     if (filters.matriz === 'FALSE') conditions.push({ matriz: false });
-    if (filters.contatoDisponivel === 'SIM') conditions.push({ $or: [
-      { 'telefones.telefone_completo': { $exists: true } },
-      { 'emails.email': { $exists: true } }
-    ] });
     if (filters.situacaoCadastral) conditions.push({ situacao_cadastral: filters.situacaoCadastral });
 
     const filtrosInformados = conditions.filter((item) => !('situacao_cadastral' in item));
-    if (filtrosInformados.length === 0) {
+    if (filtrosInformados.length === 0 && filters.contatoDisponivel !== 'SIM') {
       return Response.json({ error: 'Informe pelo menos um filtro além da situação cadastral' }, { status: 400 });
     }
 
@@ -49,6 +45,33 @@ Deno.serve(async (req) => {
 
     const data = await response.json();
     if (!response.ok) return Response.json({ error: data.message || data.error || 'Erro na consulta Kipflow' }, { status: response.status });
+
+    if (filters.contatoDisponivel === 'SIM') {
+      const companies = Array.isArray(data.data) ? data.data : [];
+      const headers = { 'X-API-Key': apiKey };
+      const findContact = async (company) => {
+        const cnpj = String(company.cnpj || '').padStart(14, '0');
+        const phonesResponse = await fetch(`https://api.kipflow.io/contacts/v1/phones?cnpj=${cnpj}&phone_limit=1&exclude_contador=true`, { headers });
+        const phonesPayload = await phonesResponse.json();
+        const phones = phonesPayload?.data?.phones || [];
+        if (phones.length) return { telefones: phones, emails: [], ...company };
+
+        const emailsResponse = await fetch(`https://api.kipflow.io/contacts/v1/emails?cnpj=${cnpj}&email_limit=1`, { headers });
+        const emailsPayload = await emailsResponse.json();
+        const emails = Array.isArray(emailsPayload?.data) ? emailsPayload.data : [];
+        return emails.length ? { telefones: [], emails, ...company } : null;
+      };
+
+      const matched = [];
+      for (let index = 0; index < companies.length; index += 4) {
+        const batch = await Promise.all(companies.slice(index, index + 4).map(findContact));
+        matched.push(...batch.filter(Boolean));
+        if (index + 4 < companies.length) await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      data.data = matched;
+      data.pagination = { ...(data.pagination || {}), total: matched.length };
+    }
+
     return Response.json(data);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
