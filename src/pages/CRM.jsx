@@ -21,6 +21,7 @@ import NovoLeadDialog from "../components/crm/NovoLeadDialog";
 import EditLeadDialog from "../components/crm/EditLeadDialog";
 
 const estagios = [
+  { id: "Prospeccao", nome: "Prospecção", cor: "border border-cyan-400/30 bg-cyan-400/10 text-cyan-200 backdrop-blur-xl", icone: Users },
   { id: "Reuniao_Marcada", nome: "Reunião Marcada", cor: "border border-blue-400/30 bg-blue-400/10 text-blue-200 backdrop-blur-xl", icone: Calendar },
   { id: "Em_Avaliacao", nome: "Em Avaliação", cor: "border border-amber-300/30 bg-amber-300/10 text-amber-200 backdrop-blur-xl", icone: TrendingUp },
   { id: "Negocio_Fechado", nome: "Negócio Fechado", cor: "border border-emerald-400/30 bg-emerald-400/10 text-emerald-200 backdrop-blur-xl", icone: DollarSign },

@@ -23,6 +23,7 @@ const produtoConfig = {
 };
 
 const estagiosConfig = [
+  { id: "Prospeccao", nome: "Prospecção", icon: "" },
   { id: "Reuniao_Marcada", nome: "Reunião Marcada", icon: "📅" },
   { id: "Em_Avaliacao", nome: "Em Avaliação", icon: "🔍" },
   { id: "Negocio_Fechado", nome: "Negócio Fechado", icon: "🤝" },
