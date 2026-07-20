@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     if (filters.segmento) conditions.push({ segmento: filters.segmento });
     if (filters.porte) conditions.push({ porte: filters.porte });
     if (filters.uf) conditions.push({ sigla_uf: filters.uf });
-    if (filters.municipio) conditions.push({ municipio: filters.municipio.trim().toUpperCase() });
+    if (filters.municipio) conditions.push({ municipio: filters.municipio.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase() });
     if (filters.faixaFuncionarios) conditions.push({ faixa_funcionarios_grupo: filters.faixaFuncionarios });
     if (filters.faturamentoMin) conditions.push({ faturamento: { $gte: Number(filters.faturamentoMin) } });
     if (filters.faturamentoMax) conditions.push({ faturamento: { $lte: Number(filters.faturamentoMax) } });
