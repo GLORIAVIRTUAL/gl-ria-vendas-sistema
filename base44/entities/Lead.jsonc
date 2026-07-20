@@ -100,8 +100,19 @@
     }
   },
   "required": [
-    "nome_cliente",
-    "email_cliente"
+    "nome_cliente"
+  ],
+  "anyOf": [
+    {
+      "required": [
+        "email_cliente"
+      ]
+    },
+    {
+      "required": [
+        "telefone_cliente"
+      ]
+    }
   ],
   "rls": {
     "create": {

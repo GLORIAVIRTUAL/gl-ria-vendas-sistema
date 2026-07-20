@@ -37,10 +37,11 @@ export default function useProspeccao() {
   };
 
   const addCRM = async (prospect, stage) => {
-    if (!prospect.email) return toast.error("O prospect precisa ter e-mail para entrar no CRM.");
+    const telefone = prospect.whatsapp || prospect.telefone;
+    if (!prospect.email && !telefone) return toast.error("O prospect precisa ter telefone ou e-mail para entrar no CRM.");
     setBusyId(prospect.id);
     try {
-      const lead = await base44.entities.Lead.create({ nome_cliente: prospect.nome_fantasia || prospect.razao_social, nome_empresa: prospect.razao_social, email_cliente: prospect.email, telefone_cliente: prospect.whatsapp || prospect.telefone, estagio: stage, prioridade: "Media", observacoes: `Prospect Kipflow. CNPJ: ${prospect.cnpj}. ${prospect.ramo_atividade || prospect.cnae || ""}` });
+      const lead = await base44.entities.Lead.create({ nome_cliente: prospect.nome_fantasia || prospect.razao_social, nome_empresa: prospect.razao_social, ...(prospect.email ? { email_cliente: prospect.email } : {}), ...(telefone ? { telefone_cliente: telefone } : {}), estagio: stage, prioridade: "Media", observacoes: `Prospect Kipflow. CNPJ: ${prospect.cnpj}. ${prospect.ramo_atividade || prospect.cnae || ""}` });
       await base44.entities.Prospect.update(prospect.id, { status: "no_crm", crm_lead_id: lead.id });
       await queryClient.invalidateQueries({ queryKey: ["prospects"] }); toast.success("Prospect adicionado ao CRM.");
     } finally { setBusyId(""); }

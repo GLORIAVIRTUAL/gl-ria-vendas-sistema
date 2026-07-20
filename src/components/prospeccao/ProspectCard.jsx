@@ -18,7 +18,7 @@ export default function ProspectCard({ prospect, saved, onSave, onAddCRM, onWhat
     <ProspectDetails prospect={prospect} />
     {prospect.site && <a href={prospect.site.startsWith("http") ? prospect.site : `https://${prospect.site}`} target="_blank" rel="noreferrer" className="text-sm text-cyan-300">Abrir site da empresa</a>}
     {!saved && <Button disabled={busy} onClick={onSave}>{busy ? "Salvando..." : "Salvar como prospect"}</Button>}
-    {saved && !prospect.crm_lead_id && <div className="flex flex-wrap gap-2"><select value={stage} onChange={(event) => setStage(event.target.value)} className="h-9 rounded-md border border-input bg-slate-950/60 px-3 text-sm text-slate-100">{stages.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select><Button disabled={busy || !prospect.email} onClick={() => onAddCRM(stage)}>Adicionar ao CRM</Button></div>}
+    {saved && !prospect.crm_lead_id && <div className="flex flex-wrap gap-2"><select value={stage} onChange={(event) => setStage(event.target.value)} className="h-9 rounded-md border border-input bg-slate-950/60 px-3 text-sm text-slate-100">{stages.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select><Button disabled={busy || !(prospect.email || prospect.whatsapp || prospect.telefone)} onClick={() => onAddCRM(stage)}>Adicionar ao CRM</Button></div>}
     {saved && prospect.crm_lead_id && <Badge className="border-green-400/30 bg-green-400/10 text-green-200">Adicionado ao CRM</Badge>}
     {saved && <div className="grid gap-3 lg:grid-cols-2"><WhatsAppProspectAction prospect={prospect} onSend={onWhatsApp} loading={busy} /><EmailProspectAction prospect={prospect} onSend={onEmail} loading={busy} /></div>}
   </CardContent></Card>;
