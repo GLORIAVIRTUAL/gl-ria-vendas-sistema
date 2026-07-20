@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
@@ -12,6 +12,9 @@ export default function useProspeccao() {
   const [hasSearched, setHasSearched] = useState(false);
   const [searching, setSearching] = useState(false);
   const [busyId, setBusyId] = useState("");
+  const lastSearchKey = useRef("");
+  const nextPage = useRef(0);
+  const seenCnpjs = useRef(new Set());
   const { data: prospects = [], isLoading } = useQuery({ queryKey: ["prospects"], queryFn: () => base44.entities.Prospect.list("-created_date") });
 
   const search = async (filters) => {
@@ -19,12 +22,26 @@ export default function useProspeccao() {
     setSearching(true);
     try {
       const { resultSize, ...searchFilters } = filters;
-      const response = await kipflowSearch({ filters: searchFilters, page: 0, size: Number(resultSize) || 20 });
+      const searchKey = JSON.stringify(searchFilters);
+      if (searchKey !== lastSearchKey.current) {
+        lastSearchKey.current = searchKey;
+        nextPage.current = 0;
+        seenCnpjs.current = new Set();
+      }
+
+      const requestedPage = nextPage.current;
+      const response = await kipflowSearch({ filters: searchFilters, page: requestedPage, size: Number(resultSize) || 20 });
       const payload = response.data;
       if (payload?.error) throw new Error(payload.error);
-      setResults((payload?.data || []).map(normalizeCompany));
+
+      const freshResults = (payload?.data || [])
+        .map(normalizeCompany)
+        .filter((company) => company.cnpj && !seenCnpjs.current.has(company.cnpj));
+      freshResults.forEach((company) => seenCnpjs.current.add(company.cnpj));
+      nextPage.current = requestedPage + 1;
+      setResults(freshResults);
       setPagination(payload?.pagination || null);
-      if (!(payload?.data || []).length) toast.info("Nenhuma empresa encontrada com esses filtros.");
+      if (!freshResults.length) toast.info("Não há novas empresas para estes filtros.");
     } catch (error) { toast.error(error.response?.data?.error || error.message); }
     finally { setSearching(false); }
   };
