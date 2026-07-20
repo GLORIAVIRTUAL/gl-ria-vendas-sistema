@@ -19,8 +19,9 @@ Deno.serve(async (req) => {
     if (filters.faixaFuncionarios) conditions.push({ faixa_funcionarios_grupo: filters.faixaFuncionarios });
     if (filters.faturamentoMin) conditions.push({ faturamento: { $gte: Number(filters.faturamentoMin) } });
     if (filters.faturamentoMax) conditions.push({ faturamento: { $lte: Number(filters.faturamentoMax) } });
-    if (filters.somenteMatriz) conditions.push({ matriz: true });
-    if (filters.somenteAtivas !== false) conditions.push({ situacao_cadastral: 'ATIVA' });
+    if (filters.matriz === 'TRUE') conditions.push({ matriz: true });
+    if (filters.matriz === 'FALSE') conditions.push({ matriz: false });
+    if (filters.situacaoCadastral) conditions.push({ situacao_cadastral: filters.situacaoCadastral });
 
     const filtrosInformados = conditions.filter((item) => !('situacao_cadastral' in item));
     if (filtrosInformados.length === 0) {

@@ -2,35 +2,37 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import FilterSelect from "@/components/prospeccao/FilterSelect";
+import { atividades, faturamentos, funcionarios, matrizes, municipios, portes, segments, situacoes, ufs } from "@/lib/kipflowFilterOptions";
 
-const initial = { cnpj: "", nome: "", cnae: "", segmento: "", porte: "", uf: "", municipio: "", faturamentoMin: "", faturamentoMax: "", somenteMatriz: false, somenteAtivas: true };
-const textFields = [
-  ["cnpj", "CNPJ"], ["nome", "Razão social ou nome"], ["cnae", "Atividade ou CNAE"],
-  ["municipio", "Município"], ["uf", "UF"], ["faturamentoMin", "Faturamento mínimo"], ["faturamentoMax", "Faturamento máximo"]
-];
+const initial = { cnpj: "", nome: "", cnae: "", municipio: "", uf: "", segmento: "", porte: "", faixaFaturamento: "", faixaFuncionarios: "", situacaoCadastral: "ATIVA", matriz: "" };
 
 export default function ProspectSearchForm({ onSearch, loading }) {
   const [filters, setFilters] = useState(initial);
   const set = (field, value) => setFilters((current) => ({ ...current, [field]: value }));
-  return <Card>
-    <CardHeader><CardTitle>Filtros de empresas</CardTitle></CardHeader>
-    <CardContent>
-      <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); onSearch(filters); }}>
-        <div className="grid gap-3 md:grid-cols-3">
-          {textFields.map(([field, label]) => <Input key={field} value={filters[field]} onChange={(event) => set(field, event.target.value)} placeholder={label} />)}
-          <select className="h-9 rounded-md border border-input bg-slate-950/35 px-3 text-sm text-slate-100" value={filters.segmento} onChange={(event) => set("segmento", event.target.value)}>
-            <option value="">Todos os segmentos</option><option value="COMERCIO">Comércio</option><option value="INDUSTRIA">Indústria</option><option value="SERVICOS">Serviços</option><option value="AGROPECUARIA">Agropecuária</option><option value="CONSTRUCAO CIVIL">Construção civil</option>
-          </select>
-          <select className="h-9 rounded-md border border-input bg-slate-950/35 px-3 text-sm text-slate-100" value={filters.porte} onChange={(event) => set("porte", event.target.value)}>
-            <option value="">Todos os portes</option><option value="MICRO EMPRESA">Microempresa</option><option value="PEQUENO PORTE">Pequeno porte</option><option value="DEMAIS">Demais</option>
-          </select>
-        </div>
-        <div className="flex flex-wrap gap-5 text-sm text-slate-300">
-          <label><input type="checkbox" checked={filters.somenteAtivas} onChange={(event) => set("somenteAtivas", event.target.checked)} className="mr-2" />Somente ativas</label>
-          <label><input type="checkbox" checked={filters.somenteMatriz} onChange={(event) => set("somenteMatriz", event.target.checked)} className="mr-2" />Somente matrizes</label>
-        </div>
-        <Button type="submit" disabled={loading}>{loading ? "Consultando Kipflow..." : "Buscar empresas"}</Button>
-      </form>
-    </CardContent>
-  </Card>;
+  const submit = (event) => {
+    event.preventDefault();
+    const [faturamentoMin = "", faturamentoMax = ""] = filters.faixaFaturamento.split(":");
+    onSearch({ ...filters, faturamentoMin, faturamentoMax });
+  };
+  return <Card><CardHeader><CardTitle>Filtros de empresas</CardTitle></CardHeader><CardContent>
+    <form className="space-y-4" onSubmit={submit}>
+      <div className="grid gap-3 md:grid-cols-3">
+        <Input value={filters.cnpj} onChange={(event) => set("cnpj", event.target.value)} placeholder="CNPJ" />
+        <Input value={filters.nome} onChange={(event) => set("nome", event.target.value)} placeholder="Razão social ou nome" />
+        <Input list="atividades-kipflow" value={filters.cnae} onChange={(event) => set("cnae", event.target.value)} placeholder="Atividade ou CNAE" />
+        <Input list="municipios-kipflow" value={filters.municipio} onChange={(event) => set("municipio", event.target.value)} placeholder="Município" />
+        <FilterSelect value={filters.uf} onChange={(value) => set("uf", value)} placeholder="Todos os estados" options={ufs} />
+        <FilterSelect value={filters.segmento} onChange={(value) => set("segmento", value)} placeholder="Todos os segmentos" options={segments} />
+        <FilterSelect value={filters.porte} onChange={(value) => set("porte", value)} placeholder="Todos os portes" options={portes} />
+        <FilterSelect value={filters.faixaFaturamento} onChange={(value) => set("faixaFaturamento", value)} placeholder="Todas as faixas de faturamento" options={faturamentos} />
+        <FilterSelect value={filters.faixaFuncionarios} onChange={(value) => set("faixaFuncionarios", value)} placeholder="Todas as faixas de funcionários" options={funcionarios} />
+        <FilterSelect value={filters.situacaoCadastral} onChange={(value) => set("situacaoCadastral", value)} placeholder="Todas as situações" options={situacoes} />
+        <FilterSelect value={filters.matriz} onChange={(value) => set("matriz", value)} placeholder="Matrizes e filiais" options={matrizes} />
+      </div>
+      <datalist id="atividades-kipflow">{atividades.map((value) => <option key={value} value={value} />)}</datalist>
+      <datalist id="municipios-kipflow">{municipios.map((value) => <option key={value} value={value} />)}</datalist>
+      <Button type="submit" disabled={loading}>{loading ? "Consultando Kipflow..." : "Buscar empresas"}</Button>
+    </form>
+  </CardContent></Card>;
 }
