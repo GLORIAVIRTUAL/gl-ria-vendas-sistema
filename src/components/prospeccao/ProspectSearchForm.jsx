@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import FilterSelect from "@/components/prospeccao/FilterSelect";
 import MunicipalitySelect from "@/components/prospeccao/MunicipalitySelect";
-import { atividades, atividadesEspecificas, faturamentos, funcionarios, matrizes, portes, resultados, segments, situacoes, ufs } from "@/lib/kipflowFilterOptions";
+import { atividades, atividadesEspecificas, contatosDisponiveis, faturamentos, funcionarios, matrizes, portes, resultados, segments, situacoes, ufs } from "@/lib/kipflowFilterOptions";
 
-const initial = { cnpj: "", nome: "", cnae: "", cnaeEspecifico: "", municipio: "", uf: "", segmento: "", porte: "", faixaFaturamento: "", faixaFuncionarios: "", situacaoCadastral: "ATIVA", matriz: "", resultSize: "20" };
+const initial = { cnpj: "", nome: "", cnae: "", cnaeEspecifico: "", municipio: "", uf: "", segmento: "", porte: "", faixaFaturamento: "", faixaFuncionarios: "", situacaoCadastral: "ATIVA", matriz: "", contatoDisponivel: "", resultSize: "20" };
 
 export default function ProspectSearchForm({ onSearch, loading }) {
   const [filters, setFilters] = useState(initial);
@@ -31,6 +31,7 @@ export default function ProspectSearchForm({ onSearch, loading }) {
         <FilterSelect value={filters.faixaFuncionarios} onChange={(value) => set("faixaFuncionarios", value)} placeholder="Todas as faixas de funcionários" options={funcionarios} />
         <FilterSelect value={filters.situacaoCadastral} onChange={(value) => set("situacaoCadastral", value)} placeholder="Todas as situações" options={situacoes} />
         <FilterSelect value={filters.matriz} onChange={(value) => set("matriz", value)} placeholder="Matrizes e filiais" options={matrizes} />
+        <FilterSelect value={filters.contatoDisponivel} onChange={(value) => set("contatoDisponivel", value)} placeholder="Com ou sem contato" options={contatosDisponiveis} />
         <FilterSelect value={filters.resultSize} onChange={(value) => set("resultSize", value)} placeholder="Quantidade de resultados" options={resultados} />
       </div>
       <datalist id="atividades-kipflow">{atividades.map((value) => <option key={value} value={value} />)}</datalist>

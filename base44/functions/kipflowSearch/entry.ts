@@ -22,6 +22,10 @@ Deno.serve(async (req) => {
     if (filters.faturamentoMax) conditions.push({ faturamento: { $lte: Number(filters.faturamentoMax) } });
     if (filters.matriz === 'TRUE') conditions.push({ matriz: true });
     if (filters.matriz === 'FALSE') conditions.push({ matriz: false });
+    if (filters.contatoDisponivel === 'SIM') conditions.push({ $or: [
+      { 'telefones.telefone_completo': { $exists: true } },
+      { 'emails.email': { $exists: true } }
+    ] });
     if (filters.situacaoCadastral) conditions.push({ situacao_cadastral: filters.situacaoCadastral });
 
     const filtrosInformados = conditions.filter((item) => !('situacao_cadastral' in item));
