@@ -375,9 +375,16 @@ async function processAIResponse(base44, contact, phone) {
       return;
     }
 
-    // Busca configurações da IA
-    const aiSettings = await base44.asServiceRole.entities.AISettings.list();
-    const settings = aiSettings.find(s => s.is_active) || aiSettings[0];
+    // Usa sempre o prompt ativo atualizado mais recentemente.
+    const activeSettings = await base44.asServiceRole.entities.AISettings.filter(
+      { is_active: true },
+      '-updated_date',
+      1
+    );
+    const fallbackSettings = activeSettings.length
+      ? activeSettings
+      : await base44.asServiceRole.entities.AISettings.list('-updated_date', 1);
+    const settings = fallbackSettings[0];
 
     if (!settings) {
       console.log('⚠️ Nenhuma configuração de IA encontrada');
@@ -453,14 +460,18 @@ CONTEXTO TÉCNICO (use apenas como referência, siga sempre as instruções acim
 - Telefone do cliente: ${phone}
 - Esta ${jaRespondeu ? 'NÃO é a primeira mensagem da conversa (já conversaram antes)' : 'É a primeira mensagem da IA nesta conversa'}.
 
-OBJETIVO DE CONVERSÃO (OBRIGATÓRIO):
-- Em TODA conversa, depois de explicar os produtos e serviços ao cliente, você DEVE conduzir naturalmente para o agendamento de uma reunião.
-- SEMPRE pergunte ao cliente se ele prefere uma reunião ONLINE (por vídeo/Google Meet) ou PRESENCIAL.
-- Se o cliente escolher ONLINE: colete nome, email, data (dia útil) e horário, e use o bloco [AGENDAR] abaixo para marcar a reunião online.
-- Se o cliente escolher PRESENCIAL: NÃO use o bloco [AGENDAR]. Em vez disso, oriente o cliente a falar diretamente com o responsável e envie este contato pessoal:
-  "Para reuniões presenciais, fale diretamente com o Thiago Cavalcanti pelo WhatsApp: (87) 98802-0504. Ele vai combinar o melhor dia e local com você. 😊"
+AGENDAMENTO (FERRAMENTA DISPONÍVEL, NÃO É OBRIGATÓRIO):
+- Siga integralmente as regras de agendamento definidas no prompt salvo acima.
+- NÃO ofereça reunião enquanto o cliente estiver apenas conhecendo a empresa, fazendo perguntas ou entendendo uma funcionalidade.
+- NÃO repita convite para reunião ou demonstração em respostas consecutivas.
+- Primeiro responda completamente à dúvida atual. Só proponha esse próximo passo quando houver interesse comercial claro e ele for realmente útil.
+- Só pergunte se a reunião será ONLINE ou PRESENCIAL depois que o cliente aceitar explicitamente conversar, reunir-se ou ver uma demonstração.
+- Só inicie a coleta de dados depois desse aceite explícito; peça apenas um dado faltante por vez.
+- Se o cliente continuar fazendo perguntas, responda às perguntas sem renovar o convite.
+- Se o cliente escolher PRESENCIAL, não use [AGENDAR]; informe o contato do responsável somente nesse momento.
+- Se escolher ONLINE, só execute após reunir todos os dados e receber a confirmação final explícita do resumo.
 
-PARA AGENDAR uma reunião ONLINE, quando tiver todos os dados, inclua no final da resposta um bloco neste formato exato:
+PARA EXECUTAR uma reunião ONLINE já aceita e confirmada, inclua no final da resposta um bloco neste formato exato:
 [AGENDAR]
 NOME: nome completo
 EMAIL: email do cliente
