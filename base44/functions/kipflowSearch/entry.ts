@@ -51,29 +51,53 @@ Deno.serve(async (req) => {
     if (filters.sociosInformados === 'SIM') {
       const companies = Array.isArray(data.data) ? data.data : [];
       const hasName = (partner) => Boolean(String(partner?.nome_socio || partner?.nome || '').trim());
-      const enrichPartner = async (partner) => {
+      const normalizeName = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toUpperCase();
+      const fetchCompanyEmails = async (company) => {
+        const cnpj = String(company.cnpj || '').padStart(14, '0');
+        try {
+          const emailResponse = await fetch(`https://api.kipflow.io/contacts/v1/emails?cnpj=${cnpj}&email_limit=50`, { headers: { 'X-API-Key': apiKey } });
+          if (!emailResponse.ok) return [];
+          const payload = await emailResponse.json();
+          return Array.isArray(payload?.data) ? payload.data : payload?.data?.emails || [];
+        } catch (_) {
+          return [];
+        }
+      };
+      const enrichPartner = async (partner, companyEmails) => {
+        const partnerName = normalizeName(partner.nome_socio || partner.nome);
+        const matchedEmails = companyEmails.filter((item) => {
+          const ownerName = normalizeName(item.nome_completo || item.nome || item.full_name || `${item.first_name || ''} ${item.last_name || ''}`);
+          return ownerName && (ownerName === partnerName || ownerName.includes(partnerName) || partnerName.includes(ownerName));
+        }).map((item) => item.email || item.endereco || item.address).filter(Boolean);
         const document = String(partner.cnpj_cpf_socio || partner.cpf_cnpj_socio || partner.cpf || '').replace(/\D/g, '');
-        if (document.length !== 11) return partner;
+        if (document.length !== 11) return matchedEmails.length ? { ...partner, emails_socio: [...new Set(matchedEmails)] } : partner;
         try {
           const personResponse = await fetch(`https://api.kipflow.io/people/v1/search?cpf=${document}`, { headers: { 'X-API-Key': apiKey } });
-          if (!personResponse.ok) return partner;
+          if (!personResponse.ok) return matchedEmails.length ? { ...partner, emails_socio: [...new Set(matchedEmails)] } : partner;
           const payload = await personResponse.json();
           const person = payload?.data || payload || {};
           const partnerPhones = person.telefones || person.phones || person.contatos?.telefones || [];
-          return partnerPhones.length ? { ...partner, telefones_socio: partnerPhones } : partner;
+          const personEmails = person.emails || person.contatos?.emails || [];
+          const emailValues = personEmails.map((item) => typeof item === 'string' ? item : item.email || item.endereco).filter(Boolean);
+          return { ...partner, telefones_socio: partnerPhones, emails_socio: [...new Set([...matchedEmails, ...emailValues])] };
         } catch (_) {
-          return partner;
+          return matchedEmails.length ? { ...partner, emails_socio: [...new Set(matchedEmails)] } : partner;
         }
       };
       const matched = [];
-      for (const company of companies) {
-        const partners = Array.isArray(company.socios) ? company.socios.filter(hasName) : [];
-        if (!partners.length) continue;
-        const enrichedPartners = [];
-        for (let index = 0; index < partners.length; index += 4) {
-          enrichedPartners.push(...await Promise.all(partners.slice(index, index + 4).map(enrichPartner)));
-        }
-        matched.push({ ...company, socios: enrichedPartners });
+      for (let companyIndex = 0; companyIndex < companies.length; companyIndex += 4) {
+        const batch = await Promise.all(companies.slice(companyIndex, companyIndex + 4).map(async (company) => {
+          const partners = Array.isArray(company.socios) ? company.socios.filter(hasName) : [];
+          if (!partners.length) return null;
+          const companyEmails = await fetchCompanyEmails(company);
+          const enrichedPartners = [];
+          for (let index = 0; index < partners.length; index += 4) {
+            enrichedPartners.push(...await Promise.all(partners.slice(index, index + 4).map((partner) => enrichPartner(partner, companyEmails))));
+          }
+          return { ...company, socios: enrichedPartners };
+        }));
+        matched.push(...batch.filter(Boolean));
+        if (companyIndex + 4 < companies.length) await new Promise((resolve) => setTimeout(resolve, 1000));
       }
       data.data = matched;
       data.pagination = { ...(data.pagination || {}), total: matched.length };
