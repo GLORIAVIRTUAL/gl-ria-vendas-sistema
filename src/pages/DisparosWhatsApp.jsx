@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -444,7 +443,7 @@ Estamos ansiosos para conversar com você! 🚀`;
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold text-blue-600">
-                          {format(dataProgramada, "dd/MM 'às' HH:mm", { locale: ptBR })}
+                          {format(dataProgramada, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </p>
                         <Badge className="bg-blue-100 text-blue-700 mt-1">
                           <Clock className="w-3 h-3 mr-1" />
