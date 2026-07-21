@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,7 +77,7 @@ export default function APIDocumentacao() {
             <div>
               <h3 className="font-bold text-slate-900 mb-2">🔗 URL do Webhook WhatsApp</h3>
               <div className="flex gap-2">
-                <code className="flex-1 bg-slate-100 px-4 py-3 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto">
+                <code className="flex-1 bg-slate-100 px-4 py-3 rounded-lg text-sm font-mono font-semibold text-slate-950 overflow-x-auto">
                   {webhookWhatsAppUrl}
                 </code>
                 <button
@@ -104,7 +103,7 @@ export default function APIDocumentacao() {
             <div>
               <h3 className="font-bold text-slate-900 mb-2">📋 O que o webhook recebe</h3>
               <div className="bg-slate-100 rounded-lg p-4">
-                <pre className="text-xs font-mono text-slate-800 overflow-x-auto">{`{
+                <pre className="text-xs font-mono font-semibold text-slate-950 overflow-x-auto">{`{
   "messageId": "3EB0C0D71C80E00C48D8",
   "phone": "5511999999999",
   "status": "SENT",  // ou: RECEIVED, READ, FAILED
@@ -141,7 +140,7 @@ export default function APIDocumentacao() {
             <div>
               <h3 className="font-bold text-slate-900 mb-2">1️⃣ URL do Webhook</h3>
               <div className="flex gap-2">
-                <code className="flex-1 bg-slate-100 px-4 py-3 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto">
+                <code className="flex-1 bg-slate-100 px-4 py-3 rounded-lg text-sm font-mono font-semibold text-slate-950 overflow-x-auto">
                   {webhookUrl}
                 </code>
                 <button
