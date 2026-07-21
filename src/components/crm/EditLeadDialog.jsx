@@ -143,8 +143,8 @@ export default function EditLeadDialog({ lead, open, onOpenChange, onSave, isSav
                   onClick={() => setFormData({...formData, produto_interesse: key})}
                   className={`p-3 rounded-lg border-2 transition-all duration-200 text-left ${
                     formData.produto_interesse === key
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-cyan-400 bg-cyan-100 text-slate-950'
+                      : 'border-slate-500 text-slate-100 hover:border-cyan-400'
                   }`}
                 >
                   <div className="flex items-center gap-2">
