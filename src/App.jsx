@@ -61,6 +61,11 @@ const AuthenticatedApp = () => {
     }
   }
 
+  if (!isAuthenticated) {
+    navigateToLogin();
+    return null;
+  }
+
   // Render the main app
   return (
     <Routes>
