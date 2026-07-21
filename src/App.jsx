@@ -20,6 +20,8 @@ import Trafego from '@/pages/Trafego';
 import GerenciarUsuarios from '@/pages/GerenciarUsuarios';
 import Prospeccao from '@/pages/Prospeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
+import AgendamentoPublico from '@/pages/AgendamentoPublico';
+import FormularioStart from '@/pages/FormularioStart';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -39,6 +41,21 @@ const AuthenticatedApp = () => (
     <Route path="/register" element={<Register />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/AgendamentoPublico" element={
+      <LayoutWrapper currentPageName="AgendamentoPublico">
+        <AgendamentoPublico />
+      </LayoutWrapper>
+    } />
+    <Route path="/OnboardingPublico" element={
+      <LayoutWrapper currentPageName="OnboardingPublico">
+        <OnboardingPublico />
+      </LayoutWrapper>
+    } />
+    <Route path="/FormularioStart" element={
+      <LayoutWrapper currentPageName="FormularioStart">
+        <FormularioStart />
+      </LayoutWrapper>
+    } />
 
     <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
       <Route path="/" element={
@@ -46,7 +63,7 @@ const AuthenticatedApp = () => (
           <MainPage />
         </LayoutWrapper>
       } />
-      {Object.entries(Pages).map(([path, Page]) => (
+      {Object.entries(Pages).filter(([path]) => !["AgendamentoPublico", "OnboardingPublico", "FormularioStart"].includes(path)).map(([path, Page]) => (
         <Route
           key={path}
           path={`/${path}`}
@@ -80,11 +97,6 @@ const AuthenticatedApp = () => (
       <Route path="/Prospeccao" element={
         <LayoutWrapper currentPageName="Prospeccao">
           <Prospeccao />
-        </LayoutWrapper>
-      } />
-      <Route path="/OnboardingPublico" element={
-        <LayoutWrapper currentPageName="OnboardingPublico">
-          <OnboardingPublico />
         </LayoutWrapper>
       } />
       <Route path="/PoliticaPrivacidade" element={<PoliticaPrivacidade />} />
