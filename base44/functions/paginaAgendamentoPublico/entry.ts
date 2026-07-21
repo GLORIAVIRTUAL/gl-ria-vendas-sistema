@@ -23,6 +23,9 @@ Deno.serve((req) => {
             nome_cliente: "",
             email_cliente: "",
             telefone_cliente: "",
+            nome_empresa: "",
+            site_instagram_empresa: "",
+            processo_resolver: "",
             data: "",
             horario: "",
             observacoes: ""
@@ -71,7 +74,7 @@ Deno.serve((req) => {
 
                     <!-- Steps -->
                     <div class="flex items-center justify-center gap-3 border-b border-slate-600/60 bg-white/5 p-4 sm:gap-5 sm:p-6">
-                        \${[1,2].map(step => \`
+                        \${[1,2,3].map(step => \`
                             <div class="flex items-center gap-2 \${etapa >= step ? 'opacity-100' : 'opacity-40'}">
                                 <div class="\${etapa >= step ? 'border-cyan-300 bg-cyan-400 text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.75)]' : 'border-slate-500 bg-slate-900/70 text-slate-400'} flex h-9 w-9 items-center justify-center rounded-full border font-bold sm:h-10 sm:w-10">
                                     \${etapa > step ? '✓' : step}
@@ -118,11 +121,42 @@ Deno.serve((req) => {
                         </div>
                         <button onclick="proximaEtapa()" 
                                 class="w-full rounded-lg bg-cyan-400 py-3.5 text-base font-semibold text-slate-950 shadow-[0_0_20px_rgba(34,211,238,0.65)] transition hover:bg-cyan-300">
-                            Próximo: Data e Hora
+                            Próximo: Sobre a Empresa
                         </button>
                     </div>
                 \`;
             } else if (etapa === 2) {
+                content.innerHTML = \`
+                    <div class="space-y-4">
+                        <h2 class="mb-4 text-lg font-semibold text-white sm:text-xl">Sobre a Empresa</h2>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Nome da Empresa *</label>
+                            <input type="text" id="nome_empresa" value="\${formData.nome_empresa}"
+                                   class="w-full rounded-lg border border-slate-400/70 bg-slate-900/45 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/60" placeholder="Nome da empresa">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Site ou Instagram da Empresa *</label>
+                            <input type="text" id="site_instagram_empresa" value="\${formData.site_instagram_empresa}"
+                                   class="w-full rounded-lg border border-slate-400/70 bg-slate-900/45 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/60" placeholder="site.com.br ou @empresa">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Qual processo quer resolver? *</label>
+                            <textarea id="processo_resolver" rows="4"
+                                      class="w-full rounded-lg border border-slate-400/70 bg-slate-900/45 px-4 py-3 text-base text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-400/60" placeholder="Descreva brevemente o processo">\${formData.processo_resolver}</textarea>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button onclick="voltarEtapa()"
+                                    class="flex-1 rounded-lg border border-slate-400 bg-transparent py-3.5 text-base font-semibold text-white transition hover:bg-white/10">
+                                Voltar
+                            </button>
+                            <button onclick="proximaEtapa()"
+                                    class="flex-1 rounded-lg bg-cyan-400 py-3.5 text-base font-semibold text-slate-950 shadow-[0_0_20px_rgba(34,211,238,0.65)] transition hover:bg-cyan-300">
+                                Próximo: Data e Hora
+                            </button>
+                        </div>
+                    </div>
+                \`;
+            } else if (etapa === 3) {
                 content.innerHTML = \`
                     <div class="space-y-4">
                         <h2 class="mb-4 text-lg font-semibold text-white sm:text-xl">Data e Horário</h2>
@@ -164,6 +198,15 @@ Deno.serve((req) => {
                 
                 if (!formData.nome_cliente || !formData.email_cliente) {
                     mostrarErro('Preencha nome e email');
+                    return;
+                }
+            } else if (etapa === 2) {
+                formData.nome_empresa = document.getElementById('nome_empresa').value;
+                formData.site_instagram_empresa = document.getElementById('site_instagram_empresa').value;
+                formData.processo_resolver = document.getElementById('processo_resolver').value;
+
+                if (!formData.nome_empresa || !formData.site_instagram_empresa || !formData.processo_resolver) {
+                    mostrarErro('Preencha todos os dados da empresa');
                     return;
                 }
             }
@@ -235,6 +278,9 @@ Deno.serve((req) => {
                         nome_cliente: formData.nome_cliente,
                         email_cliente: formData.email_cliente,
                         telefone_cliente: formData.telefone_cliente,
+                        nome_empresa: formData.nome_empresa,
+                        site_instagram_empresa: formData.site_instagram_empresa,
+                        processo_resolver: formData.processo_resolver,
                         data: formData.data,
                         horario: formData.horario,
                         observacoes: formData.observacoes,
