@@ -279,10 +279,7 @@ button:focus-visible {
     display: none !important;
   }
 
-  .app-theme div:has(> svg:only-child),
-  .app-theme span:has(> svg:only-child) {
-    display: none !important;
-  }
+  /* Mantém os textos visíveis mesmo quando um ícone interno é ocultado. */
 
   /* Controles interativos nunca podem ficar vazios quando usam um ícone. */
   .app-theme button svg,
