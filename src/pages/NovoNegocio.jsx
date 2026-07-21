@@ -298,7 +298,7 @@ export default function NovoNegocio() {
             <CardContent className="p-6 space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="dia_cobranca">Dia de Cobrança *</Label>
+                  <Label htmlFor="dia_cobranca" className="text-cyan-100">Dia de Cobrança *</Label>
                   <Input
                     id="dia_cobranca"
                     type="number"
@@ -308,10 +308,11 @@ export default function NovoNegocio() {
                     onChange={(e) => setFormData({...formData, dia_cobranca: e.target.value})}
                     required
                     disabled={isProcessingStripe}
+                    className="border-cyan-300/60 bg-slate-950/70 font-semibold text-cyan-100"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="data_primeira_cobranca">Data da Primeira Cobrança *</Label>
+                  <Label htmlFor="data_primeira_cobranca" className="text-cyan-100">Data da Primeira Cobrança *</Label>
                   <Input
                     id="data_primeira_cobranca"
                     type="date"
@@ -319,6 +320,7 @@ export default function NovoNegocio() {
                     onChange={(e) => setFormData({...formData, data_primeira_cobranca: e.target.value})}
                     required
                     disabled={isProcessingStripe}
+                    className="border-cyan-300/60 bg-slate-950/70 font-semibold text-cyan-100 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:brightness-200 [&::-webkit-calendar-picker-indicator]:invert"
                   />
                 </div>
                 <div className="md:col-span-2">
