@@ -284,6 +284,13 @@ button:focus-visible {
     display: none !important;
   }
 
+  /* Controles interativos nunca podem ficar vazios quando usam um ícone. */
+  .app-theme button svg,
+  .app-theme a[role="button"] svg,
+  .app-theme [role="button"] svg {
+    display: inline-block !important;
+  }
+
   .app-theme h1,
   .app-theme h2,
   .app-theme h3 {

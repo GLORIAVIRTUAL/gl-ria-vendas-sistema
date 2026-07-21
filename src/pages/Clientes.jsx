@@ -273,17 +273,17 @@ export default function Clientes() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEditar(cliente)}
-                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            className="text-blue-300 hover:text-blue-200 hover:bg-blue-500/10"
                           >
-                            <Pencil className="w-4 h-4" />
+                            Editar
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleDeletar(cliente.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="text-red-300 hover:text-red-200 hover:bg-red-500/10"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            Excluir
                           </Button>
                         </div>
                       </TableCell>

@@ -671,11 +671,7 @@ Caso tenha dúvidas, estamos à disposição! 😊`;
                             className="text-green-600 hover:text-green-700 hover:bg-green-50"
                             title="Enviar link por WhatsApp"
                           >
-                            {enviandoWhatsApp === neg.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Send className="w-4 h-4" />
-                            )}
+                            {enviandoWhatsApp === neg.id ? "Enviando..." : "WhatsApp"}
                           </Button>
                         )}
                         
@@ -689,11 +685,7 @@ Caso tenha dúvidas, estamos à disposição! 😊`;
                             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                             title="Enviar link por Email"
                           >
-                            {enviandoEmail === neg.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Mail className="w-4 h-4" />
-                            )}
+                            {enviandoEmail === neg.id ? "Enviando..." : "E-mail"}
                           </Button>
                         )}
                         
@@ -706,7 +698,7 @@ Caso tenha dúvidas, estamos à disposição! 😊`;
                           }}
                           className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
                         >
-                          <Pencil className="w-4 h-4" />
+                          Editar
                         </Button>
                         <Button
                           size="sm"
@@ -718,9 +710,9 @@ Caso tenha dúvidas, estamos à disposição! 😊`;
                           }}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          Excluir
                         </Button>
-                      </div>
+                        </div>
                     </TableCell>
                   </TableRow>
                 ))}

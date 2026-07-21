@@ -216,23 +216,23 @@ export default function ChatIA() {
             </div>
             <div className="flex items-center gap-2">
               <Button
-                variant="ghost"
-                size="icon"
+                variant="outline"
+                size="sm"
                 onClick={() => setNotificationsEnabled(!notificationsEnabled)}
                 className={cn(
                   "border border-transparent hover:border-cyan-400/30 hover:bg-cyan-400/10",
                   notificationsEnabled ? "text-cyan-300" : "text-slate-500"
                 )}
               >
-                {notificationsEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+                {notificationsEnabled ? "Alertas ativos" : "Alertas pausados"}
               </Button>
               <Button
-                variant="ghost"
-                size="icon"
+                variant="outline"
+                size="sm"
                 onClick={() => refetchContacts()}
                 className="text-slate-400 hover:bg-cyan-400/10 hover:text-cyan-300"
               >
-                <RefreshCw className="w-5 h-5" />
+                Atualizar
               </Button>
             </div>
           </div>
@@ -323,12 +323,12 @@ export default function ChatIA() {
 
       {selectedContact && (
         <Button
-          variant="ghost"
-          size="icon"
+          variant="outline"
+          size="sm"
           className="absolute right-4 top-4 z-10"
           onClick={() => setShowDetails(!showDetails)}
         >
-          <Info className="w-5 h-5" />
+          {showDetails ? "Fechar detalhes" : "Ver detalhes"}
         </Button>
       )}
 
