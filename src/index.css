@@ -454,6 +454,14 @@ button:focus-visible {
   .app-theme a:not([data-sidebar="menu-button"]):not([data-sidebar="menu-sub-button"]) {
     color: rgb(103 232 249);
   }
+
+  /* Os gráficos Recharts usam SVG para desenhar dados, e não ícones. */
+  .app-theme .recharts-responsive-container,
+  .app-theme .recharts-wrapper,
+  .app-theme .recharts-wrapper svg,
+  .app-theme .recharts-surface {
+    display: block !important;
+  }
 }
 
 @layer base {
