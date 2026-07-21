@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -410,14 +409,14 @@ export default function TesteWhatsApp() {
             </div>
             <div className="bg-yellow-50 border border-yellow-200 p-3 rounded ml-8 space-y-2">
               <div>
-                <code className="bg-yellow-100 px-2 py-1 rounded text-sm">ZAPI_CLIENT_TOKEN</code>
+                <code className="bg-yellow-100 px-2 py-1 rounded text-sm font-semibold text-slate-950">ZAPI_CLIENT_TOKEN</code>
                 <span className="ml-2">=</span>
-                <code className="bg-yellow-100 px-2 py-1 rounded text-sm ml-2">D7CF569A1200C994A03C24E4</code>
+                <code className="bg-yellow-100 px-2 py-1 rounded text-sm ml-2 font-semibold text-slate-950">D7CF569A1200C994A03C24E4</code>
               </div>
               <div>
-                <code className="bg-yellow-100 px-2 py-1 rounded text-sm">WHATSAPP_INSTANCE_ID</code>
+                <code className="bg-yellow-100 px-2 py-1 rounded text-sm font-semibold text-slate-950">WHATSAPP_INSTANCE_ID</code>
                 <span className="ml-2">=</span>
-                <code className="bg-yellow-100 px-2 py-1 rounded text-sm ml-2">3E751CE408B2902AAA951209B086BFBE</code>
+                <code className="bg-yellow-100 px-2 py-1 rounded text-sm ml-2 font-semibold text-slate-950">3E751CE408B2902AAA951209B086BFBE</code>
               </div>
             </div>
 
