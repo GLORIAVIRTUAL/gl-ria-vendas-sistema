@@ -27,7 +27,8 @@ const estagios = [
   { id: "Negocio_Fechado", nome: "Negócio Fechado", cor: "border border-emerald-400/30 bg-emerald-400/10 text-emerald-200 backdrop-blur-xl", icone: DollarSign },
   { id: "Implantacao", nome: "Implantação", cor: "border border-violet-400/30 bg-violet-400/10 text-violet-200 backdrop-blur-xl", icone: Package },
   { id: "Inicio_de_Uso", nome: "Início de Uso", cor: "border border-orange-400/30 bg-orange-400/10 text-orange-200 backdrop-blur-xl", icone: Users },
-  { id: "Estavel", nome: "Estável", cor: "border border-cyan-400/30 bg-cyan-400/10 text-cyan-200 backdrop-blur-xl", icone: ChevronRight }
+  { id: "Estavel", nome: "Estável", cor: "border border-cyan-400/30 bg-cyan-400/10 text-cyan-200 backdrop-blur-xl", icone: ChevronRight },
+  { id: "Desistiu", nome: "Desistiu", cor: "border border-red-400/30 bg-red-400/10 text-red-200 backdrop-blur-xl", icone: Users }
 ];
 
 const produtoConfig = {

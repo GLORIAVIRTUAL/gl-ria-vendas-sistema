@@ -40,7 +40,8 @@
         "Negocio_Fechado",
         "Implantacao",
         "Inicio_de_Uso",
-        "Estavel"
+        "Estavel",
+        "Desistiu"
       ],
       "default": "Reuniao_Marcada",
       "description": "Est\u00e1gio no funil de vendas"
