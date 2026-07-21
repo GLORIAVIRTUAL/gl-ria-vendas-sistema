@@ -268,6 +268,13 @@ button:focus-visible {
     color-scheme: dark;
   }
 
+  .app-theme input[type="date"]::-webkit-calendar-picker-indicator,
+  .app-theme input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(1) brightness(1.8);
+    opacity: 1;
+  }
+
   .app-theme svg {
     display: none !important;
   }

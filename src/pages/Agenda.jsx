@@ -243,11 +243,11 @@ export default function Agenda() {
           <div className="flex items-center justify-between">
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
               onClick={() => setSemanaInicio(addDays(semanaInicio, -7))}
-              className="rounded-full"
+              aria-label="Voltar para a semana anterior"
             >
-              <ChevronLeft className="w-5 h-5" />
+              Semana anterior
             </Button>
             
             <div className="text-center">
@@ -266,11 +266,11 @@ export default function Agenda() {
 
             <Button
               variant="outline"
-              size="icon"
+              size="sm"
               onClick={() => setSemanaInicio(addDays(semanaInicio, 7))}
-              className="rounded-full"
+              aria-label="Avançar para a próxima semana"
             >
-              <ChevronRight className="w-5 h-5" />
+              Próxima semana
             </Button>
           </div>
         </Card>
