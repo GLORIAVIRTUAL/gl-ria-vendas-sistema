@@ -15,6 +15,18 @@
       "type": "string",
       "description": "Telefone do cliente"
     },
+    "nome_empresa": {
+      "type": "string",
+      "description": "Nome da empresa"
+    },
+    "site_instagram_empresa": {
+      "type": "string",
+      "description": "Site ou Instagram da empresa"
+    },
+    "processo_resolver": {
+      "type": "string",
+      "description": "Processo que o cliente deseja resolver"
+    },
     "produto": {
       "type": "string",
       "description": "Produto (legado / opcional)"

@@ -19,7 +19,10 @@ Deno.serve(async (req) => {
     const { 
       nome_cliente, 
       email_cliente, 
-      telefone_cliente, 
+      telefone_cliente,
+      nome_empresa,
+      site_instagram_empresa,
+      processo_resolver,
       produto, 
       data, 
       horario, 
@@ -58,11 +61,11 @@ Deno.serve(async (req) => {
       }, { status: 401 });
     }
 
-    if (!nome_cliente || !email_cliente || !data || !horario) {
+    if (!nome_cliente || !email_cliente || !nome_empresa || !site_instagram_empresa || !processo_resolver || !data || !horario) {
       console.error('❌ Campos obrigatórios faltando');
       return Response.json({ 
         error: 'Campos obrigatórios faltando',
-        message: 'nome_cliente, email_cliente, data e horario são obrigatórios'
+        message: 'nome_cliente, email_cliente, nome_empresa, site_instagram_empresa, processo_resolver, data e horario são obrigatórios'
       }, { status: 400 });
     }
 
@@ -99,7 +102,7 @@ Deno.serve(async (req) => {
 
     const calendarResponse = await base44.asServiceRole.functions.invoke('createGoogleCalendarEvent', {
       summary: `Reunião - ${nome_cliente}`,
-      description: `Cliente: ${nome_cliente}\nEmail: ${email_cliente}\nTelefone: ${telefone_cliente || 'Não informado'}\n\nObservações: ${observacoes || 'Nenhuma'}\n\n🌐 Agendado via Chatbot`,
+      description: `Cliente: ${nome_cliente}\nEmail: ${email_cliente}\nTelefone: ${telefone_cliente || 'Não informado'}\nEmpresa: ${nome_empresa}\nSite ou Instagram: ${site_instagram_empresa}\nProcesso que deseja resolver: ${processo_resolver}\n\nObservações: ${observacoes || 'Nenhuma'}\n\n🌐 Agendado via Chatbot`,
       startDateTime,
       endDateTime,
       attendeeEmail: email_cliente,
@@ -115,6 +118,10 @@ Deno.serve(async (req) => {
       nome_cliente,
       email_cliente,
       telefone_cliente: telefone_cliente || '',
+      nome_empresa,
+      site_instagram_empresa,
+      processo_resolver,
+      produto: produto || '',
       data,
       horario,
       observacoes: observacoes || '',
@@ -126,6 +133,7 @@ Deno.serve(async (req) => {
     console.log('👤 Criando lead no CRM...');
     await base44.asServiceRole.entities.Lead.create({
       nome_cliente,
+      nome_empresa,
       email_cliente,
       telefone_cliente: telefone_cliente || '',
       data_reuniao: data,

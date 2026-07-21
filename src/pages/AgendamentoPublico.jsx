@@ -26,6 +26,9 @@ export default function AgendamentoPublico() {
     nome_cliente: "",
     email_cliente: "",
     telefone_cliente: "",
+    nome_empresa: "",
+    site_instagram_empresa: "",
+    processo_resolver: "",
     produto: "",
     data: null,
     horario: "",
@@ -87,7 +90,7 @@ export default function AgendamentoPublico() {
     setErro(null);
     setAgendando(true);
 
-    if (!formData.nome_cliente || !formData.email_cliente || !formData.produto || !formData.data || !formData.horario) {
+    if (!formData.nome_cliente || !formData.email_cliente || !formData.nome_empresa || !formData.site_instagram_empresa || !formData.processo_resolver || !formData.produto || !formData.data || !formData.horario) {
       setErro("Por favor, preencha todos os campos obrigatórios");
       setAgendando(false);
       return;
@@ -113,6 +116,9 @@ export default function AgendamentoPublico() {
           nome_cliente: formData.nome_cliente,
           email_cliente: formData.email_cliente,
           telefone_cliente: formData.telefone_cliente,
+          nome_empresa: formData.nome_empresa,
+          site_instagram_empresa: formData.site_instagram_empresa,
+          processo_resolver: formData.processo_resolver,
           produto: formData.produto,
           data: dataStr,
           horario: formData.horario,
@@ -228,7 +234,7 @@ export default function AgendamentoPublico() {
           </header>
 
           <div className="mb-5 grid gap-3 md:grid-cols-3 md:gap-4">
-            {[1, 2, 3].map((step) => (
+            {[1, 2, 3, 4].map((step) => (
               <button
                 key={step}
                 type="button"
@@ -244,10 +250,11 @@ export default function AgendamentoPublico() {
                 </span>
                 <span className="whitespace-nowrap text-sm text-slate-100">
                   {step === 1 && 'Seus Dados'}
-                  {step === 2 && 'Escolher Produto'}
-                  {step === 3 && 'Data e Hora'}
+                  {step === 2 && 'Sua Empresa'}
+                  {step === 3 && 'Escolher Produto'}
+                  {step === 4 && 'Data e Hora'}
                 </span>
-                <span className={`ml-2 h-px min-w-4 flex-1 ${etapa >= step ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.9)]' : 'bg-slate-600'} ${step === 3 ? 'md:hidden' : ''}`} />
+                <span className={`ml-2 h-px min-w-4 flex-1 ${etapa >= step ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.9)]' : 'bg-slate-600'} ${step === 4 ? 'md:hidden' : ''}`} />
               </button>
             ))}
           </div>
@@ -259,7 +266,7 @@ export default function AgendamentoPublico() {
             </Alert>
           )}
 
-          <div className="grid items-start gap-5 lg:grid-cols-3 lg:gap-7">
+          <div className="grid items-start gap-5 lg:grid-cols-4 lg:gap-5">
             <Card className={`border border-slate-400/50 bg-white/[0.08] text-white shadow-xl backdrop-blur-xl transition-all ${etapa === 1 ? 'ring-1 ring-cyan-400/70' : ''}`}>
               <CardContent className="p-5">
                 <h2 className="mb-6 whitespace-nowrap text-lg font-semibold">Como podemos te contatar?</h2>
@@ -302,13 +309,63 @@ export default function AgendamentoPublico() {
                     disabled={!formData.nome_cliente || !formData.email_cliente}
                     className="h-10 bg-cyan-400 px-5 font-semibold text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.65)] hover:bg-cyan-300"
                   >
-                    Próximo: Escolher Produto
+                    Próximo: Sua Empresa
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
             <Card className={`border border-slate-400/50 bg-white/[0.08] text-white shadow-xl backdrop-blur-xl transition-all ${etapa === 2 ? 'ring-1 ring-cyan-400/70' : ''}`}>
+              <CardContent className="p-5">
+                <h2 className="mb-1 text-lg font-semibold">Sua Empresa</h2>
+                <p className="mb-4 text-sm text-slate-200">Conte-nos sobre o seu negócio.</p>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="nome_empresa" className="mb-2 block text-sm font-normal text-slate-100">Nome da Empresa *</Label>
+                    <Input
+                      id="nome_empresa"
+                      value={formData.nome_empresa}
+                      onChange={(e) => setFormData({...formData, nome_empresa: e.target.value})}
+                      placeholder="Ex: Empresa Glória"
+                      className="h-10 border-slate-300/80 bg-slate-900/45 text-white placeholder:text-slate-300 focus-visible:border-cyan-300 focus-visible:ring-cyan-400/80"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="site_instagram_empresa" className="mb-2 block text-sm font-normal text-slate-100">Site ou Instagram da Empresa *</Label>
+                    <Input
+                      id="site_instagram_empresa"
+                      value={formData.site_instagram_empresa}
+                      onChange={(e) => setFormData({...formData, site_instagram_empresa: e.target.value})}
+                      placeholder="site.com.br ou @empresa"
+                      className="h-10 border-slate-300/80 bg-slate-900/45 text-white placeholder:text-slate-300 focus-visible:border-cyan-300 focus-visible:ring-cyan-400/80"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="processo_resolver" className="mb-2 block text-sm font-normal text-slate-100">Qual processo quer resolver? *</Label>
+                    <Textarea
+                      id="processo_resolver"
+                      value={formData.processo_resolver}
+                      onChange={(e) => setFormData({...formData, processo_resolver: e.target.value})}
+                      placeholder="Descreva brevemente o processo"
+                      rows={3}
+                      className="border-slate-300/80 bg-slate-900/45 text-white placeholder:text-slate-300 focus-visible:ring-cyan-400/80"
+                    />
+                  </div>
+                </div>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <Button onClick={() => setEtapa(1)} variant="outline" className="h-10 border-slate-300 bg-transparent text-white hover:bg-white/10 hover:text-white">Voltar</Button>
+                  <Button
+                    onClick={() => setEtapa(3)}
+                    disabled={!formData.nome_empresa || !formData.site_instagram_empresa || !formData.processo_resolver}
+                    className="h-10 whitespace-nowrap bg-cyan-400 px-2 text-xs font-semibold text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.65)] hover:bg-cyan-300"
+                  >
+                    Próximo: Produto
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className={`border border-slate-400/50 bg-white/[0.08] text-white shadow-xl backdrop-blur-xl transition-all ${etapa === 3 ? 'ring-1 ring-cyan-400/70' : ''}`}>
               <CardContent className="p-5">
                 <h2 className="text-lg font-semibold">Escolha o Produto</h2>
                 <p className="mb-4 text-sm text-slate-200">Qual solução você deseja conhecer?</p>
@@ -330,9 +387,9 @@ export default function AgendamentoPublico() {
                   ))}
                 </div>
                 <div className="mt-5 grid grid-cols-2 gap-3">
-                  <Button onClick={() => setEtapa(1)} variant="outline" className="h-10 border-slate-300 bg-transparent text-white hover:bg-white/10 hover:text-white">Voltar</Button>
+                  <Button onClick={() => setEtapa(2)} variant="outline" className="h-10 border-slate-300 bg-transparent text-white hover:bg-white/10 hover:text-white">Voltar</Button>
                   <Button
-                    onClick={() => setEtapa(3)}
+                    onClick={() => setEtapa(4)}
                     disabled={!formData.produto}
                     className="h-10 whitespace-nowrap bg-cyan-400 px-2 text-xs font-semibold text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.65)] hover:bg-cyan-300"
                   >
@@ -342,7 +399,7 @@ export default function AgendamentoPublico() {
               </CardContent>
             </Card>
 
-            <Card className={`border border-slate-400/50 bg-white/[0.08] text-white shadow-xl backdrop-blur-xl transition-all ${etapa === 3 ? 'ring-1 ring-cyan-400/70' : ''}`}>
+            <Card className={`border border-slate-400/50 bg-white/[0.08] text-white shadow-xl backdrop-blur-xl transition-all ${etapa === 4 ? 'ring-1 ring-cyan-400/70' : ''}`}>
               <CardContent className="p-5">
                 <h2 className="text-lg font-semibold">Data e Horário</h2>
                 <p className="mb-4 text-sm text-slate-200">Quando você gostaria de conversar?</p>
