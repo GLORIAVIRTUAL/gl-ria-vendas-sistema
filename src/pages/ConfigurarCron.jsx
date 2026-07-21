@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,7 +62,7 @@ export default function ConfigurarCron() {
                 URL do Endpoint WhatsApp:
               </Label>
               <div className="flex gap-2">
-                <code className="flex-1 bg-slate-100 px-4 py-3 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto">
+                <code className="flex-1 bg-slate-100 px-4 py-3 rounded-lg text-sm font-mono font-semibold text-slate-950 overflow-x-auto">
                   {cronUrlWhatsApp}
                 </code>
                 <Button
@@ -104,7 +103,7 @@ export default function ConfigurarCron() {
                 URL do Endpoint Email:
               </Label>
               <div className="flex gap-2">
-                <code className="flex-1 bg-slate-100 px-4 py-3 rounded-lg text-sm font-mono text-slate-800 overflow-x-auto">
+                <code className="flex-1 bg-slate-100 px-4 py-3 rounded-lg text-sm font-mono font-semibold text-slate-950 overflow-x-auto">
                   {cronUrlEmail}
                 </code>
                 <Button
