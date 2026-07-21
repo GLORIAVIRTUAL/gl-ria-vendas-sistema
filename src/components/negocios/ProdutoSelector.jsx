@@ -155,15 +155,15 @@ export default function ProdutoSelector({ produtos, onProdutosChange, valorPerso
                     key={produto.id}
                     type="button"
                     onClick={() => adicionarProduto(produto.produto)}
-                    className="flex items-center justify-between p-4 border-2 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left"
+                    className="flex items-center justify-between rounded-lg border-2 border-slate-500 bg-slate-950/60 p-4 text-left transition-all hover:border-cyan-400 hover:bg-cyan-950/40"
                   >
                     <div className="flex-1">
-                      <p className="font-bold text-slate-900">{produto.produto}</p>
-                      <span className="text-green-600 font-semibold text-sm">
+                      <p className="font-bold text-cyan-100">{produto.produto}</p>
+                      <span className="text-sm font-semibold text-emerald-300">
                         R$ {produto.preco_recomendado.toFixed(2)}
                       </span>
                     </div>
-                    <Plus className="w-5 h-5 text-blue-600" />
+                    <Plus className="w-5 h-5 text-cyan-300" />
                   </button>
                 ))}
               </div>
