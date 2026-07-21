@@ -463,27 +463,23 @@ ${agendamento.link_reuniao ? `🎥 *Link da reunião:*\n${agendamento.link_reuni
                               
                               <Button
                                 size="sm"
-                                variant="ghost"
+                                variant="outline"
                                 onClick={() => handleDebugLink(ag)}
-                                className="text-slate-400 hover:text-slate-600 p-1 h-auto"
+                                className="text-slate-300"
                                 title="Ver detalhes do link"
                               >
-                                <AlertCircle className="w-3 h-3" />
+                                Detalhes
                               </Button>
                               
                               <Button
                                 size="sm"
-                                variant="ghost"
+                                variant="outline"
                                 onClick={() => recreateLinkMutation.mutate(ag)}
                                 disabled={recreatingLink === ag.id}
-                                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 p-1 h-auto"
+                                className="text-orange-300"
                                 title="Recriar link (se estiver expirado)"
                               >
-                                {recreatingLink === ag.id ? (
-                                  <Clock className="w-3 h-3 animate-spin" />
-                                ) : (
-                                  <RefreshCw className="w-3 h-3" />
-                                )}
+                                {recreatingLink === ag.id ? "Recriando..." : "Recriar link"}
                               </Button>
                             </>
                           ) : (
@@ -506,10 +502,10 @@ ${agendamento.link_reuniao ? `🎥 *Link da reunião:*\n${agendamento.link_reuni
                               size="sm"
                               variant="outline"
                               onClick={() => handleOpenWhatsApp(ag)}
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50 p-2 h-auto"
+                              className="text-green-300"
                               title="Enviar mensagem no WhatsApp"
                             >
-                              <Send className="w-4 h-4" />
+                              WhatsApp
                             </Button>
                           )}
                         </div>
@@ -519,10 +515,10 @@ ${agendamento.link_reuniao ? `🎥 *Link da reunião:*\n${agendamento.link_reuni
                           size="sm"
                           variant="outline"
                           onClick={() => deleteMutation.mutate(ag.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-300 hover:text-red-200 hover:bg-red-500/10"
                           title="Excluir agendamento"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          Excluir
                         </Button>
                       </TableCell>
                     </TableRow>
