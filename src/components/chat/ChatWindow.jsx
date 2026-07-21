@@ -4,7 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
-  Send, Paperclip, Bot, User, 
+  Send, Paperclip,
   MoreVertical, X, Loader2, FileText, Trash2, CheckCircle2 
 } from 'lucide-react';
 import {
@@ -180,13 +180,20 @@ export default function ChatWindow({
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 border border-slate-600/60 bg-slate-900/70 rounded-full px-3 py-1.5">
-            <User className={cn("w-4 h-4", !contact.ai_enabled ? "text-green-500" : "text-slate-400")} />
-            <Switch 
+            <span className={cn(
+              "text-xs font-semibold whitespace-nowrap",
+              contact.ai_enabled ? "text-cyan-200" : "text-amber-200"
+            )}>
+              {contact.ai_enabled
+                ? `${isOpenClaw ? "OpenClaw" : "IA"} ativa`
+                : "Atendimento manual"}
+            </span>
+            <Switch
               checked={contact.ai_enabled}
               onCheckedChange={handleAIToggle}
+              aria-label={contact.ai_enabled ? "Desativar atendimento automático" : "Ativar atendimento automático"}
               className="data-[state=checked]:bg-cyan-400"
             />
-            <Bot className={cn("w-4 h-4", contact.ai_enabled ? "text-cyan-300" : "text-slate-500")} />
           </div>
 
           <DropdownMenu>
