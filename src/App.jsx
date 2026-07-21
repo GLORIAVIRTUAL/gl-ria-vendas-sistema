@@ -19,6 +19,7 @@ import ClientesOpenClaw from '@/pages/ClientesOpenClaw';
 import Trafego from '@/pages/Trafego';
 import GerenciarUsuarios from '@/pages/GerenciarUsuarios';
 import Prospeccao from '@/pages/Prospeccao';
+import OnboardingPublico from '@/pages/OnboardingPublico';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -30,6 +31,15 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+  const isPublicOnboarding = window.location.pathname.toLowerCase().startsWith('/onboardingpublico');
+
+  if (isPublicOnboarding) {
+    return (
+      <Routes>
+        <Route path="/OnboardingPublico" element={<OnboardingPublico />} />
+      </Routes>
+    );
+  }
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
