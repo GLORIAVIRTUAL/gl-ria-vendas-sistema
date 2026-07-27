@@ -184,7 +184,7 @@ export default function ChatWindow({
       </div>
 
       <div
-        className="relative flex-1 overflow-y-auto bg-slate-950/50 px-4 pb-28 pt-5 bg-blend-overlay before:absolute before:inset-0 before:bg-slate-950/30 md:px-8"
+        className="relative flex-1 overflow-x-hidden overflow-y-auto bg-slate-950/50 px-4 pb-28 pt-5 bg-blend-overlay before:absolute before:inset-0 before:bg-slate-950/30 md:px-8"
         style={{
           backgroundImage: "url('https://media.base44.com/images/public/68f3ccc3a454aaec766ae684/e72093d7d_generated_image.png')",
           backgroundSize: 'cover',
@@ -226,7 +226,7 @@ export default function ChatWindow({
         </div>
       )}
 
-      <div className="absolute inset-x-0 bottom-0 z-20 border-t border-cyan-300/15 bg-slate-950/55 px-6 py-4 backdrop-blur-xl">
+      <div className="relative z-20 shrink-0 border-t border-cyan-300/15 bg-slate-950/80 px-4 py-4 backdrop-blur-xl md:px-6">
         <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-cyan-300/45 bg-cyan-400/10 p-2 shadow-[0_18px_45px_rgba(0,0,0,0.55),0_0_26px_rgba(34,211,238,0.18),inset_0_1px_0_rgba(255,255,255,0.08)] [transform:translateZ(36px)]">
           <input
             type="file"
