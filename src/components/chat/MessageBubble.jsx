@@ -68,14 +68,17 @@ export default function MessageBubble({ message, isOpenClaw = false }) {
       isOutbound ? "justify-end [transform:translateZ(34px)]" : "justify-start [transform:translateZ(18px)]"
     )}>
       <div className={cn(
-        "max-w-[72%] rounded-xl border px-4 py-3 backdrop-blur-xl transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.01]",
+        "relative max-w-[72%] rounded-xl border px-4 py-3 backdrop-blur-xl transition-all duration-300 after:pointer-events-none after:absolute after:inset-x-3 after:-bottom-2 after:h-3 after:rounded-b-xl after:bg-slate-950/75 after:blur-[1px] hover:-translate-y-2 hover:scale-[1.015] hover:[transform:translateZ(42px)_rotateX(-2deg)]",
         isOutbound 
           ? isAI 
             ? isOpenClaw
               ? "border-red-300/70 bg-red-950/65 text-white shadow-[0_18px_38px_rgba(0,0,0,0.48),0_0_22px_rgba(248,113,113,0.3),inset_0_1px_0_rgba(255,255,255,0.14)] rounded-br-sm"
               : "border-cyan-200/80 bg-cyan-950/90 text-slate-50 shadow-[0_18px_38px_rgba(0,0,0,0.5),0_0_24px_rgba(34,211,238,0.38),inset_0_1px_0_rgba(255,255,255,0.16)] rounded-br-sm"
               : "border-slate-400/50 bg-slate-800/80 text-white shadow-[0_18px_36px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.1)] rounded-br-sm"
-              : "border-cyan-300/45 bg-slate-950/90 text-slate-100 shadow-[0_16px_34px_rgba(0,0,0,0.5),0_0_18px_rgba(34,211,238,0.2),inset_0_1px_0_rgba(255,255,255,0.1)] rounded-bl-sm"
+              : "border-cyan-300/45 bg-slate-950/90 text-slate-100 shadow-[0_16px_34px_rgba(0,0,0,0.5),0_0_18px_rgba(34,211,238,0.2),inset_0_1px_0_rgba(255,255,255,0.1)] rounded-bl-sm",
+        isOutbound
+          ? "[transform:translateZ(28px)_rotateY(-3deg)_rotateX(1deg)]"
+          : "[transform:translateZ(28px)_rotateY(3deg)_rotateX(1deg)]"
       )}>
         {isOutbound && (
           <div className={cn(

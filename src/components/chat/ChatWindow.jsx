@@ -195,7 +195,7 @@ export default function ChatWindow({
         <div className="relative z-10 mx-auto max-w-4xl animate-in fade-in duration-700">
           <TemplateSelector contact={contact} onSent={() => {}} />
         </div>
-        <div className="relative z-10 mx-auto max-w-4xl space-y-3 [transform-style:preserve-3d]">
+        <div className="relative z-10 mx-auto max-w-4xl space-y-4 [perspective:1100px] [transform-style:preserve-3d]">
           {messages.map((msg) => (
             <MessageBubble key={msg.id} message={msg} isOpenClaw={contact.llm_destino === 'openclaw'} />
           ))}
