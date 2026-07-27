@@ -253,6 +253,21 @@ ${agendamento.link_reuniao ? `🎥 *Link da reunião:*\n${agendamento.link_reuni
     return matchBusca && matchProduto && matchStatus;
   });
 
+  const agora = new Date();
+  const dataHora = (ag) => new Date(`${ag.data}T${ag.horario || "00:00"}:00`).getTime();
+  const agendamentosFuturos = agendamentosFiltrados
+    .filter((ag) => dataHora(ag) >= agora.getTime())
+    .sort((a, b) => dataHora(a) - dataHora(b));
+  const agendamentosPassados = agendamentosFiltrados
+    .filter((ag) => dataHora(ag) < agora.getTime())
+    .sort((a, b) => dataHora(b) - dataHora(a));
+  const agendamentosOrganizados = [
+    { tipo: "secao", id: "futuros", titulo: "Próximos agendamentos", quantidade: agendamentosFuturos.length },
+    ...(agendamentosFuturos.length ? agendamentosFuturos : [{ tipo: "vazio", id: "sem-futuros", texto: "Nenhum agendamento futuro encontrado" }]),
+    { tipo: "secao", id: "passados", titulo: "Histórico de agendamentos", quantidade: agendamentosPassados.length },
+    ...(agendamentosPassados.length ? agendamentosPassados : [{ tipo: "vazio", id: "sem-passados", texto: "Nenhum agendamento passado encontrado" }]),
+  ];
+
   const handleChangeStatus = () => {
     if (agendamentoSelecionado && novoStatus) {
       updateStatusMutation.mutate({ id: agendamentoSelecionado.id, status: novoStatus });
@@ -267,7 +282,7 @@ ${agendamento.link_reuniao ? `🎥 *Link da reunião:*\n${agendamento.link_reuni
             Todos os Agendamentos
           </h1>
           <p className="text-slate-600">
-            Gerencie todas as reuniões agendadas (ordenadas por proximidade)
+            Próximos agendamentos primeiro; histórico organizado do mais recente para o mais antigo
           </p>
         </div>
 
@@ -337,7 +352,33 @@ ${agendamento.link_reuniao ? `🎥 *Link da reunião:*\n${agendamento.link_reuni
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {agendamentosFiltrados.map((ag) => {
+                {agendamentosOrganizados.map((item) => {
+                  if (item.tipo === "secao") {
+                    return (
+                      <TableRow key={item.id} className={item.id === "passados" ? "border-t-4 border-cyan-400/30 bg-slate-900/80" : "bg-cyan-950/60"}>
+                        <TableCell colSpan={8} className="py-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-base font-bold text-cyan-100">{item.titulo}</span>
+                            <Badge variant="outline" className="border-cyan-400/40 text-cyan-100">
+                              {item.quantidade}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+
+                  if (item.tipo === "vazio") {
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell colSpan={8} className="py-8 text-center text-slate-400">
+                          {item.texto}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+
+                  const ag = item;
                   const StatusIcon = statusConfig[ag.status]?.icon || Clock;
                   
                   return (
@@ -528,11 +569,6 @@ ${agendamento.link_reuniao ? `🎥 *Link da reunião:*\n${agendamento.link_reuni
             </Table>
           </div>
 
-          {agendamentosFiltrados.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-slate-500 text-lg">Nenhum agendamento encontrado</p>
-            </div>
-          )}
         </Card>
 
         {/* Dialog de envio de WhatsApp */}
