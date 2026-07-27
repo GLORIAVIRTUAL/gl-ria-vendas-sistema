@@ -99,7 +99,7 @@
           "created_by_id": "{{user.id}}"
         },
         {
-          "data.afiliado_id": "{{user.afiliado_id}}"
+          "data.afiliado_id": "{{user.data.afiliado_id}}"
         },
         {
           "user_condition": {
@@ -114,7 +114,7 @@
           "created_by_id": "{{user.id}}"
         },
         {
-          "data.afiliado_id": "{{user.afiliado_id}}"
+          "data.afiliado_id": "{{user.data.afiliado_id}}"
         },
         {
           "user_condition": {
@@ -129,7 +129,7 @@
           "created_by_id": "{{user.id}}"
         },
         {
-          "data.afiliado_id": "{{user.afiliado_id}}"
+          "data.afiliado_id": "{{user.data.afiliado_id}}"
         },
         {
           "user_condition": {
@@ -144,7 +144,7 @@
           "created_by_id": "{{user.id}}"
         },
         {
-          "data.afiliado_id": "{{user.afiliado_id}}"
+          "data.afiliado_id": "{{user.data.afiliado_id}}"
         },
         {
           "user_condition": {

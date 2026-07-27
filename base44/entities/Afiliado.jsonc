@@ -50,7 +50,7 @@
     "read": {
       "$or": [
         {
-          "_id": "{{user.afiliado_id}}"
+          "id": "{{user.data.afiliado_id}}"
         },
         {
           "user_condition": {
@@ -62,7 +62,7 @@
     "update": {
       "$or": [
         {
-          "_id": "{{user.afiliado_id}}"
+          "id": "{{user.data.afiliado_id}}"
         },
         {
           "user_condition": {
