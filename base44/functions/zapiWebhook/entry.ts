@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const processedMessages = new Set();
 
+// Webhook ativo para receber mensagens da instância Z-API configurada.
 // Compara dois telefones de forma tolerante ao nono dígito (com/sem o 9 após o DDD).
 // Ex: "5587988020504" (com 9) deve casar com "558788020504" (sem 9).
 function telefonesIguais(tel1, tel2) {
