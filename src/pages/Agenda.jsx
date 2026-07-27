@@ -13,6 +13,7 @@ import NovoCompromissoDialog from "../components/agenda/NovoCompromissoDialog";
 import EditCompromissoDialog from "../components/agenda/EditCompromissoDialog";
 import CompromissoCard from "../components/agenda/CompromissoCard";
 import DiaFullscreenDialog from "../components/agenda/DiaFullscreenDialog";
+import ActivityCalendar from "../components/agenda/ActivityCalendar";
 
 const prioridadeCor = {
   Baixa: "bg-blue-100 text-blue-700 border-blue-200",
@@ -35,6 +36,13 @@ export default function Agenda() {
     queryFn: () => base44.entities.Compromisso.list('-data', 200),
     initialData: [],
     refetchInterval: 30000, // Atualiza a cada 30 segundos
+  });
+
+  const { data: agendamentos = [] } = useQuery({
+    queryKey: ['agendamentos-agenda'],
+    queryFn: () => base44.entities.Agendamento.list('-data', 200),
+    initialData: [],
+    refetchInterval: 30000,
   });
 
   const createMutation = useMutation({
@@ -176,6 +184,11 @@ export default function Agenda() {
     setDiaFullscreenAberto(true);
   };
 
+  const handleSelecionarDiaCalendario = (dataStr) => {
+    setSemanaInicio(startOfWeek(parseISO(dataStr), { weekStartsOn: 0 }));
+    handleAbrirDiaFullscreen(dataStr);
+  };
+
   const handleAdicionarCompromisso = (dataStr) => {
     setDataSelecionada(dataStr);
     setDialogNovoAberto(true);
@@ -237,6 +250,13 @@ export default function Agenda() {
             <p className="font-heading text-3xl font-bold text-emerald-200 drop-shadow-[0_0_12px_rgba(52,211,153,0.28)]">{compromissosConcluidos}</p>
           </Card>
         </div>
+
+        <ActivityCalendar
+          compromissos={compromissos}
+          agendamentos={agendamentos}
+          selectedDate={diaFullscreenData}
+          onSelectDate={handleSelecionarDiaCalendario}
+        />
 
         {/* Navegação de Semana */}
         <Card className="p-4 shadow-lg border-0">
@@ -402,7 +422,8 @@ export default function Agenda() {
         open={diaFullscreenAberto}
         onOpenChange={setDiaFullscreenAberto}
         data={diaFullscreenData}
-        compromissos={diaFullscreenData ? compromissosPorDia[diaFullscreenData] || [] : []}
+        compromissos={diaFullscreenData ? compromissos.filter((item) => item.data === diaFullscreenData).sort((a, b) => a.horario.localeCompare(b.horario)) : []}
+        agendamentos={diaFullscreenData ? agendamentos.filter((item) => item.data === diaFullscreenData).sort((a, b) => a.horario.localeCompare(b.horario)) : []}
         onMarcarConcluido={handleMarcarConcluido}
         onEditar={handleEditar}
         onExcluir={handleExcluir}

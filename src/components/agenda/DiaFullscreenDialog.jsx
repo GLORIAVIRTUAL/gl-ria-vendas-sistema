@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, Check, Pencil, Trash2, Bell, Plus, Calendar } from "lucide-react";
+import { Clock, Pencil, Trash2, Bell, Plus, Calendar } from "lucide-react";
+import AgendamentoDiaCard from "@/components/agenda/AgendamentoDiaCard";
 
 const prioridadeCor = {
   Baixa: "border-cyan-400/40 bg-cyan-400/15 text-cyan-200",
@@ -17,9 +18,10 @@ const prioridadeCor = {
   Alta: "border-red-400/40 bg-red-400/15 text-red-200"
 };
 
-export default function DiaFullscreenDialog({ open, onOpenChange, data, compromissos, onMarcarConcluido, onEditar, onExcluir, onAdicionarCompromisso }) {
+export default function DiaFullscreenDialog({ open, onOpenChange, data, compromissos, agendamentos = [], onMarcarConcluido, onEditar, onExcluir, onAdicionarCompromisso }) {
   if (!data) return null;
 
+  const totalAtividades = compromissos.length + agendamentos.length;
   const diaSemana = format(parseISO(data), 'EEEE', { locale: ptBR });
   const diaFormatado = format(parseISO(data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
@@ -38,13 +40,13 @@ export default function DiaFullscreenDialog({ open, onOpenChange, data, compromi
               </p>
             </div>
             <Badge className="text-lg px-4 py-2">
-              {compromissos.length} {compromissos.length === 1 ? 'compromisso' : 'compromissos'}
+              {totalAtividades} {totalAtividades === 1 ? 'atividade' : 'atividades'}
             </Badge>
           </div>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {compromissos.length === 0 ? (
+          {totalAtividades === 0 ? (
             <div className="text-center py-16">
               <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Calendar className="w-10 h-10 text-slate-400" />
@@ -167,6 +169,9 @@ export default function DiaFullscreenDialog({ open, onOpenChange, data, compromi
                     </Card>
                   );
                 })}
+                {agendamentos.map((agendamento) => (
+                  <AgendamentoDiaCard key={agendamento.id} agendamento={agendamento} />
+                ))}
               </div>
             </>
           )}
