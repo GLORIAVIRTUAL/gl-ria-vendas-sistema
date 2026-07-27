@@ -64,23 +64,23 @@ export default function MessageBubble({ message, isOpenClaw = false }) {
 
   return (
     <div className={cn(
-      "flex mb-3",
-      isOutbound ? "justify-end" : "justify-start"
+      "flex mb-4 animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-700 [transform-style:preserve-3d]",
+      isOutbound ? "justify-end [transform:translateZ(34px)]" : "justify-start [transform:translateZ(18px)]"
     )}>
       <div className={cn(
-        "max-w-[75%] rounded-2xl px-3 py-2 shadow-sm",
+        "max-w-[72%] rounded-xl border px-4 py-3 backdrop-blur-xl transition-transform duration-300 hover:-translate-y-1 hover:scale-[1.01]",
         isOutbound 
           ? isAI 
             ? isOpenClaw
-              ? "bg-gradient-to-r from-red-500 to-red-600 text-white rounded-br-md"
-              : "bg-cyan-400 text-slate-950 shadow-[0_0_16px_rgba(34,211,238,0.16)] rounded-br-md"
-              : "bg-slate-700 text-white rounded-br-md"
-              : "bg-slate-900/85 border border-slate-600/60 text-slate-100 rounded-bl-md backdrop-blur-lg"
+              ? "border-red-300/70 bg-red-950/65 text-white shadow-[0_18px_38px_rgba(0,0,0,0.48),0_0_22px_rgba(248,113,113,0.3),inset_0_1px_0_rgba(255,255,255,0.14)] rounded-br-sm"
+              : "border-cyan-200/80 bg-cyan-950/90 text-slate-50 shadow-[0_18px_38px_rgba(0,0,0,0.5),0_0_24px_rgba(34,211,238,0.38),inset_0_1px_0_rgba(255,255,255,0.16)] rounded-br-sm"
+              : "border-slate-400/50 bg-slate-800/80 text-white shadow-[0_18px_36px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.1)] rounded-br-sm"
+              : "border-cyan-300/45 bg-slate-950/90 text-slate-100 shadow-[0_16px_34px_rgba(0,0,0,0.5),0_0_18px_rgba(34,211,238,0.2),inset_0_1px_0_rgba(255,255,255,0.1)] rounded-bl-sm"
       )}>
         {isOutbound && (
           <div className={cn(
             "flex items-center gap-1.5 text-[10px] mb-1",
-            isAI ? (isOpenClaw ? "text-red-100" : "text-slate-800") : "text-slate-300"
+            isAI ? (isOpenClaw ? "text-red-300" : "text-cyan-300") : "text-slate-300"
           )}>
             {isAI ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
             <span>{isAI ? (isOpenClaw ? 'OPENCLAW' : 'IA GLÓRIA') : (message.extracted_data?.sent_by || 'Atendente')}</span>
@@ -98,7 +98,7 @@ export default function MessageBubble({ message, isOpenClaw = false }) {
         {message.content && (
           <p className={cn(
             "text-sm whitespace-pre-wrap break-words",
-            isOutbound ? (isAI && !isOpenClaw ? "text-slate-950" : "text-white") : "text-slate-100"
+            isOutbound ? "text-slate-50" : "text-slate-100"
           )}>
             {message.content}
           </p>
@@ -106,7 +106,7 @@ export default function MessageBubble({ message, isOpenClaw = false }) {
         
         <div className={cn(
           "flex items-center justify-end gap-1 mt-1",
-          isOutbound ? (isAI && !isOpenClaw ? "text-slate-800" : "text-white/70") : "text-slate-400"
+          isOutbound ? (isAI && !isOpenClaw ? "text-cyan-100/70" : "text-white/70") : "text-slate-400"
         )}>
           <span className="text-[10px]">
             {(() => {

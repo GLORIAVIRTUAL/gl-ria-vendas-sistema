@@ -207,7 +207,10 @@ export default function ChatIA() {
 
   return (
     <div className="h-[calc(100vh-80px)] flex overflow-hidden bg-slate-950/45">
-      <div className="w-80 shrink-0 bg-slate-950/80 border-r border-cyan-400/20 flex flex-col backdrop-blur-xl">
+      <div className={cn(
+        "w-full shrink-0 bg-slate-950/80 border-r border-cyan-400/20 flex-col backdrop-blur-xl md:w-80",
+        selectedContact ? "hidden md:flex" : "flex"
+      )}>
         <div className="p-4 border-b border-cyan-400/20 bg-slate-900/65">
           <div className="flex items-center justify-between mb-4">
             <div>

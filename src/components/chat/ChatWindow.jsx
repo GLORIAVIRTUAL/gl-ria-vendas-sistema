@@ -149,101 +149,53 @@ export default function ChatWindow({
 
   return (
     <div className={cn(
-      "flex-1 flex flex-col h-full bg-slate-950/45",
-      isOpenClaw ? "shadow-[inset_0_1px_0_rgba(248,113,113,0.12)]" : "shadow-[inset_0_1px_0_rgba(103,232,249,0.12)]"
+      "relative flex-1 flex flex-col h-full overflow-hidden bg-slate-950",
+      isOpenClaw ? "shadow-[inset_0_1px_0_rgba(248,113,113,0.18)]" : "shadow-[inset_0_1px_0_rgba(103,232,249,0.18)]"
     )}>
-      <div className="flex items-center justify-between p-4 bg-slate-950/80 border-b border-cyan-400/20 shadow-lg backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <Avatar className={cn("h-10 w-10 border-2", isOpenClaw ? "border-red-200" : "border-blue-200")}>
-            <AvatarImage src={contact.profile_picture} />
-            <AvatarFallback className={cn(
-              "text-white",
-              isOpenClaw ? "bg-gradient-to-br from-red-500 to-red-600" : "bg-gradient-to-br from-blue-500 to-cyan-500"
-            )}>
-              {(contact.name || contact.phone || '?').charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h3 className="font-semibold text-slate-50">{contact.name || contact.phone}</h3>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">{contact.phone}</span>
-              <Badge variant="outline" className={cn(
-                "text-[10px] py-0",
-                isOpenClaw ? "bg-red-500" : pipelineStages.find(s => s.value === contact.pipeline_stage)?.color,
-                "text-white border-none"
-              )}>
-                {pipelineStages.find(s => s.value === contact.pipeline_stage)?.label || 'Novo'}
-              </Badge>
+      <div className="relative z-20 grid grid-cols-1 gap-4 border-b border-cyan-300/25 bg-slate-950/90 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:grid-cols-[220px_1fr_auto] lg:px-6 lg:py-4">
+        <div className="border-r border-cyan-300/20 pr-5">
+          <p className="font-heading text-xl font-bold tracking-tight text-cyan-300">GLÓRIA IA</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-300">{contact.name || contact.phone}</p>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={() => handleAIToggle(true)} className="rounded-md border border-emerald-400/35 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-200 shadow-[0_0_16px_rgba(52,211,153,0.18)]">● IA ativa</button>
+            <button className="rounded-md border border-red-400/35 bg-red-400/10 px-3 py-1.5 text-xs font-semibold text-red-300 shadow-[0_0_16px_rgba(248,113,113,0.18)]">● OpenClaw ativa</button>
+            <button onClick={() => handleAIToggle(false)} className="rounded-md border border-slate-500/40 bg-slate-900/60 px-3 py-1.5 text-xs font-semibold text-slate-300">● Atendimento manual</button>
+          </div>
+          <div className="rounded-lg border border-cyan-300/20 bg-cyan-400/10 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <p className="text-[11px] text-slate-400">Mover para:</p>
+            <div className="flex flex-wrap gap-x-5 gap-y-1">
+              {pipelineStages.map((stage) => (
+                <button key={stage.value} onClick={() => handlePipelineChange(stage.value)} className="text-xs font-medium text-slate-100 transition-colors hover:text-cyan-300">
+                  {stage.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 border border-slate-600/60 bg-slate-900/70 rounded-full px-3 py-1.5">
-            <span className={cn(
-              "text-xs font-semibold whitespace-nowrap",
-              contact.ai_enabled ? "text-cyan-200" : "text-amber-200"
-            )}>
-              {contact.ai_enabled
-                ? `${isOpenClaw ? "OpenClaw" : "IA"} ativa`
-                : "Atendimento manual"}
-            </span>
-            <Switch
-              checked={contact.ai_enabled}
-              onCheckedChange={handleAIToggle}
-              aria-label={contact.ai_enabled ? "Desativar atendimento automático" : "Ativar atendimento automático"}
-              className="data-[state=checked]:bg-cyan-400"
-            />
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="w-5 h-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem className="font-medium text-slate-500">
-                Mover para:
-              </DropdownMenuItem>
-              {pipelineStages.map((stage) => (
-                <DropdownMenuItem 
-                  key={stage.value}
-                  onClick={() => handlePipelineChange(stage.value)}
-                  className="gap-2"
-                >
-                  <span className={cn("w-2 h-2 rounded-full", stage.color)} />
-                  {stage.label}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                className="text-green-600 font-semibold" 
-                onClick={handleFinishConversation}
-              >
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                Finalizar conversa
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-slate-500" onClick={onClose}>
-                Fechar janela
-              </DropdownMenuItem>
-              {isAdmin && (
-                <DropdownMenuItem 
-                  className="text-red-600 font-semibold" 
-                  onClick={onDelete}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Excluir conversa
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex flex-col items-start justify-center gap-2 border-l border-cyan-300/20 pl-4 text-xs">
+          <button onClick={handleFinishConversation} className="font-semibold text-red-300 hover:text-red-200">Finalizar conversa</button>
+          <button onClick={onClose} className="font-semibold text-slate-200 hover:text-cyan-200">Fechar janela</button>
+          {isAdmin && <button onClick={onDelete} className="font-semibold text-red-400 hover:text-red-300">Excluir conversa</button>}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <TemplateSelector contact={contact} onSent={() => {}} />
-        <div className="space-y-1">
+      <div
+        className="relative flex-1 overflow-y-auto bg-slate-950/50 px-4 pb-28 pt-5 bg-blend-overlay before:absolute before:inset-0 before:bg-slate-950/30 md:px-8"
+        style={{
+          backgroundImage: "url('https://media.base44.com/images/public/68f3ccc3a454aaec766ae684/e72093d7d_generated_image.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          perspective: '1200px'
+        }}
+      >
+        <div className="relative z-10 mx-auto max-w-4xl animate-in fade-in duration-700">
+          <TemplateSelector contact={contact} onSent={() => {}} />
+        </div>
+        <div className="relative z-10 mx-auto max-w-4xl space-y-3 [transform-style:preserve-3d]">
           {messages.map((msg) => (
             <MessageBubble key={msg.id} message={msg} isOpenClaw={contact.llm_destino === 'openclaw'} />
           ))}
@@ -274,8 +226,8 @@ export default function ChatWindow({
         </div>
       )}
 
-      <div className="p-4 bg-slate-950/85 border-t border-cyan-400/20 backdrop-blur-xl">
-        <div className="flex items-end gap-2">
+      <div className="absolute inset-x-0 bottom-0 z-20 border-t border-cyan-300/15 bg-slate-950/55 px-6 py-4 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-cyan-300/45 bg-cyan-400/10 p-2 shadow-[0_18px_45px_rgba(0,0,0,0.55),0_0_26px_rgba(34,211,238,0.18),inset_0_1px_0_rgba(255,255,255,0.08)] [transform:translateZ(36px)]">
           <input
             type="file"
             ref={fileInputRef}
@@ -301,7 +253,7 @@ export default function ChatWindow({
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Digite sua mensagem..."
-              className="min-h-[44px] max-h-32 resize-none pr-12 rounded-2xl border-slate-600/70 bg-slate-900/70 text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:ring-cyan-400"
+              className="min-h-[44px] max-h-32 resize-none rounded-xl border-cyan-300/35 bg-slate-950/45 pr-12 text-slate-100 shadow-[inset_0_0_24px_rgba(34,211,238,0.08)] placeholder:text-slate-400 focus:border-cyan-300 focus:ring-cyan-300"
               rows={1}
             />
           </div>
