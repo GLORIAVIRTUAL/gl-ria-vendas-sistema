@@ -26,7 +26,8 @@ function telefonesIguais(tel1, tel2) {
 const TELEFONES_SOMENTE_HUMANO = [
   '5587988020504',
   '558796330830',
-  '5511939246061'
+  '5511939246061',
+  '14323562790'
 ];
 
 // Acumulador de mensagens por telefone (debounce).
