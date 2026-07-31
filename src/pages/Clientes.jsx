@@ -31,9 +31,15 @@ export default function Clientes() {
     initialData: [],
   });
 
-  const { data: negocios = [] } = useQuery({
+  const { data: negocios = [], isFetching: carregandoNegocios } = useQuery({
     queryKey: ['negocios'],
     queryFn: () => base44.entities.NegocioFechado.list(),
+    initialData: [],
+  });
+
+  const { data: leads = [], isFetching: carregandoLeads } = useQuery({
+    queryKey: ['leads-clientes'],
+    queryFn: () => base44.entities.Lead.list(),
     initialData: [],
   });
 
@@ -56,35 +62,39 @@ export default function Clientes() {
   const sincronizarNegociosMutation = useMutation({
     mutationFn: async () => {
       const clientesExistentes = await base44.entities.Cliente.list();
-      const negociosAtivos = negocios.filter(n => n.status_pagamento === 'Ativo');
-      
-      const promises = negociosAtivos.map(async (negocio) => {
-        const clienteExiste = clientesExistentes.find(c => c.negocio_id === negocio.id);
-        
-        if (!clienteExiste) {
-          return base44.entities.Cliente.create({
-            negocio_id: negocio.id,
-            nome_cliente: negocio.nome_cliente,
-            nome_empresa: negocio.nome_empresa,
-            email_cliente: negocio.email_cliente,
-            telefone_cliente: negocio.telefone_cliente || '',
-            produto: negocio.produto,
-            valor_mensalidade: negocio.valor_mensalidade,
-            status_pagamento: negocio.status_pagamento,
-            cnpj: '',
-            endereco_completo: '',
-            observacoes: negocio.observacoes || '',
-            arquivos_urls: [],
-            data_inicio_contrato: negocio.data_primeira_cobranca || negocio.created_date
-          });
-        }
-      });
-      
-      await Promise.all(promises);
+      const estagiosPermitidos = ['Negocio_Fechado', 'Implantacao', 'Inicio_de_Uso', 'Estavel'];
+      const leadsElegiveis = leads.filter(lead => estagiosPermitidos.includes(lead.estagio));
+
+      const resultados = await Promise.all(leadsElegiveis.map(async (lead) => {
+        const negocio = lead.negocio_id ? negocios.find(item => item.id === lead.negocio_id) : null;
+        const email = negocio?.email_cliente || lead.email_cliente;
+        const referenciaCliente = lead.negocio_id || `lead:${lead.id}`;
+        const clienteExiste = clientesExistentes.find(cliente => cliente.negocio_id === referenciaCliente);
+
+        if (clienteExiste || !email) return null;
+
+        return base44.entities.Cliente.create({
+          negocio_id: referenciaCliente,
+          nome_cliente: negocio?.nome_cliente || lead.nome_cliente,
+          nome_empresa: negocio?.nome_empresa || lead.nome_empresa || 'Não informado',
+          email_cliente: email,
+          telefone_cliente: negocio?.telefone_cliente || lead.telefone_cliente || '',
+          produto: negocio?.produto || lead.produto_interesse || '',
+          valor_mensalidade: negocio?.valor_mensalidade || lead.valor_estimado || 0,
+          status_pagamento: negocio?.status_pagamento || 'Ativo',
+          cnpj: '',
+          endereco_completo: '',
+          observacoes: negocio?.observacoes || lead.observacoes || '',
+          arquivos_urls: [],
+          data_inicio_contrato: negocio?.data_primeira_cobranca || negocio?.created_date || lead.created_date
+        });
+      }));
+
+      return resultados.filter(Boolean).length;
     },
-    onSuccess: () => {
+    onSuccess: (totalCriados) => {
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
-      alert('✅ Clientes sincronizados com sucesso!');
+      alert(`Clientes atualizados com sucesso! ${totalCriados} novo(s) cliente(s) adicionado(s).`);
     },
   });
 
@@ -133,11 +143,11 @@ export default function Clientes() {
           </div>
           <Button
             onClick={() => sincronizarNegociosMutation.mutate()}
-            disabled={sincronizarNegociosMutation.isPending}
+            disabled={sincronizarNegociosMutation.isPending || carregandoLeads || carregandoNegocios}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg"
           >
             <Users className="w-5 h-5 mr-2" />
-            {sincronizarNegociosMutation.isPending ? 'Sincronizando...' : 'Sincronizar Negócios'}
+            {carregandoLeads || carregandoNegocios ? 'Carregando...' : sincronizarNegociosMutation.isPending ? 'Atualizando...' : 'Atualizar Clientes'}
           </Button>
         </div>
 
