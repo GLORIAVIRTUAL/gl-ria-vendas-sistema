@@ -23,6 +23,12 @@ function telefonesIguais(tel1, tel2) {
   return a === b || a.endsWith(b) || b.endsWith(a);
 }
 
+const TELEFONES_SOMENTE_HUMANO = [
+  '5587988020504',
+  '558796330830',
+  '5511939246061'
+];
+
 // Acumulador de mensagens por telefone (debounce).
 // Permite que o cliente envie várias frases e a IA responda apenas uma vez.
 // A marca de debounce é persistida no BANCO (campo debounce_token do Contact),
@@ -87,6 +93,11 @@ Deno.serve(async (req) => {
     if (!phone) {
       console.log('⚠️ Sem telefone no payload');
       return Response.json({ success: true });
+    }
+
+    const somenteHumano = TELEFONES_SOMENTE_HUMANO.some(numero => telefonesIguais(numero, phone));
+    if (somenteHumano) {
+      console.log('🙋 Telefone configurado para atendimento exclusivamente humano:', phone);
     }
 
     // Evita duplicação
@@ -187,14 +198,16 @@ Deno.serve(async (req) => {
         profile_picture: body.senderPhoto || '',
         pipeline_stage: 'novo_lead',
         llm_destino: llmDestino,
-        ai_enabled: true,
+        ai_enabled: !somenteHumano,
         is_active: true,
         conversation_finished: false,
         last_message_at: new Date().toISOString()
       });
 
-      // Notifica o dono no celular pessoal sobre cliente novo no chat
-      await notificarClienteNovo(contactName || phone, phone);
+      // Notifica o dono somente quando não for uma conversa exclusiva do modo humano.
+      if (!somenteHumano) {
+        await notificarClienteNovo(contactName || phone, phone);
+      }
     } else {
       contact = existingContacts[0];
       const wasFinished = contact.conversation_finished || contact.is_active === false;
@@ -204,6 +217,7 @@ Deno.serve(async (req) => {
         name: contactName || contact.name,
         profile_picture: body.senderPhoto || contact.profile_picture,
         llm_destino: llmDestino,
+        ...(somenteHumano ? { ai_enabled: false, transferido_humano_at: new Date().toISOString() } : {}),
         is_active: true,
         conversation_finished: false
       });
@@ -211,6 +225,7 @@ Deno.serve(async (req) => {
       contact.is_active = true;
       contact.conversation_finished = false;
       contact.llm_destino = llmDestino;
+      if (somenteHumano) contact.ai_enabled = false;
 
       if (wasFinished) {
         console.log('🔄 Nova conversa iniciada (anterior foi finalizada)');
@@ -245,6 +260,11 @@ Deno.serve(async (req) => {
     });
 
     console.log('✅ Mensagem salva!');
+
+    if (somenteHumano) {
+      console.log('🙋 Mensagem mantida no chat em modo humano, sem resposta automática.');
+      return Response.json({ success: true, modo: 'humano' });
+    }
 
     // ID da mensagem que ESTA execução está processando. Usado para o debounce:
     // após o sleep, só responde a execução cuja mensagem é a mais recente do contato.
