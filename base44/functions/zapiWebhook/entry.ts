@@ -267,7 +267,7 @@ Deno.serve(async (req) => {
     // Se este telefone é de um prospect em cadência, a cadência é interrompida
     // e ele entra no CRM como lead quente.
     try {
-      const resultadoCadencia = await pararCadenciaPorResposta(base44.asServiceRole, phone);
+      const resultadoCadencia = await pararCadenciaPorResposta(base44.asServiceRole, phone, content);
       if (resultadoCadencia.prospect_id) {
         console.log('🛑 Cadência interrompida por resposta:', JSON.stringify(resultadoCadencia));
       }
