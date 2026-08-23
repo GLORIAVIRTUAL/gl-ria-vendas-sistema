@@ -1,0 +1,98 @@
+{
+  "name": "CadenciaEnvio",
+  "type": "object",
+  "properties": {
+    "campanha_id": {
+      "type": "string",
+      "description": "Campanha relacionada"
+    },
+    "campanha_nome": {
+      "type": "string",
+      "description": "Nome da campanha"
+    },
+    "prospect_id": {
+      "type": "string",
+      "description": "Prospect destinat\u00e1rio"
+    },
+    "prospect_nome": {
+      "type": "string",
+      "description": "Nome do prospect"
+    },
+    "passo_ordem": {
+      "type": "number",
+      "description": "Ordem do passo na cad\u00eancia"
+    },
+    "canal": {
+      "type": "string",
+      "enum": [
+        "WhatsApp",
+        "Email"
+      ],
+      "description": "Canal do envio"
+    },
+    "destino": {
+      "type": "string",
+      "description": "Telefone ou e-mail usado no envio"
+    },
+    "assunto": {
+      "type": "string",
+      "description": "Assunto (e-mail)"
+    },
+    "mensagem": {
+      "type": "string",
+      "description": "Mensagem enviada ou programada"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "programado",
+        "enviado",
+        "erro",
+        "cancelado"
+      ],
+      "default": "programado",
+      "description": "Status do envio"
+    },
+    "data_programada": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando o envio deve ocorrer"
+    },
+    "data_envio": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando o envio ocorreu"
+    },
+    "erro_mensagem": {
+      "type": "string",
+      "description": "Mensagem de erro do envio"
+    }
+  },
+  "required": [
+    "campanha_id",
+    "prospect_id",
+    "canal"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

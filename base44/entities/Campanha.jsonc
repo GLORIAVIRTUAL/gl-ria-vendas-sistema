@@ -1,0 +1,96 @@
+{
+  "name": "Campanha",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome da campanha de prospec\u00e7\u00e3o"
+    },
+    "descricao": {
+      "type": "string",
+      "description": "Objetivo da campanha"
+    },
+    "icp_id": {
+      "type": "string",
+      "description": "ICP alvo da campanha (vazio = todos)"
+    },
+    "ativa": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a cad\u00eancia autom\u00e1tica est\u00e1 ativa"
+    },
+    "score_minimo": {
+      "type": "number",
+      "default": 60,
+      "description": "Lead score m\u00ednimo para entrar na campanha"
+    },
+    "limite_diario_envios": {
+      "type": "number",
+      "default": 30,
+      "description": "M\u00e1ximo de mensagens enviadas por execu\u00e7\u00e3o"
+    },
+    "limite_diario_entradas": {
+      "type": "number",
+      "default": 20,
+      "description": "M\u00e1ximo de prospects que entram na cad\u00eancia por execu\u00e7\u00e3o"
+    },
+    "passos": {
+      "type": "array",
+      "description": "Passos da cad\u00eancia em ordem",
+      "items": {
+        "type": "object",
+        "properties": {
+          "canal": {
+            "type": "string",
+            "enum": [
+              "WhatsApp",
+              "Email"
+            ]
+          },
+          "dia_offset": {
+            "type": "number",
+            "description": "Dias ap\u00f3s a entrada do prospect na cad\u00eancia"
+          },
+          "assunto": {
+            "type": "string",
+            "description": "Assunto (somente e-mail)"
+          },
+          "mensagem": {
+            "type": "string",
+            "description": "Mensagem com vari\u00e1veis {{empresa}}, {{cidade}}, {{produto}}"
+          }
+        }
+      }
+    },
+    "ultima_execucao": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u00daltima execu\u00e7\u00e3o da cad\u00eancia"
+    }
+  },
+  "required": [
+    "nome"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
