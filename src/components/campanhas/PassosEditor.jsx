@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function PassosEditor({ passos, onChange }) {
   const atualizar = (indice, campo, valor) => onChange(passos.map((passo, i) => i === indice ? { ...passo, [campo]: valor } : passo));
-  const adicionar = () => onChange([...passos, { canal: "WhatsApp", dia_offset: passos.length === 0 ? 0 : passos.length * 2, assunto: "", mensagem: "" }]);
+  const adicionar = () => onChange([...passos, { canal: "WhatsApp", dia_offset: passos.length === 0 ? 0 : passos.length * 2, assunto: "", mensagem: "", objetivo: "", usar_ia: false }]);
   const remover = (indice) => onChange(passos.filter((_, i) => i !== indice));
 
   return <div className="space-y-4">
@@ -39,6 +39,14 @@ export default function PassosEditor({ passos, onChange }) {
         <Textarea rows={4} value={passo.mensagem || ""} onChange={(e) => atualizar(indice, "mensagem", e.target.value)} className="mt-1" placeholder="Olá! Vi que a {{empresa}} atua em {{cidade}}..." />
         <p className="mt-1 text-xs text-slate-400">Variáveis: {"{{empresa}} {{cidade}} {{uf}} {{segmento}} {{atividade}} {{produto}}"}</p>
       </div>
+      <div>
+        <Label className="text-xs text-cyan-100">Objetivo deste passo (orienta a IA)</Label>
+        <Input value={passo.objetivo || ""} onChange={(e) => atualizar(indice, "objetivo", e.target.value)} className="mt-1" placeholder="Ex: apresentar a Glória e propor uma conversa de 15 min" />
+      </div>
+      <label className="flex items-center gap-2 text-xs text-cyan-100">
+        <input type="checkbox" checked={!!passo.usar_ia} onChange={(e) => atualizar(indice, "usar_ia", e.target.checked)} className="h-4 w-4 accent-cyan-400" />
+        Personalizar com IA no momento do envio (usa o template como base)
+      </label>
     </div>)}
   </div>;
 }

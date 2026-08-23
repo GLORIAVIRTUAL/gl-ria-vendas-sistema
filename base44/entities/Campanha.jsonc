@@ -58,6 +58,15 @@
           "mensagem": {
             "type": "string",
             "description": "Mensagem com vari\u00e1veis {{empresa}}, {{cidade}}, {{produto}}"
+          },
+          "objetivo": {
+            "type": "string",
+            "description": "Objetivo da mensagem, usado para orientar a IA"
+          },
+          "usar_ia": {
+            "type": "boolean",
+            "default": false,
+            "description": "Personalizar a mensagem com IA no momento do envio"
           }
         }
       }

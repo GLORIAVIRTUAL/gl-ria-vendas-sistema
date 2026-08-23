@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { aplicarVariaveis, enviarEmail, enviarWhatsApp } from '../../shared/envio.ts';
+import { personalizarMensagem } from '../../shared/personalizacao.ts';
 
 const destinoDoProspect = (prospect, canal) => canal === 'Email'
   ? prospect.email
@@ -41,6 +42,9 @@ const inscreverProspects = async (db, campanha) => {
         destino,
         assunto: passo.assunto || '',
         mensagem: passo.mensagem,
+        objetivo: passo.objetivo || '',
+        usar_ia: !!passo.usar_ia,
+        template_base: passo.mensagem,
         status: 'programado',
         data_programada: new Date(agora + (Number(passo.dia_offset) || 0) * 86400000).toISOString()
       });
@@ -66,8 +70,27 @@ const dispararPendentes = async (db, campanha) => {
       const prospect = await db.entities.Prospect.get(envio.prospect_id);
       if (!prospect) throw new Error('Prospect não encontrado');
 
-      const mensagem = aplicarVariaveis(envio.mensagem, prospect);
-      const assunto = aplicarVariaveis(envio.assunto, prospect);
+      let mensagem = aplicarVariaveis(envio.template_base || envio.mensagem, prospect);
+      let assunto = aplicarVariaveis(envio.assunto, prospect);
+      let personalizadoIA = false;
+
+      if (envio.usar_ia) {
+        try {
+          const personalizado = await personalizarMensagem({
+            db,
+            prospect,
+            campanha,
+            passo: { canal: envio.canal, passo_ordem: envio.passo_ordem, objetivo: envio.objetivo },
+            templateAplicado: mensagem,
+            assuntoAplicado: assunto
+          });
+          mensagem = personalizado.mensagem;
+          assunto = personalizado.assunto || assunto;
+          personalizadoIA = true;
+        } catch (erroIA) {
+          console.error(`Falha na personalização por IA do envio ${envio.id}, usando template base:`, erroIA.message);
+        }
+      }
 
       if (envio.canal === 'Email') {
         await enviarEmail({ email: envio.destino, assunto: assunto || `Olá, ${prospect.nome_fantasia || prospect.razao_social}`, corpo: mensagem.replace(/\n/g, '<br>') });
@@ -79,6 +102,7 @@ const dispararPendentes = async (db, campanha) => {
         status: 'enviado',
         mensagem,
         assunto,
+        personalizado_ia: personalizadoIA,
         data_envio: new Date().toISOString()
       });
       if (prospect.status !== 'contatado') {
