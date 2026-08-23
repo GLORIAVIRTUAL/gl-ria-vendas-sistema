@@ -95,6 +95,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "ICPs", url: "/ICPs", icon: Target },
     { title: "Prospecção", url: "/Prospeccao", icon: Users },
     { title: "Campanhas", url: "/Campanhas", icon: Megaphone },
+    { title: "Resultados Cadências", url: "/ResultadosCadencias", icon: TrendingUp },
     { title: "Chat IA", url: createPageUrl("ChatIA"), icon: MessageSquare },
     { title: "Clientes OpenClaw", url: createPageUrl("ClientesOpenClaw"), icon: Bot },
     { title: "Tráfego Pago", url: createPageUrl("Trafego"), icon: Megaphone },

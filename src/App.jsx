@@ -118,6 +118,11 @@ const AuthenticatedApp = () => (
           <MotorComercial />
         </LayoutWrapper>
       } />
+      <Route path="/ResultadosCadencias" element={
+        <LayoutWrapper currentPageName="ResultadosCadencias">
+          <ResultadosCadencias />
+        </LayoutWrapper>
+      } />
       <Route path="/PoliticaPrivacidade" element={<PoliticaPrivacidade />} />
       <Route path="/TermosServico" element={<TermosServico />} />
       <Route path="*" element={<PageNotFound />} />
