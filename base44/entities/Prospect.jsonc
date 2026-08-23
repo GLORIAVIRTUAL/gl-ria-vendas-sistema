@@ -96,6 +96,14 @@
       "type": "string",
       "description": "Lead criado no CRM"
     },
+    "icp_id": {
+      "type": "string",
+      "description": "ICP de origem deste prospect"
+    },
+    "origem_prospeccao": {
+      "type": "string",
+      "description": "Origem da prospec\u00e7\u00e3o (ex: Manual, Prospec\u00e7\u00e3o Autom\u00e1tica)"
+    },
     "dados_kipflow": {
       "type": "object",
       "description": "Dados completos retornados pelo Kipflow"

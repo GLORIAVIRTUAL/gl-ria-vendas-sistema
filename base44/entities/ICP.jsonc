@@ -1,0 +1,190 @@
+{
+  "name": "ICP",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "description": "Nome do perfil ideal de cliente"
+    },
+    "descricao": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o do ICP"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o ICP est\u00e1 ativo"
+    },
+    "segmento": {
+      "type": "string",
+      "description": "Segmento principal"
+    },
+    "subsegmentos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Subsegmentos do ICP"
+    },
+    "cnaes_desejados": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "CNAEs desejados (configura\u00e7\u00e3o manual)"
+    },
+    "cnaes_excluidos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "CNAEs que devem ser exclu\u00eddos"
+    },
+    "estados": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Estados (UF) alvo"
+    },
+    "cidades": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Cidades alvo"
+    },
+    "regioes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Regi\u00f5es alvo"
+    },
+    "porte_minimo": {
+      "type": "string",
+      "description": "Porte m\u00ednimo da empresa"
+    },
+    "porte_maximo": {
+      "type": "string",
+      "description": "Porte m\u00e1ximo da empresa"
+    },
+    "funcionarios_minimo": {
+      "type": "number",
+      "description": "Quantidade m\u00ednima de funcion\u00e1rios"
+    },
+    "funcionarios_maximo": {
+      "type": "number",
+      "description": "Quantidade m\u00e1xima de funcion\u00e1rios"
+    },
+    "faturamento_minimo": {
+      "type": "number",
+      "description": "Faixa m\u00ednima de faturamento, quando dispon\u00edvel"
+    },
+    "matriz_filial": {
+      "type": "string",
+      "enum": [
+        "Indiferente",
+        "Matriz",
+        "Filial"
+      ],
+      "default": "Indiferente",
+      "description": "Filtro de matriz ou filial"
+    },
+    "exigir_telefone": {
+      "type": "boolean",
+      "default": false,
+      "description": "Exigir telefone dispon\u00edvel"
+    },
+    "exigir_email": {
+      "type": "boolean",
+      "default": false,
+      "description": "Exigir e-mail dispon\u00edvel"
+    },
+    "exigir_site": {
+      "type": "boolean",
+      "default": false,
+      "description": "Exigir site dispon\u00edvel"
+    },
+    "exigir_whatsapp": {
+      "type": "boolean",
+      "default": false,
+      "description": "Exigir WhatsApp dispon\u00edvel"
+    },
+    "palavras_chave": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Palavras-chave do ICP"
+    },
+    "produtos_recomendados": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Produtos Gl\u00f3ria recomendados"
+    },
+    "peso_comercial": {
+      "type": "number",
+      "default": 50,
+      "description": "Peso comercial do segmento (0 a 100)"
+    },
+    "limite_diario_empresas": {
+      "type": "number",
+      "default": 20,
+      "description": "Quantidade m\u00e1xima de empresas buscadas por dia"
+    },
+    "intervalo_execucao": {
+      "type": "string",
+      "enum": [
+        "Manual",
+        "Diario",
+        "2x_por_semana",
+        "Semanal",
+        "Quinzenal"
+      ],
+      "default": "Manual",
+      "description": "Intervalo de execu\u00e7\u00e3o da prospec\u00e7\u00e3o"
+    },
+    "prospeccao_automatica_ativa": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a prospec\u00e7\u00e3o autom\u00e1tica deste ICP est\u00e1 habilitada"
+    },
+    "observacoes_ia": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es para orientar a IA"
+    },
+    "ultima_execucao": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data e hora da \u00faltima execu\u00e7\u00e3o da prospec\u00e7\u00e3o"
+    }
+  },
+  "required": [
+    "nome"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
