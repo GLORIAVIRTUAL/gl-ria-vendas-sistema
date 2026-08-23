@@ -7,6 +7,7 @@ import MotorStatCard from "@/components/motor/MotorStatCard";
 import EtapasFunil from "@/components/motor/EtapasFunil";
 import ConverterQuentesButton from "@/components/motor/ConverterQuentesButton";
 import RespostasRecentes from "@/components/motor/RespostasRecentes";
+import RespostasEmailRecentes from "@/components/motor/RespostasEmailRecentes";
 
 const ESTAGIOS = [
   ["Prospeccao", "Prospecção"],
@@ -22,6 +23,7 @@ export default function MotorComercial() {
   const { data: leads = [] } = useQuery({ queryKey: ["leads-motor"], queryFn: () => base44.entities.Lead.list("-created_date", 500) });
   const { data: icps = [] } = useQuery({ queryKey: ["icps"], queryFn: () => base44.entities.ICP.list() });
   const { data: campanhas = [] } = useQuery({ queryKey: ["campanhas"], queryFn: () => base44.entities.Campanha.list() });
+  const { data: emails = [] } = useQuery({ queryKey: ["emails-motor"], queryFn: () => base44.entities.EmailNotificacao.list("-created_date", 100) });
 
   const analisados = prospects.filter((prospect) => prospect.analisado_em);
   const quentes = analisados.filter((prospect) => (prospect.score || 0) >= 70);
@@ -66,6 +68,9 @@ export default function MotorComercial() {
       <EtapasFunil titulo="Funil de vendas (CRM)" etapas={ESTAGIOS.map(([chave, label]) => ({ label, valor: leads.filter((lead) => lead.estagio === chave).length }))} />
     </div>
 
-    <RespostasRecentes prospects={prospects} />
+    <div className="grid gap-4 xl:grid-cols-2">
+      <RespostasRecentes prospects={prospects} />
+      <RespostasEmailRecentes emails={emails} />
+    </div>
   </div>;
 }
