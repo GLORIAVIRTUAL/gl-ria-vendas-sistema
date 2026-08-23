@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { secrets } from 'base44:runtime';
 
 const processedMessages = new Set();
 
@@ -505,13 +506,34 @@ HORARIO: HH:MM
 HISTÓRICO DA CONVERSA (as últimas mensagens "Cliente:" são as mais recentes, responda a elas):
 ${history}`;
 
-    console.log('🔄 Chamando IA...');
+    console.log('🔄 Chamando OpenAI GPT-4o...');
 
-    const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-      prompt: fullPrompt
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${secrets.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: fullPrompt }],
+        temperature: 0.4
+      }),
+      signal: AbortSignal.timeout(120000)
     });
 
-    console.log('✅ Resposta da IA:', aiResponse);
+    if (!openaiResponse.ok) {
+      throw new Error(`OpenAI retornou status ${openaiResponse.status}`);
+    }
+
+    const openaiData = await openaiResponse.json();
+    const aiResponse = (openaiData.choices?.[0]?.message?.content || '').trim();
+
+    if (!aiResponse) {
+      throw new Error('OpenAI não retornou texto de resposta');
+    }
+
+    console.log('✅ Resposta do GPT-4o recebida');
 
     // Verifica comando de agendamento
     let finalResponse = aiResponse;
