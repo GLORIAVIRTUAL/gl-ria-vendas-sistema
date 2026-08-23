@@ -21,6 +21,7 @@ import GerenciarUsuarios from '@/pages/GerenciarUsuarios';
 import Prospeccao from '@/pages/Prospeccao';
 import ICPs from '@/pages/ICPs';
 import Campanhas from '@/pages/Campanhas';
+import MotorComercial from '@/pages/MotorComercial';
 import OnboardingPublico from '@/pages/OnboardingPublico';
 import AgendamentoPublico from '@/pages/AgendamentoPublico';
 import FormularioStart from '@/pages/FormularioStart';
@@ -109,6 +110,11 @@ const AuthenticatedApp = () => (
       <Route path="/Campanhas" element={
         <LayoutWrapper currentPageName="Campanhas">
           <Campanhas />
+        </LayoutWrapper>
+      } />
+      <Route path="/MotorComercial" element={
+        <LayoutWrapper currentPageName="MotorComercial">
+          <MotorComercial />
         </LayoutWrapper>
       } />
       <Route path="/PoliticaPrivacidade" element={<PoliticaPrivacidade />} />
