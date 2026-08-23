@@ -22,6 +22,7 @@ import Prospeccao from '@/pages/Prospeccao';
 import ICPs from '@/pages/ICPs';
 import Campanhas from '@/pages/Campanhas';
 import MotorComercial from '@/pages/MotorComercial';
+import ResultadosCadencias from '@/pages/ResultadosCadencias';
 import OnboardingPublico from '@/pages/OnboardingPublico';
 import AgendamentoPublico from '@/pages/AgendamentoPublico';
 import FormularioStart from '@/pages/FormularioStart';
