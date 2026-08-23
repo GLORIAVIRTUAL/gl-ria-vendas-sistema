@@ -114,11 +114,9 @@ export default function EmailNotification() {
   return (
     <div className="fixed top-4 right-4 z-50 max-w-md space-y-3">
       {!audioHabilitado && (
-        <Alert className="bg-yellow-50 border-yellow-300">
-          <AlertDescription className="text-sm text-yellow-800">
-            ⚠️ Clique em qualquer lugar para ativar alertas sonoros
-          </AlertDescription>
-        </Alert>
+        <p className="pointer-events-none fixed bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-yellow-400/40 bg-slate-950/80 px-3 py-1 text-xs text-yellow-200">
+          Clique em qualquer lugar para ativar alertas sonoros
+        </p>
       )}
       <AnimatePresence>
         {visibleEmails.slice(0, 3).map((email, index) => (
