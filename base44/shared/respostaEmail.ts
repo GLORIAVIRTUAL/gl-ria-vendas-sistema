@@ -1,6 +1,8 @@
 // Etapa 6 — classificação comercial das respostas de e-mail com IA
 // e execução das regras de cadência (parar, suprimir, reagendar, escalar).
 
+import { enviarEmail } from './envio.ts';
+
 const CATEGORIAS = [
   'interessado', 'pediu_demonstracao', 'pediu_preco', 'pediu_informacoes',
   'pediu_contato_whatsapp', 'pediu_reuniao', 'nao_interessado', 'pessoa_errada',
@@ -116,6 +118,32 @@ const garantirLead = async (db: any, prospect: any, classificacao: string, proxi
   return lead.id;
 };
 
+// Avisa o time por e-mail quando a resposta exige intervenção humana.
+const alertarTime = async (emailRegistro: any, analise: any, prospect: any) => {
+  const destinoEmail = (Deno.env.get('GMAIL_EMAIL') || '').trim();
+  const empresa = prospect ? (prospect.nome_fantasia || prospect.razao_social) : 'Contato sem prospect vinculado';
+  const resumo = [
+    `Empresa: ${empresa}`,
+    `Remetente: ${emailRegistro.from}`,
+    `Assunto: ${emailRegistro.subject || '(sem assunto)'}`,
+    `Classificação: ${analise.classificacao_email}`,
+    `Motivo: ${analise.motivo_necessita_humano || 'Não informado'}`,
+    `Próxima ação sugerida: ${analise.proxima_acao || 'Não informada'}`
+  ];
+
+  if (destinoEmail) {
+    try {
+      await enviarEmail({
+        email: destinoEmail,
+        assunto: `[Ação humana] Resposta de ${empresa}`,
+        corpo: `<h3>Resposta de e-mail exige atendimento humano</h3><p>${resumo.join('<br>')}</p>`
+      });
+    } catch (erroAlerta) {
+      console.error('Falha ao enviar alerta por e-mail:', erroAlerta.message);
+    }
+  }
+};
+
 export async function processarRespostaEmail(db: any, emailRegistro: any) {
   const endereco = extrairEmail(emailRegistro.from);
   const prospect = await encontrarProspect(db, endereco);
@@ -170,5 +198,8 @@ export async function processarRespostaEmail(db: any, emailRegistro: any) {
   }
 
   await db.entities.EmailNotificacao.update(emailRegistro.id, atualizacao);
+  if (atualizacao.necessita_humano) {
+    await alertarTime(emailRegistro, analise, prospect);
+  }
   return { classificacao: analise.classificacao_email, acao, prospect_id: prospect?.id || null };
 }
