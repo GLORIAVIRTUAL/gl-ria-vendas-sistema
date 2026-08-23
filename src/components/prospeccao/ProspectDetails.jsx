@@ -1,5 +1,6 @@
 import React from "react";
 import { formatMoney } from "@/lib/prospectUtils";
+import ProspectQualificacao from "@/components/prospeccao/ProspectQualificacao";
 
 const formatDate = (value) => {
   if (!value) return "Não informada";
@@ -25,6 +26,7 @@ export default function ProspectDetails({ prospect }) {
   const companyType = source.matriz === true ? "Matriz" : source.matriz === false ? "Filial" : "Não informado";
 
   return <div className="space-y-4">
+    <ProspectQualificacao prospect={prospect} />
     <div className="grid gap-2 text-sm text-slate-300 md:grid-cols-2">
       <p><strong>Atividade:</strong> {prospect.ramo_atividade || prospect.cnae || "Não informada"}</p>
       <p><strong>Segmento:</strong> {prospect.segmento || "Não informado"}</p>

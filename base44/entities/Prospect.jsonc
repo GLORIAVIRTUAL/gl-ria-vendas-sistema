@@ -168,6 +168,93 @@
     "opt_out_motivo": {
       "type": "string",
       "description": "Motivo/origem do opt-out"
+    },
+    "intent_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Inten\u00e7\u00e3o de compra de 0 a 100, aumenta conforme intera\u00e7\u00f5es"
+    },
+    "qualificacao": {
+      "type": "object",
+      "description": "Informa\u00e7\u00f5es de qualifica\u00e7\u00e3o coletadas pelo Agente Comercial",
+      "properties": {
+        "empresa": {
+          "type": "string"
+        },
+        "segmento": {
+          "type": "string"
+        },
+        "cargo_pessoa": {
+          "type": "string"
+        },
+        "quantidade_funcionarios": {
+          "type": "string"
+        },
+        "unidades": {
+          "type": "string"
+        },
+        "sistema_atual": {
+          "type": "string"
+        },
+        "principal_problema": {
+          "type": "string"
+        },
+        "produto_interesse": {
+          "type": "string"
+        },
+        "urgencia": {
+          "type": "string"
+        },
+        "decisao_depende_de_outra_pessoa": {
+          "type": "string"
+        },
+        "orcamento_informado": {
+          "type": "string"
+        },
+        "observacoes": {
+          "type": "string"
+        }
+      }
+    },
+    "objecoes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Obje\u00e7\u00f5es comerciais identificadas na conversa"
+    },
+    "interesse_registrado": {
+      "type": "string",
+      "description": "Interesse comercial declarado pelo contato"
+    },
+    "qualificado_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u00daltima atualiza\u00e7\u00e3o da qualifica\u00e7\u00e3o pelo Agente Comercial"
+    },
+    "consentimento_whatsapp": {
+      "type": "object",
+      "description": "Consentimento do contato para conversas por WhatsApp",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "nao_informado",
+            "concedido",
+            "negado"
+          ]
+        },
+        "origem": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "observacao": {
+          "type": "string"
+        }
+      }
     }
   },
   "required": [

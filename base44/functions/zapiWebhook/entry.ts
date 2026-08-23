@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { secrets } from 'base44:runtime';
 import { pararCadenciaPorResposta } from '../../shared/cadenciaResposta.ts';
+import { buscarContextoComercial, montarContextoComercial, registrarQualificacao } from '../../shared/agenteComercial.ts';
 
 const processedMessages = new Set();
 
@@ -386,8 +387,20 @@ Deno.serve(async (req) => {
         console.log('⚠️ IA desabilitada para o contato, ignorando.');
         return Response.json({ success: true });
       }
+      // Modo Agente Comercial: se o telefone pertence a um prospect da prospecção,
+      // a IA de atendimento recebe o contexto comercial e conduz para a reunião.
+      let contextoComercial = null;
+      try {
+        contextoComercial = await buscarContextoComercial(base44.asServiceRole, phone);
+        if (contextoComercial) {
+          console.log('💼 Modo Agente Comercial ativo para:', contextoComercial.prospect.razao_social);
+        }
+      } catch (comErr) {
+        console.error('⚠️ Erro ao carregar contexto comercial:', comErr.message);
+      }
+
       console.log('🤖 Acumulador concluído, processando resposta da IA...');
-      await processAIResponse(base44, currentContact, phone);
+      await processAIResponse(base44, currentContact, phone, contextoComercial);
     }
 
     return Response.json({ success: true });
@@ -399,7 +412,7 @@ Deno.serve(async (req) => {
 });
 
 // ========== FUNÇÃO PARA PROCESSAR IA E RESPONDER VIA Z-API ==========
-async function processAIResponse(base44, contact, phone) {
+async function processAIResponse(base44, contact, phone, contextoComercial = null) {
   try {
     const clientToken = (Deno.env.get('CLIENT_TOKEN') || '').trim();
     const instanceToken = (Deno.env.get('TOKEN_DA_INSTANCIA') || '').trim();
@@ -514,6 +527,8 @@ TELEFONE: ${phone}
 DATA: YYYY-MM-DD (pode ser HOJE ou qualquer dia útil futuro; nunca datas passadas; horários 08:00 às 20:00)
 HORARIO: HH:MM
 [/AGENDAR]
+
+${contextoComercial ? montarContextoComercial(contextoComercial) : ''}
 
 HISTÓRICO DA CONVERSA (as últimas mensagens "Cliente:" são as mais recentes, responda a elas):
 ${history}`;
@@ -770,6 +785,20 @@ ${history}`;
     } else {
       const errorText = await sendResponse.text();
       console.error('❌ Erro ao enviar via Z-API:', errorText);
+    }
+
+    // Registra qualificação, objeções e intenção do prospect a partir da conversa.
+    if (contextoComercial) {
+      try {
+        const resultado = await registrarQualificacao(
+          base44,
+          contextoComercial.prospect,
+          `${history}\nAssistente: ${finalResponse}`
+        );
+        console.log('💼 Qualificação comercial atualizada:', JSON.stringify(resultado));
+      } catch (qualErr) {
+        console.error('⚠️ Erro ao registrar qualificação comercial:', qualErr.message);
+      }
     }
 
   } catch (error) {
