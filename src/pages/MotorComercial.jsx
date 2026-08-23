@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import MotorStatCard from "@/components/motor/MotorStatCard";
 import EtapasFunil from "@/components/motor/EtapasFunil";
 import ConverterQuentesButton from "@/components/motor/ConverterQuentesButton";
+import RespostasRecentes from "@/components/motor/RespostasRecentes";
 
 const ESTAGIOS = [
   ["Prospeccao", "Prospecção"],
@@ -64,5 +65,7 @@ export default function MotorComercial() {
       ]} />
       <EtapasFunil titulo="Funil de vendas (CRM)" etapas={ESTAGIOS.map(([chave, label]) => ({ label, valor: leads.filter((lead) => lead.estagio === chave).length }))} />
     </div>
+
+    <RespostasRecentes prospects={prospects} />
   </div>;
 }
