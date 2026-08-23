@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import MotorStatCard from "@/components/motor/MotorStatCard";
 import EtapasFunil from "@/components/motor/EtapasFunil";
+import ConverterQuentesButton from "@/components/motor/ConverterQuentesButton";
 
 const ESTAGIOS = [
   ["Prospeccao", "Prospecção"],
@@ -39,6 +40,8 @@ export default function MotorComercial() {
         <Button variant="outline" asChild><Link to="/ICPs">ICPs</Link></Button>
         <Button variant="outline" asChild><Link to="/Prospeccao">Prospecção</Link></Button>
         <Button variant="outline" asChild><Link to="/Campanhas">Campanhas</Link></Button>
+        <Button variant="outline" asChild><Link to="/ResultadosCadencias">Resultados</Link></Button>
+        <ConverterQuentesButton />
       </div>
     </div>
 
