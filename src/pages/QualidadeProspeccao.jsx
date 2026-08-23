@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import QualidadeCard from "@/components/qualidade/QualidadeCard";
 import QualidadePorICP from "@/components/qualidade/QualidadePorICP";
 import SemContatoLista from "@/components/qualidade/SemContatoLista";
+import ListaSupressao from "@/components/qualidade/ListaSupressao";
 
 export default function QualidadeProspeccao() {
   const { data: prospects = [], isLoading } = useQuery({
@@ -23,6 +24,7 @@ export default function QualidadeProspeccao() {
   const temSite = prospects.filter((p) => p.site).length;
   const analisados = prospects.filter((p) => p.score != null).length;
   const semContato = prospects.filter((p) => !p.telefone && !p.whatsapp && !p.email);
+  const optOut = prospects.filter((p) => p.opt_out);
 
   const nomeICP = (id) => icps.find((i) => i.id === id)?.nome || "Sem ICP";
   const grupos = {};
@@ -66,6 +68,7 @@ export default function QualidadeProspeccao() {
           <div className="grid gap-4 lg:grid-cols-2">
             <QualidadePorICP linhas={linhas} />
             <SemContatoLista prospects={semContato} />
+            <ListaSupressao prospects={optOut} />
           </div>
         </>
       )}
