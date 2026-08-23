@@ -94,6 +94,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "Motor Comercial", url: "/MotorComercial", icon: Target },
     { title: "ICPs", url: "/ICPs", icon: Target },
     { title: "Prospecção", url: "/Prospeccao", icon: Users },
+    { title: "Qualidade Prospecção", url: "/QualidadeProspeccao", icon: Target },
     { title: "Campanhas", url: "/Campanhas", icon: Megaphone },
     { title: "Resultados Cadências", url: "/ResultadosCadencias", icon: TrendingUp },
     { title: "Chat IA", url: createPageUrl("ChatIA"), icon: MessageSquare },

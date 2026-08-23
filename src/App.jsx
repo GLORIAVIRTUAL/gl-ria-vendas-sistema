@@ -23,6 +23,7 @@ import ICPs from '@/pages/ICPs';
 import Campanhas from '@/pages/Campanhas';
 import MotorComercial from '@/pages/MotorComercial';
 import ResultadosCadencias from '@/pages/ResultadosCadencias';
+import QualidadeProspeccao from '@/pages/QualidadeProspeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
 import AgendamentoPublico from '@/pages/AgendamentoPublico';
 import FormularioStart from '@/pages/FormularioStart';
@@ -121,6 +122,11 @@ const AuthenticatedApp = () => (
       <Route path="/ResultadosCadencias" element={
         <LayoutWrapper currentPageName="ResultadosCadencias">
           <ResultadosCadencias />
+        </LayoutWrapper>
+      } />
+      <Route path="/QualidadeProspeccao" element={
+        <LayoutWrapper currentPageName="QualidadeProspeccao">
+          <QualidadeProspeccao />
         </LayoutWrapper>
       } />
       <Route path="/PoliticaPrivacidade" element={<PoliticaPrivacidade />} />
