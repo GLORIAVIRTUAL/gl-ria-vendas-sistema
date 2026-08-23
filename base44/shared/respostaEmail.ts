@@ -81,6 +81,25 @@ const reagendarPendentes = async (db: any, prospectId: string, retomarEm: string
   return pendentes.length;
 };
 
+// Quando o e-mail indica outro responsável, redireciona a cadência em andamento
+// para o novo endereço em vez de simplesmente interrompê-la.
+const redirecionarParaDecisor = async (db: any, prospect: any, decisor: string) => {
+  const novoEmail = extrairEmail(decisor);
+  if (!novoEmail || novoEmail === String(prospect.email || '').toLowerCase()) return null;
+
+  await db.entities.Prospect.update(prospect.id, { email: novoEmail });
+
+  const pendentes = await db.entities.CadenciaEnvio.filter({ prospect_id: prospect.id, status: 'programado' });
+  let redirecionados = 0;
+  for (const envio of pendentes) {
+    if (envio.canal !== 'Email') continue;
+    await db.entities.CadenciaEnvio.update(envio.id, { destino: novoEmail });
+    redirecionados += 1;
+  }
+
+  return { novoEmail, redirecionados };
+};
+
 const garantirLead = async (db: any, prospect: any, classificacao: string, proximaAcao: string) => {
   if (prospect.crm_lead_id) return prospect.crm_lead_id;
   const lead = await db.entities.Lead.create({
@@ -122,6 +141,19 @@ export async function processarRespostaEmail(db: any, emailRegistro: any) {
       await cancelarPendentes(db, prospect.id, 'Opt-out: contato pediu para não receber mensagens');
       await db.entities.Prospect.update(prospect.id, { opt_out: true, opt_out_motivo: 'Solicitou remoção da lista por e-mail', respondeu_em: new Date().toISOString() });
       acao = 'opt_out';
+    } else if (
+      ['indicou_outro_responsavel', 'pessoa_errada'].includes(analise.classificacao_email) &&
+      extrairEmail(analise.decisor_indicado || '')
+    ) {
+      const redirecionamento = await redirecionarParaDecisor(db, prospect, analise.decisor_indicado);
+      if (redirecionamento) {
+        atualizacao.proxima_acao = `Cadência redirecionada para ${redirecionamento.novoEmail}. ${analise.proxima_acao || ''}`.trim();
+        acao = 'redirecionado_decisor';
+      } else {
+        await cancelarPendentes(db, prospect.id, `Cadência interrompida: ${analise.classificacao_email}`);
+        await db.entities.Prospect.update(prospect.id, { respondeu_em: new Date().toISOString() });
+        acao = 'cadencia_interrompida';
+      }
     } else if (PARAR_CADENCIA.includes(analise.classificacao_email)) {
       await cancelarPendentes(db, prospect.id, `Cadência interrompida: ${analise.classificacao_email}`);
       await db.entities.Prospect.update(prospect.id, { respondeu_em: new Date().toISOString() });
