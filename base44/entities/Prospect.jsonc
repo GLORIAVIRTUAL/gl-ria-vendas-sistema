@@ -154,6 +154,11 @@
       "type": "string",
       "format": "date-time",
       "description": "Data e hora da \u00faltima an\u00e1lise da IA"
+    },
+    "respondeu_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando o prospect respondeu e a cad\u00eancia foi interrompida"
     }
   },
   "required": [

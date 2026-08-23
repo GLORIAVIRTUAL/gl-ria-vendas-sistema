@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { secrets } from 'base44:runtime';
+import { pararCadenciaPorResposta } from '../../shared/cadenciaResposta.ts';
 
 const processedMessages = new Set();
 
@@ -262,6 +263,17 @@ Deno.serve(async (req) => {
     });
 
     console.log('✅ Mensagem salva!');
+
+    // Se este telefone é de um prospect em cadência, a cadência é interrompida
+    // e ele entra no CRM como lead quente.
+    try {
+      const resultadoCadencia = await pararCadenciaPorResposta(base44.asServiceRole, phone);
+      if (resultadoCadencia.prospect_id) {
+        console.log('🛑 Cadência interrompida por resposta:', JSON.stringify(resultadoCadencia));
+      }
+    } catch (cadErr) {
+      console.error('⚠️ Erro ao interromper cadência:', cadErr.message);
+    }
 
     if (somenteHumano) {
       console.log('🙋 Mensagem mantida no chat em modo humano, sem resposta automática.');
