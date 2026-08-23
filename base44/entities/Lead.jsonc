@@ -35,8 +35,14 @@
       "type": "string",
       "enum": [
         "Prospeccao",
+        "Contatado",
+        "Engajado",
+        "Qualificado",
         "Reuniao_Marcada",
+        "Reuniao_Realizada",
         "Em_Avaliacao",
+        "Proposta",
+        "Negociacao",
         "Negocio_Fechado",
         "Implantacao",
         "Inicio_de_Uso",
@@ -45,6 +51,11 @@
       ],
       "default": "Reuniao_Marcada",
       "description": "Est\u00e1gio no funil de vendas"
+    },
+    "estagio_atualizado_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u00daltima mudan\u00e7a de est\u00e1gio"
     },
     "valor_estimado": {
       "type": "number",

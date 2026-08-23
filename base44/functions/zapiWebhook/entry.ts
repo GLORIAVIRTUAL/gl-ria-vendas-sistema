@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { secrets } from 'base44:runtime';
 import { pararCadenciaPorResposta } from '../../shared/cadenciaResposta.ts';
 import { buscarContextoComercial, montarContextoComercial, registrarQualificacao } from '../../shared/agenteComercial.ts';
+import { registrarHistorico } from '../../shared/pipeline.ts';
 
 const processedMessages = new Set();
 
@@ -695,15 +696,20 @@ ${history}`;
 
           // Cria Lead no CRM no estágio "Reunião Marcada"
           try {
-            await base44.asServiceRole.entities.Lead.create({
+            const leadCriado = await base44.asServiceRole.entities.Lead.create({
               nome_cliente: nome,
               email_cliente: email,
               telefone_cliente: telefone,
               estagio: 'Reuniao_Marcada',
+              estagio_atualizado_em: new Date().toISOString(),
               data_reuniao: data,
               agendamento_id: novoAgendamento.id,
               observacoes: `Reunião marcada via WhatsApp IA (Z-API) - ${data} às ${horario}`,
               proximos_passos: 'Realizar reunião agendada'
+            });
+            await registrarHistorico(base44.asServiceRole, leadCriado, '', 'Reuniao_Marcada', {
+              origem: 'Agendamento',
+              motivo: `Reunião agendada pela IA para ${data} às ${horario}`
             });
             console.log('✅ Lead criado no CRM (Reunião Marcada)!');
           } catch (leadError) {

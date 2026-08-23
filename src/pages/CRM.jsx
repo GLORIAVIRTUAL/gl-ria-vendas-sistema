@@ -5,7 +5,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, Users, DollarSign, Phone, Mail, Calendar, Package, ChevronRight, FileText, Send, Clock } from "lucide-react";
+import { Plus, TrendingUp, Users, DollarSign, Phone, Mail, Calendar, Package, ChevronRight, FileText, Send, Clock, Target } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, parseISO } from "date-fns";
@@ -22,13 +22,19 @@ import EditLeadDialog from "../components/crm/EditLeadDialog";
 
 const estagios = [
   { id: "Prospeccao", nome: "Prospecção", cor: "border border-cyan-400/30 bg-cyan-400/10 text-cyan-200 backdrop-blur-xl", icone: Users },
+  { id: "Contatado", nome: "Contatado", cor: "border border-sky-400/30 bg-sky-400/10 text-sky-200 backdrop-blur-xl", icone: Send },
+  { id: "Engajado", nome: "Engajado", cor: "border border-teal-400/30 bg-teal-400/10 text-teal-200 backdrop-blur-xl", icone: TrendingUp },
+  { id: "Qualificado", nome: "Qualificado", cor: "border border-indigo-400/30 bg-indigo-400/10 text-indigo-200 backdrop-blur-xl", icone: Target },
   { id: "Reuniao_Marcada", nome: "Reunião Marcada", cor: "border border-blue-400/30 bg-blue-400/10 text-blue-200 backdrop-blur-xl", icone: Calendar },
+  { id: "Reuniao_Realizada", nome: "Reunião Realizada", cor: "border border-blue-300/30 bg-blue-300/10 text-blue-100 backdrop-blur-xl", icone: Calendar },
   { id: "Em_Avaliacao", nome: "Em Avaliação", cor: "border border-amber-300/30 bg-amber-300/10 text-amber-200 backdrop-blur-xl", icone: TrendingUp },
+  { id: "Proposta", nome: "Proposta", cor: "border border-yellow-300/30 bg-yellow-300/10 text-yellow-100 backdrop-blur-xl", icone: FileText },
+  { id: "Negociacao", nome: "Negociação", cor: "border border-orange-300/30 bg-orange-300/10 text-orange-100 backdrop-blur-xl", icone: DollarSign },
   { id: "Negocio_Fechado", nome: "Negócio Fechado", cor: "border border-emerald-400/30 bg-emerald-400/10 text-emerald-200 backdrop-blur-xl", icone: DollarSign },
   { id: "Implantacao", nome: "Implantação", cor: "border border-violet-400/30 bg-violet-400/10 text-violet-200 backdrop-blur-xl", icone: Package },
   { id: "Inicio_de_Uso", nome: "Início de Uso", cor: "border border-orange-400/30 bg-orange-400/10 text-orange-200 backdrop-blur-xl", icone: Users },
   { id: "Estavel", nome: "Estável", cor: "border border-cyan-400/30 bg-cyan-400/10 text-cyan-200 backdrop-blur-xl", icone: ChevronRight },
-  { id: "Desistiu", nome: "Desistiu", cor: "border border-red-400/30 bg-red-400/10 text-red-200 backdrop-blur-xl", icone: Users }
+  { id: "Desistiu", nome: "Fechado Perdido", cor: "border border-red-400/30 bg-red-400/10 text-red-200 backdrop-blur-xl", icone: Users }
 ];
 
 const produtoConfig = {
@@ -117,11 +123,23 @@ export default function CRM() {
 
     const leadId = result.draggableId;
     const novoEstagio = result.destination.droppableId;
+    const lead = leads.find((l) => l.id === leadId);
+    if (!lead || lead.estagio === novoEstagio) return;
 
     updateLeadMutation.mutate({
       id: leadId,
-      data: { estagio: novoEstagio }
+      data: { estagio: novoEstagio, estagio_atualizado_em: new Date().toISOString() }
     });
+
+    // Registra o histórico de mudanças de etapa também nas movimentações manuais.
+    base44.entities.LeadEstagioHistorico.create({
+      lead_id: leadId,
+      lead_nome: lead.nome_cliente || "",
+      estagio_anterior: lead.estagio || "",
+      estagio_novo: novoEstagio,
+      origem: "Manual",
+      motivo: "Movido manualmente no funil"
+    }).then(() => queryClient.invalidateQueries({ queryKey: ["historico-estagios", leadId] }));
   };
 
   const handleEditarLead = (data) => {

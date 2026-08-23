@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User, Package, Target, CheckCircle } from "lucide-react";
+import HistoricoEstagios from "@/components/crm/HistoricoEstagios";
 
 const produtoConfig = {
   Gloria_Atendente: { nome: "Glória Atendente", icon: "👤" },
@@ -263,6 +264,8 @@ export default function EditLeadDialog({ lead, open, onOpenChange, onSave, isSav
               rows={3}
             />
           </div>
+
+          {lead?.id ? <HistoricoEstagios leadId={lead.id} /> : null}
 
           {/* Botões */}
           <div className="flex gap-3 pt-4 border-t">

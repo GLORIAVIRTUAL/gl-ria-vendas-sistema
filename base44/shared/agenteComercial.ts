@@ -2,6 +2,7 @@
 // Camada comercial acoplada ao atendimento de WhatsApp já existente (Z-API + IA atual).
 // NÃO substitui o atendimento: apenas enriquece o prompt quando o contato é um
 // Prospect/Lead comercial e registra qualificação, objeções e intent score.
+import { moverEstagio } from './pipeline.ts';
 
 const canonico = (t) => {
   let n = String(t || '').replace(/\D/g, '');
@@ -165,13 +166,20 @@ ${historico}`,
       }
   });
 
-  // Mantém o Lead do CRM alinhado com o que foi qualificado na conversa.
+  // Mantém o Lead do CRM alinhado com o pipeline único: qualificação concluída → Qualificado.
   if (prospect.crm_lead_id) {
     try {
       const lead = await db.entities.Lead.get(prospect.crm_lead_id);
-      if (lead && !['Reuniao_Marcada', 'Negocio_Fechado', 'Desistiu'].includes(lead.estagio) && intentScore >= 40) {
+      if (lead) {
+        const qualificacaoCompleta = !!(novaQualificacao.principal_problema && novaQualificacao.produto_interesse);
+        if (qualificacaoCompleta || intentScore >= 40) {
+          await moverEstagio(db, lead, 'Qualificado', {
+            origem: 'WhatsApp',
+            motivo: novaQualificacao.principal_problema || 'Qualificação coletada pelo Agente Comercial',
+            prospect_id: prospect.id
+          });
+        }
         await db.entities.Lead.update(lead.id, {
-          estagio: 'Em_Avaliacao',
           observacoes: `${lead.observacoes || ''}\n[Agente Comercial] ${novaQualificacao.principal_problema || 'Conversa comercial em andamento'}`.trim()
         });
       }

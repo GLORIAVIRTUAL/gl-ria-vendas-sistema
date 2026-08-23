@@ -1,0 +1,70 @@
+{
+  "name": "LeadEstagioHistorico",
+  "type": "object",
+  "properties": {
+    "lead_id": {
+      "type": "string",
+      "description": "Lead que mudou de est\u00e1gio"
+    },
+    "lead_nome": {
+      "type": "string",
+      "description": "Nome do lead no momento da mudan\u00e7a"
+    },
+    "estagio_anterior": {
+      "type": "string",
+      "description": "Est\u00e1gio de origem"
+    },
+    "estagio_novo": {
+      "type": "string",
+      "description": "Est\u00e1gio de destino"
+    },
+    "origem": {
+      "type": "string",
+      "enum": [
+        "Automatico",
+        "Manual",
+        "IA",
+        "Cadencia",
+        "Agendamento",
+        "Email",
+        "WhatsApp"
+      ],
+      "default": "Automatico",
+      "description": "O que provocou a mudan\u00e7a"
+    },
+    "motivo": {
+      "type": "string",
+      "description": "Motivo/detalhe da mudan\u00e7a"
+    },
+    "prospect_id": {
+      "type": "string",
+      "description": "Prospect relacionado, quando houver"
+    }
+  },
+  "required": [
+    "lead_id",
+    "estagio_novo"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

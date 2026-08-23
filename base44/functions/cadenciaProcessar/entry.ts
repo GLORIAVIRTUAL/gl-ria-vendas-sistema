@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { aplicarVariaveis, enviarEmail, enviarWhatsApp } from '../../shared/envio.ts';
 import { personalizarMensagem } from '../../shared/personalizacao.ts';
+import { moverEstagio } from '../../shared/pipeline.ts';
 
 const destinoDoProspect = (prospect, canal) => canal === 'Email'
   ? prospect.email
@@ -113,6 +114,18 @@ const dispararPendentes = async (db, campanha) => {
       });
       if (prospect.status !== 'contatado') {
         await db.entities.Prospect.update(prospect.id, { status: 'contatado' });
+      }
+      // Primeiro contato enviado → move o lead do CRM para "Contatado".
+      if (prospect.crm_lead_id) {
+        try {
+          await moverEstagio(db, prospect.crm_lead_id, 'Contatado', {
+            origem: 'Cadencia',
+            motivo: `Passo ${envio.passo_ordem} da campanha ${campanha.nome} enviado por ${envio.canal}`,
+            prospect_id: prospect.id
+          });
+        } catch (erroPipeline) {
+          console.error('Falha ao mover estágio para Contatado:', erroPipeline.message);
+        }
       }
       resultado.enviados += 1;
     } catch (erroEnvio) {
