@@ -10,7 +10,9 @@ export default function Prospeccao() {
   const list = view === "buscar" ? flow.results : flow.prospects;
   return <div className="min-h-screen space-y-6 p-4 md:p-8">
     <div><h1 className="text-3xl font-bold">Prospecção de Empresas</h1><p className="text-slate-300">Encontre empresas no Kipflow, salve prospects e conduza-os ao CRM.</p></div>
-    <div className="flex gap-2"><Button variant={view === "buscar" ? "default" : "outline"} onClick={() => setView("buscar")}>Buscar empresas</Button><Button variant={view === "salvos" ? "default" : "outline"} onClick={() => setView("salvos")}>Prospects salvos ({flow.prospects.length})</Button></div>
+    <div className="flex gap-2"><Button variant={view === "buscar" ? "default" : "outline"} onClick={() => setView("buscar")}>Buscar empresas</Button><Button variant={view === "salvos" ? "default" : "outline"} onClick={() => setView("salvos")}>Prospects salvos ({flow.prospects.length})</Button>
+      {view === "salvos" && <Button variant="outline" disabled={flow.busyId === "pendentes"} onClick={flow.analisarPendentes}>{flow.busyId === "pendentes" ? "Analisando..." : `Analisar pendentes (${flow.prospects.filter((p) => !p.analisado_em).length})`}</Button>}
+    </div>
     {view === "buscar" && <ProspectSearchForm onSearch={flow.search} loading={flow.searching} />}
     {view === "buscar" && flow.pagination && <p className="text-sm text-slate-300">{flow.pagination.total || flow.results.length} empresas encontradas</p>}
     {view === "salvos" && flow.isLoading && <p className="text-slate-300">Carregando prospects...</p>}

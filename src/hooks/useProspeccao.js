@@ -76,8 +76,18 @@ export default function useProspeccao() {
     finally { setBusyId(""); }
   };
 
+  const analisarPendentes = async () => {
+    setBusyId("pendentes");
+    try {
+      const response = await base44.functions.invoke("analisarProspect", { limite: 25 });
+      await queryClient.invalidateQueries({ queryKey: ["prospects"] });
+      toast.success(response.data?.mensagem || `${response.data?.analisados ?? 0} prospects analisados pela IA.`);
+    } catch (error) { toast.error(error.response?.data?.error || error.message); }
+    finally { setBusyId(""); }
+  };
+
   const markContacted = async (prospect) => { await base44.entities.Prospect.update(prospect.id, { status: "contatado" }); await queryClient.invalidateQueries({ queryKey: ["prospects"] }); };
   const sendWhatsApp = async (prospect, mensagem) => { setBusyId(prospect.id); try { await base44.functions.invoke("whatsapp/sendMessage", { telefone: prospect.whatsapp || prospect.telefone, mensagem }); await markContacted(prospect); toast.success("WhatsApp enviado."); } finally { setBusyId(""); } };
   const sendEmail = async (prospect, assunto, corpo) => { setBusyId(prospect.id); try { await base44.functions.invoke("email/sendEmail", { email_destinatario: prospect.email, assunto, corpo: corpo.replace(/\n/g, "<br>") }); await markContacted(prospect); toast.success("E-mail enviado."); } finally { setBusyId(""); } };
-  return { results, pagination, hasSearched, prospects, isLoading, searching, busyId, search, save, addCRM, analisar, sendWhatsApp, sendEmail };
+  return { results, pagination, hasSearched, prospects, isLoading, searching, busyId, search, save, addCRM, analisar, analisarPendentes, sendWhatsApp, sendEmail };
 }
