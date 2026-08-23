@@ -156,6 +156,11 @@
       "type": "string",
       "description": "Observa\u00e7\u00f5es para orientar a IA"
     },
+    "proxima_pagina": {
+      "type": "number",
+      "default": 0,
+      "description": "Pr\u00f3xima p\u00e1gina da consulta Kipflow (evita repetir as mesmas empresas)"
+    },
     "ultima_execucao": {
       "type": "string",
       "format": "date-time",

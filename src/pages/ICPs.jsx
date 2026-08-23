@@ -3,8 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import { prospeccaoAutomatica } from "@/functions/prospeccaoAutomatica";
 import ICPCard from "@/components/icp/ICPCard";
 import ICPFormDialog from "@/components/icp/ICPFormDialog";
+import ProspeccaoResumo from "@/components/icp/ProspeccaoResumo";
 
 const ESTAGIOS_GANHOS = ["Negocio_Fechado", "Implantacao", "Inicio_de_Uso", "Estavel"];
 
@@ -28,6 +31,12 @@ export default function ICPs() {
   const { data: leads = [] } = useQuery({
     queryKey: ["leads"],
     queryFn: () => base44.entities.Lead.list(),
+    initialData: [],
+  });
+
+  const { data: logs = [] } = useQuery({
+    queryKey: ["prospeccao-logs"],
+    queryFn: () => base44.entities.ProspeccaoLog.list("-created_date", 50),
     initialData: [],
   });
 
@@ -84,6 +93,28 @@ export default function ICPs() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["icps"] }),
   });
 
+  const buscarMutation = useMutation({
+    mutationFn: async (icp) => {
+      const resposta = await prospeccaoAutomatica({ icp_id: icp.id });
+      if (resposta.data?.error) throw new Error(resposta.data.error);
+      return resposta.data;
+    },
+    onSuccess: (dados) => {
+      const resultado = dados?.resultados?.[0];
+      if (resultado?.status === "sucesso") {
+        toast.success(
+          `${resultado.novas} novos prospects, ${resultado.existentes} já existentes, ${resultado.ignoradas} fora do ICP.`
+        );
+      } else {
+        toast.info(resultado?.motivo || dados?.mensagem || "Nenhuma empresa processada.");
+      }
+      queryClient.invalidateQueries({ queryKey: ["icps"] });
+      queryClient.invalidateQueries({ queryKey: ["prospects"] });
+      queryClient.invalidateQueries({ queryKey: ["prospeccao-logs"] });
+    },
+    onError: (erro) => toast.error(erro.response?.data?.error || erro.message),
+  });
+
   const abrirNovo = () => {
     setIcpSelecionado(null);
     setDialogAberto(true);
@@ -133,6 +164,8 @@ export default function ICPs() {
           </Card>
         </div>
 
+        <ProspeccaoResumo logs={logs} />
+
         {isLoading ? (
           <p className="py-10 text-center text-slate-400">Carregando ICPs...</p>
         ) : icps.length === 0 ? (
@@ -151,7 +184,9 @@ export default function ICPs() {
                 onEdit={abrirEdicao}
                 onDuplicate={(item) => duplicarMutation.mutate(item)}
                 onToggle={(item) => alternarMutation.mutate(item)}
+                onSearch={(item) => buscarMutation.mutate(item)}
                 isBusy={isBusy}
+                isSearching={buscarMutation.isPending && buscarMutation.variables?.id === icp.id}
               />
             ))}
           </div>

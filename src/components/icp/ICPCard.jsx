@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ICPStats from "./ICPStats";
 
-export default function ICPCard({ icp, stats, onEdit, onDuplicate, onToggle, isBusy }) {
+export default function ICPCard({ icp, stats, onEdit, onDuplicate, onToggle, onSearch, isBusy, isSearching }) {
   return (
     <Card className="border border-slate-500/40 bg-slate-950/60">
       <CardContent className="space-y-4 p-5">
@@ -36,6 +36,9 @@ export default function ICPCard({ icp, stats, onEdit, onDuplicate, onToggle, isB
           <span className="rounded-md border border-slate-600/60 px-2 py-1">
             Execução: {icp.intervalo_execucao || "Manual"}
           </span>
+          <span className="rounded-md border border-slate-600/60 px-2 py-1">
+            Automática: {icp.prospeccao_automatica_ativa ? "Ativa" : "Inativa"}
+          </span>
         </div>
 
         <ICPStats stats={stats} />
@@ -49,6 +52,9 @@ export default function ICPCard({ icp, stats, onEdit, onDuplicate, onToggle, isB
           </Button>
           <Button size="sm" variant="outline" onClick={() => onToggle(icp)} disabled={isBusy}>
             {icp.ativo ? "Desativar" : "Ativar"}
+          </Button>
+          <Button size="sm" onClick={() => onSearch(icp)} disabled={!icp.ativo || isSearching}>
+            {isSearching ? "Buscando..." : "Buscar agora"}
           </Button>
         </div>
       </CardContent>

@@ -1,0 +1,115 @@
+{
+  "name": "ProspeccaoLog",
+  "type": "object",
+  "properties": {
+    "icp_id": {
+      "type": "string",
+      "description": "ICP processado"
+    },
+    "icp_nome": {
+      "type": "string",
+      "description": "Nome do ICP no momento da execu\u00e7\u00e3o"
+    },
+    "origem": {
+      "type": "string",
+      "enum": [
+        "Manual",
+        "Automatico"
+      ],
+      "default": "Automatico",
+      "description": "Como a execu\u00e7\u00e3o foi disparada"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "em_andamento",
+        "sucesso",
+        "erro",
+        "ignorado"
+      ],
+      "default": "em_andamento",
+      "description": "Status da execu\u00e7\u00e3o"
+    },
+    "iniciado_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "In\u00edcio da execu\u00e7\u00e3o"
+    },
+    "finalizado_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fim da execu\u00e7\u00e3o"
+    },
+    "duracao_ms": {
+      "type": "number",
+      "description": "Dura\u00e7\u00e3o da execu\u00e7\u00e3o em milissegundos"
+    },
+    "pagina": {
+      "type": "number",
+      "description": "P\u00e1gina consultada no Kipflow"
+    },
+    "encontradas": {
+      "type": "number",
+      "default": 0,
+      "description": "Empresas retornadas pela consulta"
+    },
+    "novas": {
+      "type": "number",
+      "default": 0,
+      "description": "Prospects novos criados"
+    },
+    "existentes": {
+      "type": "number",
+      "default": 0,
+      "description": "Empresas que j\u00e1 existiam"
+    },
+    "enriquecidas": {
+      "type": "number",
+      "default": 0,
+      "description": "Empresas existentes que receberam novos dados"
+    },
+    "ignoradas": {
+      "type": "number",
+      "default": 0,
+      "description": "Empresas descartadas pelos crit\u00e9rios do ICP"
+    },
+    "erros": {
+      "type": "number",
+      "default": 0,
+      "description": "Quantidade de erros na execu\u00e7\u00e3o"
+    },
+    "erro_mensagem": {
+      "type": "string",
+      "description": "Mensagem do \u00faltimo erro"
+    },
+    "detalhes": {
+      "type": "string",
+      "description": "Resumo textual da execu\u00e7\u00e3o"
+    }
+  },
+  "required": [
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
