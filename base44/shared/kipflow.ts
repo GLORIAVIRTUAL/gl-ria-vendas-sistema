@@ -19,7 +19,11 @@ const buildError = (message, status) => {
 export const buildConditions = (filters) => {
   const conditions = [];
 
-  if (filters.cnpj) conditions.push({ cnpj: Number(onlyDigits(filters.cnpj)) });
+  if (filters.cnpj) {
+    // O Kipflow valida o CNPJ com os 14 dígitos: converter para número
+    // quebra CNPJs que começam com zero.
+    conditions.push({ cnpj: normalizeCnpj(filters.cnpj) });
+  }
   if (filters.nome) {
     const name = normalizeText(filters.nome);
     conditions.push({ $or: [
