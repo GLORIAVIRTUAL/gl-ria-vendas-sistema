@@ -18,6 +18,75 @@
       "type": "boolean",
       "default": false,
       "description": "Se a notifica\u00e7\u00e3o foi visualizada"
+    },
+    "prospect_id": {
+      "type": "string",
+      "description": "Prospect relacionado ao remetente"
+    },
+    "lead_id": {
+      "type": "string",
+      "description": "Lead do CRM relacionado"
+    },
+    "campanha_id": {
+      "type": "string",
+      "description": "Campanha de prospec\u00e7\u00e3o relacionada"
+    },
+    "classificacao_email": {
+      "type": "string",
+      "enum": [
+        "interessado",
+        "pediu_demonstracao",
+        "pediu_preco",
+        "pediu_informacoes",
+        "pediu_contato_whatsapp",
+        "pediu_reuniao",
+        "nao_interessado",
+        "pessoa_errada",
+        "indicou_outro_responsavel",
+        "fora_do_escritorio",
+        "mensagem_automatica",
+        "email_invalido",
+        "remover_da_lista",
+        "duvida_comercial",
+        "outro"
+      ],
+      "description": "Inten\u00e7\u00e3o comercial identificada pela IA"
+    },
+    "sentimento_comercial": {
+      "type": "string",
+      "enum": [
+        "positivo",
+        "neutro",
+        "negativo"
+      ],
+      "description": "Sentimento comercial da resposta"
+    },
+    "proxima_acao": {
+      "type": "string",
+      "description": "Pr\u00f3xima a\u00e7\u00e3o recomendada pela IA"
+    },
+    "necessita_humano": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a resposta exige interven\u00e7\u00e3o humana"
+    },
+    "motivo_necessita_humano": {
+      "type": "string",
+      "description": "Motivo da necessidade de interven\u00e7\u00e3o humana"
+    },
+    "decisor_indicado": {
+      "type": "string",
+      "description": "Novo respons\u00e1vel indicado no e-mail, quando houver"
+    },
+    "retomar_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data sugerida para retomar o contato (ex: retorno de f\u00e9rias)"
+    },
+    "analisado_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a IA classificou este e-mail"
     }
   },
   "required": [

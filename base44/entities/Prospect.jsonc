@@ -159,6 +159,15 @@
       "type": "string",
       "format": "date-time",
       "description": "Quando o prospect respondeu e a cad\u00eancia foi interrompida"
+    },
+    "opt_out": {
+      "type": "boolean",
+      "default": false,
+      "description": "Contato pediu para n\u00e3o receber mais mensagens (lista de supress\u00e3o)"
+    },
+    "opt_out_motivo": {
+      "type": "string",
+      "description": "Motivo/origem do opt-out"
     }
   },
   "required": [

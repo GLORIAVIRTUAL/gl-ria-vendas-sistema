@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
+import { processarRespostaEmail } from '../../../shared/respostaEmail.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -38,7 +39,7 @@ Deno.serve(async (req) => {
       }
 
       // Cria o novo email
-      await base44.asServiceRole.entities.EmailNotificacao.create({
+      const registro = await base44.asServiceRole.entities.EmailNotificacao.create({
         subject: email.subject || 'Sem assunto',
         from: email.from,
         text: email.text || '',
@@ -46,6 +47,15 @@ Deno.serve(async (req) => {
       });
 
       console.log('✅ Email novo salvo:', email.subject);
+
+      // Etapa 6 — classificação comercial com IA e aplicação das regras de cadência.
+      // Falha aqui não pode impedir o registro do e-mail.
+      try {
+        const resultado = await processarRespostaEmail(base44.asServiceRole, registro);
+        console.log('🤖 Classificação:', resultado.classificacao, '| ação:', resultado.acao);
+      } catch (erroClassificacao) {
+        console.error('⚠️ Falha ao classificar e-mail:', erroClassificacao.message);
+      }
     }
 
     return Response.json({ 

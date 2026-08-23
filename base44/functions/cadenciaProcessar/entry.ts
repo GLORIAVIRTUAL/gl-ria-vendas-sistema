@@ -20,6 +20,8 @@ const inscreverProspects = async (db, campanha) => {
 
   const elegiveis = prospects.filter((prospect) => (
     !inscritosIds.has(prospect.id) &&
+    !prospect.opt_out &&
+    !prospect.respondeu_em &&
     prospect.analisado_em &&
     (Number(prospect.score) || 0) >= scoreMinimo &&
     passos.some((passo) => destinoDoProspect(prospect, passo.canal))
@@ -69,6 +71,10 @@ const dispararPendentes = async (db, campanha) => {
     try {
       const prospect = await db.entities.Prospect.get(envio.prospect_id);
       if (!prospect) throw new Error('Prospect não encontrado');
+      if (prospect.opt_out) {
+        await db.entities.CadenciaEnvio.update(envio.id, { status: 'cancelado', erro_mensagem: 'Contato em lista de supressão (opt-out)' });
+        continue;
+      }
 
       let mensagem = aplicarVariaveis(envio.template_base || envio.mensagem, prospect);
       let assunto = aplicarVariaveis(envio.assunto, prospect);
