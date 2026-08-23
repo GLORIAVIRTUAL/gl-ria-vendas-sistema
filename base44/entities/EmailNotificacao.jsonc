@@ -83,6 +83,11 @@
       "format": "date-time",
       "description": "Data sugerida para retomar o contato (ex: retorno de f\u00e9rias)"
     },
+    "retomado_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando o contato foi efetivamente liberado para novas cad\u00eancias"
+    },
     "analisado_em": {
       "type": "string",
       "format": "date-time",
