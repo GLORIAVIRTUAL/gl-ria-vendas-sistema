@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Mail, Search, Trash2, ExternalLink, CheckCircle, Circle, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import ClassificacaoEmail from "@/components/emails/ClassificacaoEmail";
 
 export default function Emails() {
   const queryClient = useQueryClient();
@@ -177,10 +178,11 @@ export default function Emails() {
                         </p>
                       )}
 
-                      <div className="flex items-center gap-2 ml-13">
+                      <div className="flex flex-wrap items-center gap-2 ml-13">
                         <Badge variant="outline" className="text-xs">
                           {format(new Date(email.created_date), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                         </Badge>
+                        <ClassificacaoEmail email={email} />
                       </div>
                     </div>
 
@@ -251,6 +253,24 @@ export default function Emails() {
                     </p>
                   </div>
                 </div>
+
+                {emailSelecionado.classificacao_email && (
+                  <div className="rounded-lg border border-cyan-400/30 bg-slate-950/40 p-4 space-y-2">
+                    <p className="text-sm text-slate-600">Análise da IA:</p>
+                    <ClassificacaoEmail email={emailSelecionado} mostrarAcao />
+                    {emailSelecionado.motivo_necessita_humano && (
+                      <p className="text-xs text-amber-200">{emailSelecionado.motivo_necessita_humano}</p>
+                    )}
+                    {emailSelecionado.decisor_indicado && (
+                      <p className="text-xs text-cyan-100">Responsável indicado: {emailSelecionado.decisor_indicado}</p>
+                    )}
+                    {emailSelecionado.retomar_em && (
+                      <p className="text-xs text-cyan-100">
+                        Retomar contato em: {format(new Date(emailSelecionado.retomar_em), "dd/MM/yyyy", { locale: ptBR })}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 <div className="border-t pt-4">
                   <h4 className="font-semibold text-slate-900 mb-3">Conteúdo do Email:</h4>
