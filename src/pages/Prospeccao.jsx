@@ -15,7 +15,7 @@ export default function Prospeccao() {
     {view === "buscar" && flow.pagination && <p className="text-sm text-slate-300">{flow.pagination.total || flow.results.length} empresas encontradas</p>}
     {view === "salvos" && flow.isLoading && <p className="text-slate-300">Carregando prospects...</p>}
     <div className="grid gap-4 xl:grid-cols-2">
-      {list.map((prospect) => <ProspectCard key={prospect.id || prospect.cnpj} prospect={prospect} saved={view === "salvos"} busy={flow.busyId === (prospect.id || prospect.cnpj)} onSave={() => flow.save(prospect)} onAddCRM={(stage) => flow.addCRM(prospect, stage)} onWhatsApp={(message) => flow.sendWhatsApp(prospect, message)} onEmail={(subject, body) => flow.sendEmail(prospect, subject, body)} />)}
+      {list.map((prospect) => <ProspectCard key={prospect.id || prospect.cnpj} prospect={prospect} saved={view === "salvos"} busy={flow.busyId === (prospect.id || prospect.cnpj)} onSave={() => flow.save(prospect)} onAddCRM={(stage) => flow.addCRM(prospect, stage)} onAnalisar={() => flow.analisar(prospect)} onWhatsApp={(message) => flow.sendWhatsApp(prospect, message)} onEmail={(subject, body) => flow.sendEmail(prospect, subject, body)} />)}
     </div>
     {!flow.searching && !flow.isLoading && list.length === 0 && <div className="rounded-xl border border-slate-500/30 bg-slate-950/40 p-10 text-center text-slate-300">{view === "buscar" ? (flow.hasSearched ? "Nenhuma empresa corresponde a todos os filtros. Tente remover a faixa de faturamento ou de funcionários e buscar novamente." : "Use os filtros acima para localizar novas empresas.") : "Nenhum prospect salvo ainda."}</div>}
   </div>;

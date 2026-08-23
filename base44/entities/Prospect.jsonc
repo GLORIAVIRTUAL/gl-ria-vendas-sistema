@@ -107,6 +107,53 @@
     "dados_kipflow": {
       "type": "object",
       "description": "Dados completos retornados pelo Kipflow"
+    },
+    "score": {
+      "type": "number",
+      "description": "Lead score de 0 a 100 calculado pela IA"
+    },
+    "score_faixa": {
+      "type": "string",
+      "enum": [
+        "Frio",
+        "Morno",
+        "Quente"
+      ],
+      "description": "Faixa de temperatura do prospect"
+    },
+    "analise_resumo": {
+      "type": "string",
+      "description": "Resumo da an\u00e1lise feita pela IA"
+    },
+    "pontos_fortes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Sinais positivos identificados pela IA"
+    },
+    "riscos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Riscos ou pontos de aten\u00e7\u00e3o"
+    },
+    "produtos_sugeridos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Produtos Gl\u00f3ria recomendados pela IA"
+    },
+    "abordagem_sugerida": {
+      "type": "string",
+      "description": "Abordagem comercial sugerida pela IA"
+    },
+    "analisado_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data e hora da \u00faltima an\u00e1lise da IA"
     }
   },
   "required": [
