@@ -29,6 +29,11 @@ export default function PosVenda() {
     queryFn: () => base44.entities.NPSResposta.list("-created_date", 300)
   });
 
+  const { data: indicacoes = [] } = useQuery({
+    queryKey: ["indicacoes-carteira"],
+    queryFn: () => base44.entities.Indicacao.list("-created_date", 300)
+  });
+
   const resumo = resumirCarteira(negocios);
 
   const lista = resumo.itens.filter(({ saude }) => {
@@ -63,7 +68,14 @@ export default function PosVenda() {
         </CardContent></Card>
       </div>
 
-      <NPSResumo respostas={npsRespostas} />
+      <div className="grid gap-4 md:grid-cols-2">
+        <NPSResumo respostas={npsRespostas} />
+        <Card><CardContent className="space-y-1 p-5">
+          <p className="text-sm text-slate-400">Indicações de clientes</p>
+          <p className="text-3xl font-bold text-cyan-100">{indicacoes.filter((i) => i.status === "Convertida").length}</p>
+          <p className="text-xs text-slate-400">{indicacoes.length} pedido(s) e indicação(ões) registradas</p>
+        </CardContent></Card>
+      </div>
 
       <div className="flex flex-wrap gap-2">
         {FILTROS.map((f) => (

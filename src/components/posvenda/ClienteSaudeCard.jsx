@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, AlertTriangle, MessageSquare, Star } from "lucide-react";
+import { TrendingUp, AlertTriangle, MessageSquare, Star, Users } from "lucide-react";
 import AcaoRetencaoDialog from "./AcaoRetencaoDialog";
 import NPSDialog from "./NPSDialog";
+import IndicacaoDialog from "./IndicacaoDialog";
 
 const CORES = {
   Saudavel: "bg-cyan-400",
@@ -17,6 +18,7 @@ const ROTULOS = { Saudavel: "Saudável", Atencao: "Atenção", Risco: "Risco" };
 export default function ClienteSaudeCard({ negocio, saude }) {
   const [dialogAberto, setDialogAberto] = useState(false);
   const [npsAberto, setNpsAberto] = useState(false);
+  const [indicacaoAberta, setIndicacaoAberta] = useState(false);
 
   return (
     <Card>
@@ -75,10 +77,16 @@ export default function ClienteSaudeCard({ negocio, saude }) {
           Registrar NPS
         </Button>
 
+        <Button size="sm" variant="outline" onClick={() => setIndicacaoAberta(true)}>
+          <Users className="h-4 w-4" />
+          Indicações
+        </Button>
+
         {dialogAberto && (
           <AcaoRetencaoDialog negocio={negocio} saude={saude} open={dialogAberto} onOpenChange={setDialogAberto} />
         )}
         {npsAberto && <NPSDialog negocio={negocio} open={npsAberto} onOpenChange={setNpsAberto} />}
+        {indicacaoAberta && <IndicacaoDialog negocio={negocio} open={indicacaoAberta} onOpenChange={setIndicacaoAberta} />}
       </CardContent>
     </Card>
   );
