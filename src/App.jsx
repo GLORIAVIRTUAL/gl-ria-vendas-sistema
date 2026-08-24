@@ -31,6 +31,7 @@ import BaseConhecimento from '@/pages/BaseConhecimento';
 import AnalisePerdas from '@/pages/AnalisePerdas';
 import PosVenda from '@/pages/PosVenda';
 import Expansao from '@/pages/Expansao';
+import ReceitaRecorrente from '@/pages/ReceitaRecorrente';
 import ResultadosCadencias from '@/pages/ResultadosCadencias';
 import QualidadeProspeccao from '@/pages/QualidadeProspeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
@@ -126,6 +127,11 @@ const AuthenticatedApp = () => (
       <Route path="/PosVenda" element={
         <LayoutWrapper currentPageName="PosVenda">
           <PosVenda />
+        </LayoutWrapper>
+      } />
+      <Route path="/ReceitaRecorrente" element={
+        <LayoutWrapper currentPageName="ReceitaRecorrente">
+          <ReceitaRecorrente />
         </LayoutWrapper>
       } />
       <Route path="/Expansao" element={
