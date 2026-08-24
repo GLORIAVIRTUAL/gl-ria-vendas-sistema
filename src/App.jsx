@@ -26,6 +26,7 @@ import FilaDoDia from '@/pages/FilaDoDia';
 import Metas from '@/pages/Metas';
 import RelatorioComercial from '@/pages/RelatorioComercial';
 import HigieneBase from '@/pages/HigieneBase';
+import PlaybookObjecoes from '@/pages/PlaybookObjecoes';
 import ResultadosCadencias from '@/pages/ResultadosCadencias';
 import QualidadeProspeccao from '@/pages/QualidadeProspeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
@@ -116,6 +117,11 @@ const AuthenticatedApp = () => (
       <Route path="/Campanhas" element={
         <LayoutWrapper currentPageName="Campanhas">
           <Campanhas />
+        </LayoutWrapper>
+      } />
+      <Route path="/PlaybookObjecoes" element={
+        <LayoutWrapper currentPageName="PlaybookObjecoes">
+          <PlaybookObjecoes />
         </LayoutWrapper>
       } />
       <Route path="/HigieneBase" element={
