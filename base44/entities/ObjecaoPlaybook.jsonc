@@ -1,0 +1,79 @@
+{
+  "name": "ObjecaoPlaybook",
+  "type": "object",
+  "properties": {
+    "objecao": {
+      "type": "string",
+      "description": "Obje\u00e7\u00e3o comercial normalizada"
+    },
+    "categoria": {
+      "type": "string",
+      "enum": [
+        "Preco",
+        "Timing",
+        "Autoridade",
+        "Necessidade",
+        "Confianca",
+        "Concorrencia",
+        "Tecnica",
+        "Outro"
+      ],
+      "default": "Outro",
+      "description": "Categoria da obje\u00e7\u00e3o"
+    },
+    "frequencia": {
+      "type": "number",
+      "default": 1,
+      "description": "Quantas vezes esta obje\u00e7\u00e3o apareceu na base"
+    },
+    "exemplos": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Frases originais registradas nas conversas"
+    },
+    "resposta_sugerida": {
+      "type": "string",
+      "description": "Resposta recomendada pela IA"
+    },
+    "pergunta_de_virada": {
+      "type": "string",
+      "description": "Pergunta para retomar o controle da conversa"
+    },
+    "prova_recomendada": {
+      "type": "string",
+      "description": "Prova, case ou dado que refor\u00e7a a resposta"
+    },
+    "gerado_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a IA gerou/atualizou este item"
+    }
+  },
+  "required": [
+    "objecao"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
