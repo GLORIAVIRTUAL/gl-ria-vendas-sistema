@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, AlertTriangle, MessageSquare } from "lucide-react";
+import { TrendingUp, AlertTriangle, MessageSquare, Star } from "lucide-react";
 import AcaoRetencaoDialog from "./AcaoRetencaoDialog";
+import NPSDialog from "./NPSDialog";
 
 const CORES = {
   Saudavel: "bg-cyan-400",
@@ -15,6 +16,7 @@ const ROTULOS = { Saudavel: "Saudável", Atencao: "Atenção", Risco: "Risco" };
 
 export default function ClienteSaudeCard({ negocio, saude }) {
   const [dialogAberto, setDialogAberto] = useState(false);
+  const [npsAberto, setNpsAberto] = useState(false);
 
   return (
     <Card>
@@ -68,9 +70,15 @@ export default function ClienteSaudeCard({ negocio, saude }) {
           {negocio.telefone_cliente ? "Ação de retenção" : "Sem telefone cadastrado"}
         </Button>
 
+        <Button size="sm" variant="outline" onClick={() => setNpsAberto(true)}>
+          <Star className="h-4 w-4" />
+          Registrar NPS
+        </Button>
+
         {dialogAberto && (
           <AcaoRetencaoDialog negocio={negocio} saude={saude} open={dialogAberto} onOpenChange={setDialogAberto} />
         )}
+        {npsAberto && <NPSDialog negocio={negocio} open={npsAberto} onOpenChange={setNpsAberto} />}
       </CardContent>
     </Card>
   );

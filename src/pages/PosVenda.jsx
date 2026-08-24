@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { HeartPulse } from "lucide-react";
 import ClienteSaudeCard from "@/components/posvenda/ClienteSaudeCard";
+import NPSResumo from "@/components/posvenda/NPSResumo";
 import { resumirCarteira } from "@/lib/saudeCliente";
 
 const FILTROS = [
@@ -21,6 +22,11 @@ export default function PosVenda() {
   const { data: negocios = [], isLoading } = useQuery({
     queryKey: ["negocios-posvenda"],
     queryFn: () => base44.entities.NegocioFechado.list("-created_date", 300)
+  });
+
+  const { data: npsRespostas = [] } = useQuery({
+    queryKey: ["nps-respostas"],
+    queryFn: () => base44.entities.NPSResposta.list("-created_date", 300)
   });
 
   const resumo = resumirCarteira(negocios);
@@ -56,6 +62,8 @@ export default function PosVenda() {
           <p className="text-2xl font-bold text-cyan-100">{resumo.upsell}</p>
         </CardContent></Card>
       </div>
+
+      <NPSResumo respostas={npsRespostas} />
 
       <div className="flex flex-wrap gap-2">
         {FILTROS.map((f) => (
