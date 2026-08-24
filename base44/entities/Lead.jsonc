@@ -57,6 +57,48 @@
       "format": "date-time",
       "description": "\u00daltima mudan\u00e7a de est\u00e1gio"
     },
+    "temperatura": {
+      "type": "string",
+      "enum": [
+        "Frio",
+        "Morno",
+        "Quente"
+      ],
+      "description": "Temperatura comercial do lead calculada pela IA"
+    },
+    "temperatura_score": {
+      "type": "number",
+      "description": "Score de 0 a 100 que define a temperatura"
+    },
+    "proxima_melhor_acao": {
+      "type": "string",
+      "description": "Pr\u00f3xima melhor a\u00e7\u00e3o recomendada pela IA"
+    },
+    "proxima_acao_motivo": {
+      "type": "string",
+      "description": "Por que esta a\u00e7\u00e3o foi recomendada"
+    },
+    "proxima_acao_canal": {
+      "type": "string",
+      "enum": [
+        "WhatsApp",
+        "Email",
+        "Ligacao",
+        "Reuniao",
+        "Interno"
+      ],
+      "description": "Canal sugerido para executar a a\u00e7\u00e3o"
+    },
+    "proxima_acao_prazo": {
+      "type": "string",
+      "format": "date",
+      "description": "Prazo sugerido para executar a a\u00e7\u00e3o"
+    },
+    "proxima_acao_atualizada_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a IA calculou a pr\u00f3xima melhor a\u00e7\u00e3o"
+    },
     "valor_estimado": {
       "type": "number",
       "description": "Valor estimado do neg\u00f3cio em reais"

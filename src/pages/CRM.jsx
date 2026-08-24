@@ -5,7 +5,8 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, Users, DollarSign, Phone, Mail, Calendar, Package, ChevronRight, FileText, Send, Clock, Target } from "lucide-react";
+import { Plus, TrendingUp, Users, DollarSign, Phone, Mail, Calendar, Package, ChevronRight, FileText, Send, Clock, Target, Zap } from "lucide-react";
+import { proximaMelhorAcao } from "@/functions/proximaMelhorAcao";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { format, parseISO } from "date-fns";
@@ -199,6 +200,15 @@ Qualquer dúvida, estou à disposição!`;
     return leadsPorEstagio(estagioId).reduce((acc, lead) => acc + (lead.valor_estimado || 0), 0);
   };
 
+  // Recalcula temperatura e próxima melhor ação de todos os leads ativos.
+  const calcularNBAMutation = useMutation({
+    mutationFn: async () => {
+      const response = await proximaMelhorAcao({ limite: 25 });
+      return response.data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["leads"] })
+  });
+
   const totalLeads = leads.length;
   const totalValor = leads.reduce((acc, lead) => acc + (lead.valor_estimado || 0), 0);
   const taxaConversao = totalLeads > 0 
@@ -218,13 +228,23 @@ Qualquer dúvida, estou à disposição!`;
               Gerencie seus leads e acompanhe o progresso
             </p>
           </div>
-          <Button 
-            onClick={() => setDialogAberto(true)}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Novo Lead
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() => calcularNBAMutation.mutate()}
+              disabled={calcularNBAMutation.isPending}
+            >
+              <Zap className={`w-5 h-5 mr-2 ${calcularNBAMutation.isPending ? 'animate-pulse' : ''}`} />
+              {calcularNBAMutation.isPending ? 'Calculando...' : 'Próxima Melhor Ação'}
+            </Button>
+            <Button
+              onClick={() => setDialogAberto(true)}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Novo Lead
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}

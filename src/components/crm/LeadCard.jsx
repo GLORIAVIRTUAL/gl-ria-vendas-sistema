@@ -7,6 +7,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import ProximaAcaoLead, { TemperaturaBadge } from "@/components/crm/ProximaAcaoLead";
 
 const prioridadeCor = {
   Baixa: "bg-slate-100 text-slate-700",
@@ -56,6 +57,7 @@ export default function LeadCard({ lead, produtoConfig, isDragging, onEdit, onEn
             )}
           </div>
           <div className="flex items-center gap-2">
+            <TemperaturaBadge temperatura={lead.temperatura} score={lead.temperatura_score} />
             {lead.prioridade && (
               <Badge className={`${prioridadeCor[lead.prioridade]} text-xs`}>
                 {lead.prioridade}
@@ -87,6 +89,8 @@ export default function LeadCard({ lead, produtoConfig, isDragging, onEdit, onEn
             </Button>
           </div>
         </div>
+
+        <ProximaAcaoLead lead={lead} />
 
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-sm text-slate-300">
