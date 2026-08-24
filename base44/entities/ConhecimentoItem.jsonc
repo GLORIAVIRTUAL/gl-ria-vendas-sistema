@@ -1,0 +1,70 @@
+{
+  "name": "ConhecimentoItem",
+  "type": "object",
+  "properties": {
+    "titulo": {
+      "type": "string",
+      "description": "T\u00edtulo do item de conhecimento"
+    },
+    "categoria": {
+      "type": "string",
+      "enum": [
+        "Produto",
+        "Preco",
+        "Diferencial",
+        "FAQ",
+        "Politica",
+        "Processo"
+      ],
+      "default": "Produto",
+      "description": "Categoria do conte\u00fado"
+    },
+    "conteudo": {
+      "type": "string",
+      "description": "Conte\u00fado que a IA pode usar nas respostas"
+    },
+    "palavras_chave": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Palavras-chave relacionadas"
+    },
+    "ativo": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se este item \u00e9 usado pela IA"
+    },
+    "ordem": {
+      "type": "number",
+      "default": 0,
+      "description": "Ordem de prioridade na base"
+    }
+  },
+  "required": [
+    "titulo",
+    "conteudo"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

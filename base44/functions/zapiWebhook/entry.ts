@@ -3,6 +3,7 @@ import { secrets } from 'base44:runtime';
 import { pararCadenciaPorResposta } from '../../shared/cadenciaResposta.ts';
 import { buscarContextoComercial, montarContextoComercial, registrarQualificacao } from '../../shared/agenteComercial.ts';
 import { registrarHistorico } from '../../shared/pipeline.ts';
+import { montarBaseConhecimento } from '../../shared/conhecimento.ts';
 
 const processedMessages = new Set();
 
@@ -529,6 +530,7 @@ DATA: YYYY-MM-DD (pode ser HOJE ou qualquer dia útil futuro; nunca datas passad
 HORARIO: HH:MM
 [/AGENDAR]
 
+${await montarBaseConhecimento(base44)}
 ${contextoComercial ? montarContextoComercial(contextoComercial) : ''}
 
 HISTÓRICO DA CONVERSA (as últimas mensagens "Cliente:" são as mais recentes, responda a elas):
