@@ -32,6 +32,7 @@ import AnalisePerdas from '@/pages/AnalisePerdas';
 import PosVenda from '@/pages/PosVenda';
 import Expansao from '@/pages/Expansao';
 import ReceitaRecorrente from '@/pages/ReceitaRecorrente';
+import Cobrancas from '@/pages/Cobrancas';
 import ResultadosCadencias from '@/pages/ResultadosCadencias';
 import QualidadeProspeccao from '@/pages/QualidadeProspeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
@@ -127,6 +128,11 @@ const AuthenticatedApp = () => (
       <Route path="/PosVenda" element={
         <LayoutWrapper currentPageName="PosVenda">
           <PosVenda />
+        </LayoutWrapper>
+      } />
+      <Route path="/Cobrancas" element={
+        <LayoutWrapper currentPageName="Cobrancas">
+          <Cobrancas />
         </LayoutWrapper>
       } />
       <Route path="/ReceitaRecorrente" element={

@@ -1,0 +1,96 @@
+{
+  "name": "CobrancaEnvio",
+  "type": "object",
+  "properties": {
+    "negocio_id": {
+      "type": "string",
+      "description": "Cliente cobrado"
+    },
+    "nome_cliente": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "nome_empresa": {
+      "type": "string",
+      "description": "Empresa do cliente"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "Lembrete",
+        "Vencimento",
+        "Atraso"
+      ],
+      "default": "Lembrete",
+      "description": "Tipo de cobran\u00e7a enviada"
+    },
+    "canal": {
+      "type": "string",
+      "enum": [
+        "WhatsApp",
+        "Email"
+      ],
+      "default": "WhatsApp",
+      "description": "Canal usado"
+    },
+    "destino": {
+      "type": "string",
+      "description": "Telefone ou e-mail usado"
+    },
+    "mensagem": {
+      "type": "string",
+      "description": "Mensagem enviada"
+    },
+    "valor": {
+      "type": "number",
+      "description": "Valor cobrado (R$)"
+    },
+    "referencia": {
+      "type": "string",
+      "description": "Chave de idempot\u00eancia (negocio + tipo + m\u00eas/dia)"
+    },
+    "link_pagamento": {
+      "type": "string",
+      "description": "Link de pagamento enviado"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "enviado",
+        "erro"
+      ],
+      "default": "enviado",
+      "description": "Status do envio"
+    },
+    "erro_mensagem": {
+      "type": "string",
+      "description": "Mensagem de erro do envio"
+    }
+  },
+  "required": [
+    "negocio_id",
+    "tipo"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

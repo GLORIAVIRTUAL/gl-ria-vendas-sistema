@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, LayoutDashboard, List, Video, TestTube, TrendingUp, Users, Code, Clock, LogOut, Settings, ChevronDown, ChevronRight, CalendarCheck, Mail, MessageSquare, Bot, Megaphone, Target, ListChecks, Database, ShieldQuestion, BookOpen, TrendingDown, HeartPulse, DollarSign } from "lucide-react";
+import { Calendar, LayoutDashboard, List, Video, TestTube, TrendingUp, Users, Code, Clock, LogOut, Settings, ChevronDown, ChevronRight, CalendarCheck, Mail, MessageSquare, Bot, Megaphone, Target, ListChecks, Database, ShieldQuestion, BookOpen, TrendingDown, HeartPulse, DollarSign, Receipt } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -105,6 +105,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "Pós-venda e Retenção", url: "/PosVenda", icon: HeartPulse },
     { title: "Playbook de Expansão", url: "/Expansao", icon: TrendingUp },
     { title: "Receita Recorrente", url: "/ReceitaRecorrente", icon: DollarSign },
+    { title: "Cobrança Automatizada", url: "/Cobrancas", icon: Receipt },
     { title: "Campanhas", url: "/Campanhas", icon: Megaphone },
     { title: "Resultados Cadências", url: "/ResultadosCadencias", icon: TrendingUp },
     { title: "Chat IA", url: createPageUrl("ChatIA"), icon: MessageSquare },
