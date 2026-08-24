@@ -4,6 +4,7 @@ import { pararCadenciaPorResposta } from '../../shared/cadenciaResposta.ts';
 import { buscarContextoComercial, montarContextoComercial, registrarQualificacao } from '../../shared/agenteComercial.ts';
 import { registrarHistorico } from '../../shared/pipeline.ts';
 import { montarBaseConhecimento } from '../../shared/conhecimento.ts';
+import { capturarNotaNPS, mensagemAgradecimento } from '../../shared/npsResposta.ts';
 
 const processedMessages = new Set();
 
@@ -266,6 +267,28 @@ Deno.serve(async (req) => {
     });
 
     console.log('✅ Mensagem salva!');
+
+    // Se o cliente respondeu a uma pesquisa de NPS enviada recentemente,
+    // registra a nota automaticamente e encerra o fluxo com um agradecimento.
+    try {
+      const resultadoNPS = await capturarNotaNPS(base44.asServiceRole, phone, content);
+      if (resultadoNPS.registrada) {
+        console.log(`⭐ NPS registrado automaticamente: nota ${resultadoNPS.nota} (${resultadoNPS.classificacao})`);
+        const agradecimento = mensagemAgradecimento(resultadoNPS.nota);
+        await base44.asServiceRole.entities.Message.create({
+          contact_id: contact.id,
+          direction: 'outbound',
+          sender: 'ai',
+          content: agradecimento,
+          type: 'text',
+          status: 'sent'
+        });
+        await enviarMensagemZapi(phone, agradecimento);
+        return Response.json({ success: true, nps: resultadoNPS.nota });
+      }
+    } catch (npsErr) {
+      console.error('⚠️ Erro ao capturar nota de NPS:', npsErr.message);
+    }
 
     // Se este telefone é de um prospect em cadência, a cadência é interrompida
     // e ele entra no CRM como lead quente.
