@@ -1,0 +1,85 @@
+{
+  "name": "SugestaoExpansao",
+  "type": "object",
+  "properties": {
+    "negocio_id": {
+      "type": "string",
+      "description": "Cliente da carteira"
+    },
+    "nome_cliente": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "nome_empresa": {
+      "type": "string",
+      "description": "Empresa do cliente"
+    },
+    "produto_atual": {
+      "type": "string",
+      "description": "Produtos j\u00e1 contratados"
+    },
+    "produto_sugerido": {
+      "type": "string",
+      "description": "Pr\u00f3ximo produto recomendado"
+    },
+    "valor_sugerido": {
+      "type": "number",
+      "description": "Valor mensal sugerido do upsell (R$)"
+    },
+    "justificativa": {
+      "type": "string",
+      "description": "Por que este produto faz sentido agora"
+    },
+    "abordagem": {
+      "type": "string",
+      "description": "Mensagem/abordagem sugerida para o cliente"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Sugerida",
+        "Apresentada",
+        "Aceita",
+        "Recusada"
+      ],
+      "default": "Sugerida",
+      "description": "Status da oportunidade de expans\u00e3o"
+    },
+    "apresentada_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a oferta foi enviada ao cliente"
+    },
+    "gerado_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a IA gerou a sugest\u00e3o"
+    }
+  },
+  "required": [
+    "negocio_id",
+    "produto_sugerido"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
