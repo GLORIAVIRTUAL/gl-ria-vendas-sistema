@@ -1,0 +1,52 @@
+{
+  "name": "MetaComercial",
+  "type": "object",
+  "properties": {
+    "mes": {
+      "type": "string",
+      "description": "M\u00eas de refer\u00eancia no formato YYYY-MM"
+    },
+    "meta_faturamento": {
+      "type": "number",
+      "description": "Meta de faturamento fechado no m\u00eas (R$)"
+    },
+    "meta_negocios": {
+      "type": "number",
+      "description": "Meta de neg\u00f3cios fechados no m\u00eas"
+    },
+    "meta_reunioes": {
+      "type": "number",
+      "description": "Meta de reuni\u00f5es realizadas no m\u00eas"
+    },
+    "observacoes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es sobre a meta"
+    }
+  },
+  "required": [
+    "mes",
+    "meta_faturamento"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

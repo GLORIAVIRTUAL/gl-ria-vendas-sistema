@@ -23,6 +23,7 @@ import ICPs from '@/pages/ICPs';
 import Campanhas from '@/pages/Campanhas';
 import MotorComercial from '@/pages/MotorComercial';
 import FilaDoDia from '@/pages/FilaDoDia';
+import Metas from '@/pages/Metas';
 import ResultadosCadencias from '@/pages/ResultadosCadencias';
 import QualidadeProspeccao from '@/pages/QualidadeProspeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
@@ -113,6 +114,11 @@ const AuthenticatedApp = () => (
       <Route path="/Campanhas" element={
         <LayoutWrapper currentPageName="Campanhas">
           <Campanhas />
+        </LayoutWrapper>
+      } />
+      <Route path="/Metas" element={
+        <LayoutWrapper currentPageName="Metas">
+          <Metas />
         </LayoutWrapper>
       } />
       <Route path="/FilaDoDia" element={

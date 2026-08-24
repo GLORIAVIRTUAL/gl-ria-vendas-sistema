@@ -92,6 +92,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "Agenda", url: createPageUrl("Agenda"), icon: CalendarCheck },
     { title: "CRM / Funil", url: createPageUrl("CRM"), icon: TrendingUp },
     { title: "Fila do Dia", url: "/FilaDoDia", icon: ListChecks },
+    { title: "Metas e Previsão", url: "/Metas", icon: Target },
     { title: "Motor Comercial", url: "/MotorComercial", icon: Target },
     { title: "ICPs", url: "/ICPs", icon: Target },
     { title: "Prospecção", url: "/Prospeccao", icon: Users },
