@@ -83,6 +83,29 @@
       ],
       "default": "Manual",
       "description": "Origem do agendamento"
+    },
+    "briefing_ia": {
+      "type": "string",
+      "description": "Briefing comercial gerado automaticamente pela IA antes da reuni\u00e3o"
+    },
+    "briefing_gerado_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando o briefing comercial foi gerado"
+    },
+    "briefing_status": {
+      "type": "string",
+      "enum": [
+        "pendente",
+        "gerado",
+        "erro"
+      ],
+      "default": "pendente",
+      "description": "Status do briefing autom\u00e1tico"
+    },
+    "briefing_erro": {
+      "type": "string",
+      "description": "\u00daltimo erro na gera\u00e7\u00e3o do briefing"
     }
   },
   "required": [

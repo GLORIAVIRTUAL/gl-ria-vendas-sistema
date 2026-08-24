@@ -18,6 +18,7 @@
       "type": "string",
       "enum": [
         "Programado",
+        "Processando",
         "Enviado",
         "Erro"
       ],
@@ -41,6 +42,20 @@
     "erro_mensagem": {
       "type": "string",
       "description": "Mensagem de erro (se houver)"
+    },
+    "claim_token": {
+      "type": "string",
+      "description": "Token tempor\u00e1rio de claim para evitar processamento concorrente"
+    },
+    "processando_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Momento em que o disparo foi reivindicado por um processador"
+    },
+    "tentativas": {
+      "type": "integer",
+      "default": 0,
+      "description": "Quantidade de tentativas de envio"
     }
   },
   "required": [

@@ -64,6 +64,7 @@
       "type": "string",
       "enum": [
         "programado",
+        "processando",
         "enviado",
         "erro",
         "cancelado"
@@ -84,6 +85,25 @@
     "erro_mensagem": {
       "type": "string",
       "description": "Mensagem de erro do envio"
+    },
+    "claim_token": {
+      "type": "string",
+      "description": "Token tempor\u00e1rio usado para impedir processamento concorrente do mesmo envio"
+    },
+    "processando_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando este envio foi reservado por uma execu\u00e7\u00e3o"
+    },
+    "tentativas": {
+      "type": "number",
+      "default": 0,
+      "description": "Quantidade de tentativas de processamento"
+    },
+    "ultimo_erro_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data/hora da \u00faltima falha de envio"
     }
   },
   "required": [

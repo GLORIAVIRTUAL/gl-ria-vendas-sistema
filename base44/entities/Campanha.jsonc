@@ -27,12 +27,12 @@
     "limite_diario_envios": {
       "type": "number",
       "default": 30,
-      "description": "M\u00e1ximo de mensagens enviadas por execu\u00e7\u00e3o"
+      "description": "M\u00e1ximo de mensagens enviadas por dia (America/Recife)"
     },
     "limite_diario_entradas": {
       "type": "number",
       "default": 20,
-      "description": "M\u00e1ximo de prospects que entram na cad\u00eancia por execu\u00e7\u00e3o"
+      "description": "M\u00e1ximo de prospects que entram na cad\u00eancia por dia (America/Recife)"
     },
     "passos": {
       "type": "array",
@@ -75,6 +75,39 @@
       "type": "string",
       "format": "date-time",
       "description": "\u00daltima execu\u00e7\u00e3o da cad\u00eancia"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "URL da demonstra\u00e7\u00e3o espec\u00edfica desta campanha/segmento"
+    },
+    "agenda_url": {
+      "type": "string",
+      "description": "URL p\u00fablica para agendar reuni\u00e3o comercial"
+    },
+    "nome_remetente": {
+      "type": "string",
+      "default": "Thiago",
+      "description": "Nome usado nas mensagens comerciais"
+    },
+    "site_gloria": {
+      "type": "string",
+      "default": "gloriavirtual.com",
+      "description": "Site exibido nas mensagens comerciais"
+    },
+    "hora_inicio_envios": {
+      "type": "number",
+      "default": 8,
+      "description": "Hora local de Recife a partir da qual a campanha pode enviar mensagens"
+    },
+    "hora_fim_envios": {
+      "type": "number",
+      "default": 18,
+      "description": "Hora local de Recife a partir da qual a campanha deixa de enviar mensagens"
+    },
+    "somente_dias_uteis": {
+      "type": "boolean",
+      "default": true,
+      "description": "Quando ativo, n\u00e3o envia mensagens aos s\u00e1bados e domingos"
     }
   },
   "required": [
