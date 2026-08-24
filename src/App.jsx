@@ -24,6 +24,7 @@ import Campanhas from '@/pages/Campanhas';
 import MotorComercial from '@/pages/MotorComercial';
 import FilaDoDia from '@/pages/FilaDoDia';
 import Metas from '@/pages/Metas';
+import RelatorioComercial from '@/pages/RelatorioComercial';
 import ResultadosCadencias from '@/pages/ResultadosCadencias';
 import QualidadeProspeccao from '@/pages/QualidadeProspeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
@@ -114,6 +115,11 @@ const AuthenticatedApp = () => (
       <Route path="/Campanhas" element={
         <LayoutWrapper currentPageName="Campanhas">
           <Campanhas />
+        </LayoutWrapper>
+      } />
+      <Route path="/RelatorioComercial" element={
+        <LayoutWrapper currentPageName="RelatorioComercial">
+          <RelatorioComercial />
         </LayoutWrapper>
       } />
       <Route path="/Metas" element={

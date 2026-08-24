@@ -93,6 +93,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "CRM / Funil", url: createPageUrl("CRM"), icon: TrendingUp },
     { title: "Fila do Dia", url: "/FilaDoDia", icon: ListChecks },
     { title: "Metas e Previsão", url: "/Metas", icon: Target },
+    { title: "Relatório Comercial", url: "/RelatorioComercial", icon: TrendingUp },
     { title: "Motor Comercial", url: "/MotorComercial", icon: Target },
     { title: "ICPs", url: "/ICPs", icon: Target },
     { title: "Prospecção", url: "/Prospeccao", icon: Users },
