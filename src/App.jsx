@@ -29,6 +29,7 @@ import HigieneBase from '@/pages/HigieneBase';
 import PlaybookObjecoes from '@/pages/PlaybookObjecoes';
 import BaseConhecimento from '@/pages/BaseConhecimento';
 import AnalisePerdas from '@/pages/AnalisePerdas';
+import PosVenda from '@/pages/PosVenda';
 import ResultadosCadencias from '@/pages/ResultadosCadencias';
 import QualidadeProspeccao from '@/pages/QualidadeProspeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
@@ -119,6 +120,11 @@ const AuthenticatedApp = () => (
       <Route path="/Campanhas" element={
         <LayoutWrapper currentPageName="Campanhas">
           <Campanhas />
+        </LayoutWrapper>
+      } />
+      <Route path="/PosVenda" element={
+        <LayoutWrapper currentPageName="PosVenda">
+          <PosVenda />
         </LayoutWrapper>
       } />
       <Route path="/AnalisePerdas" element={
