@@ -629,7 +629,18 @@ ${history}`;
       const emailValido = email && email.includes('@') && !email.includes('[');
       const horarioValido = horario && /^\d{2}:\d{2}$/.test(horario);
 
-      if (nomeValido && emailValido && dataValida && horarioValido && !ehFimDeSemana) {
+      // Verificação de disponibilidade no servidor: nunca marca dois clientes no mesmo horário.
+      let horarioOcupado = false;
+      if (dataValida && horarioValido) {
+        const jaAgendados = await base44.asServiceRole.entities.Agendamento.filter({ data, horario });
+        horarioOcupado = jaAgendados.some((a) => a.status !== 'Cancelada');
+      }
+
+      if (horarioOcupado) {
+        console.log('⛔ Horário já ocupado, agendamento não criado:', data, horario);
+        finalResponse = aiResponse.replace(/\[AGENDAR\][\s\S]*?\[\/AGENDAR\]/, '').trim();
+        finalResponse += `\n\nEsse horário (${horario}) já está ocupado. Pode escolher outro horário para eu confirmar?`;
+      } else if (nomeValido && emailValido && dataValida && horarioValido && !ehFimDeSemana) {
         try {
           // Cria evento no Google Calendar
           let meetLink = null;
@@ -719,24 +730,63 @@ ${history}`;
 
           console.log('✅ Agendamento criado!');
 
-          // Cria Lead no CRM no estágio "Reunião Marcada"
+          // Atualiza o Lead existente ou cria um novo — nunca duplica o mesmo cliente.
           try {
-            const leadCriado = await base44.asServiceRole.entities.Lead.create({
-              nome_cliente: nome,
-              email_cliente: email,
-              telefone_cliente: telefone,
-              estagio: 'Reuniao_Marcada',
-              estagio_atualizado_em: new Date().toISOString(),
-              data_reuniao: data,
-              agendamento_id: novoAgendamento.id,
-              observacoes: `Reunião marcada via WhatsApp IA (Z-API) - ${data} às ${horario}`,
-              proximos_passos: 'Realizar reunião agendada'
-            });
-            await registrarHistorico(base44.asServiceRole, leadCriado, '', 'Reuniao_Marcada', {
-              origem: 'Agendamento',
-              motivo: `Reunião agendada pela IA para ${data} às ${horario}`
-            });
-            console.log('✅ Lead criado no CRM (Reunião Marcada)!');
+            let leadExistente = null;
+            const prospectVinculado = contextoComercial?.prospect || null;
+
+            if (prospectVinculado?.crm_lead_id) {
+              try {
+                leadExistente = await base44.asServiceRole.entities.Lead.get(prospectVinculado.crm_lead_id);
+              } catch {
+                leadExistente = null;
+              }
+            }
+
+            if (!leadExistente) {
+              const candidatos = await base44.asServiceRole.entities.Lead.list('-created_date', 500);
+              leadExistente = candidatos.find((l) =>
+                (email && String(l.email_cliente || '').toLowerCase() === email.toLowerCase()) ||
+                telefonesIguais(l.telefone_cliente, telefone)
+              ) || null;
+            }
+
+            if (leadExistente) {
+              const estagioAnterior = leadExistente.estagio || '';
+              await base44.asServiceRole.entities.Lead.update(leadExistente.id, {
+                estagio: 'Reuniao_Marcada',
+                estagio_atualizado_em: new Date().toISOString(),
+                data_reuniao: data,
+                agendamento_id: novoAgendamento.id,
+                email_cliente: leadExistente.email_cliente || email,
+                telefone_cliente: leadExistente.telefone_cliente || telefone,
+                observacoes: `${leadExistente.observacoes || ''}\n[Agendamento] Reunião marcada via WhatsApp IA - ${data} às ${horario}`.trim(),
+                proximos_passos: 'Realizar reunião agendada'
+              });
+              await registrarHistorico(base44.asServiceRole, leadExistente, estagioAnterior, 'Reuniao_Marcada', {
+                origem: 'Agendamento',
+                motivo: `Reunião agendada pela IA para ${data} às ${horario}`,
+                prospect_id: prospectVinculado?.id || ''
+              });
+              console.log('✅ Lead existente reaproveitado (Reunião Marcada):', leadExistente.id);
+            } else {
+              const leadCriado = await base44.asServiceRole.entities.Lead.create({
+                nome_cliente: nome,
+                email_cliente: email,
+                telefone_cliente: telefone,
+                estagio: 'Reuniao_Marcada',
+                estagio_atualizado_em: new Date().toISOString(),
+                data_reuniao: data,
+                agendamento_id: novoAgendamento.id,
+                observacoes: `Reunião marcada via WhatsApp IA (Z-API) - ${data} às ${horario}`,
+                proximos_passos: 'Realizar reunião agendada'
+              });
+              await registrarHistorico(base44.asServiceRole, leadCriado, '', 'Reuniao_Marcada', {
+                origem: 'Agendamento',
+                motivo: `Reunião agendada pela IA para ${data} às ${horario}`
+              });
+              console.log('✅ Lead criado no CRM (Reunião Marcada)!');
+            }
           } catch (leadError) {
             console.error('⚠️ Erro ao criar Lead no CRM:', leadError.message);
           }
