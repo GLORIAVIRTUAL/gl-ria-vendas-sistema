@@ -40,6 +40,7 @@
         "pediu_informacoes",
         "pediu_contato_whatsapp",
         "pediu_reuniao",
+        "ja_tem_sistema",
         "nao_interessado",
         "pessoa_errada",
         "indicou_outro_responsavel",
@@ -92,6 +93,20 @@
       "type": "string",
       "format": "date-time",
       "description": "Quando a IA classificou este e-mail"
+    },
+    "resposta_automatica_enviada": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se o sistema respondeu automaticamente este e-mail"
+    },
+    "resposta_automatica_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a resposta autom\u00e1tica foi enviada"
+    },
+    "resposta_automatica_texto": {
+      "type": "string",
+      "description": "Texto enviado automaticamente ao remetente"
     }
   },
   "required": [
