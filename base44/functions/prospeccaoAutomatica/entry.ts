@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { searchCompanies, normalizeCompany, icpToFilters, prospectAtendeIcp, normalizeCnpj } from '../../shared/kipflow.ts';
+import { inicioFimDiaRecife } from '../../shared/comercialAutomacao.js';
 
 const DIAS_POR_INTERVALO = {
   Diario: 1,
@@ -11,14 +12,8 @@ const DIAS_POR_INTERVALO = {
 const CAMPOS_ENRIQUECIVEIS = [
   'nome_fantasia', 'situacao_cadastral', 'segmento', 'ramo_atividade', 'cnae', 'porte',
   'faixa_funcionarios', 'email', 'telefone', 'whatsapp', 'site', 'linkedin', 'instagram',
-  'endereco', 'municipio', 'uf'
+  'endereco', 'municipio', 'uf', 'decisor_nome', 'decisor_cargo'
 ];
-
-const inicioDoDia = () => {
-  const data = new Date();
-  data.setUTCHours(0, 0, 0, 0);
-  return data.toISOString();
-};
 
 const estaNoIntervalo = (icp) => {
   const dias = DIAS_POR_INTERVALO[icp.intervalo_execucao];
@@ -41,7 +36,7 @@ const executarIcp = async (db, icp, origem) => {
   const criadosHoje = await db.entities.Prospect.filter({
     icp_id: icp.id,
     origem_prospeccao: 'Prospecção Automática',
-    created_date: { $gte: inicioDoDia() }
+    created_date: { $gte: inicioFimDiaRecife().inicio }
   });
   const restante = limiteDiario - criadosHoje.length;
   if (restante <= 0) {

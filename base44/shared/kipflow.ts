@@ -194,7 +194,10 @@ export const searchCompanies = async ({ apiKey, filters = {}, page = 0, size = 2
 export const normalizeCompany = (company) => {
   const emails = Array.isArray(company.emails) ? company.emails : [];
   const phones = Array.isArray(company.telefones) ? company.telefones : [];
-  const email = emails.find((item) => !item?.pertence_contador)?.email || emails[0]?.email || '';
+  const socios = Array.isArray(company.socios) ? company.socios : [];
+  const decisor = socios.find((socio) => Array.isArray(socio?.emails_socio) && socio.emails_socio.length) || socios[0] || null;
+  const emailDecisor = Array.isArray(decisor?.emails_socio) ? decisor.emails_socio[0] : '';
+  const email = emailDecisor || emails.find((item) => !item?.pertence_contador)?.email || emails[0]?.email || '';
   const whatsapp = phones.find((item) => item?.whatsapp && !item?.pertence_contador)?.telefone_completo || '';
   const phone = phones.find((item) => !item?.pertence_contador)?.telefone_completo || phones[0]?.telefone_completo || '';
   const address = company.endereco && typeof company.endereco === 'object' ? company.endereco : {};
@@ -226,6 +229,8 @@ export const normalizeCompany = (company) => {
     site: company.sites?.[0]?.site || '',
     linkedin: company.linkedin_url || '',
     instagram: company.instagram?.[0]?.url || '',
+    decisor_nome: decisor?.nome_socio || decisor?.nome || '',
+    decisor_cargo: decisor?.qualificacao_socio || decisor?.cargo || decisor?.funcao || '',
     endereco,
     municipio: company.municipio || address.municipio || '',
     uf: company.uf || company.sigla_uf || address.uf || address.sigla_uf || '',
