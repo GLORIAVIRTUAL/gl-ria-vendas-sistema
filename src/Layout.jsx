@@ -103,6 +103,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "Base de Conhecimento", url: "/BaseConhecimento", icon: BookOpen },
     { title: "Análise de Perdas", url: "/AnalisePerdas", icon: TrendingDown },
     { title: "Pós-venda e Retenção", url: "/PosVenda", icon: HeartPulse },
+    { title: "Playbook de Expansão", url: "/Expansao", icon: TrendingUp },
     { title: "Campanhas", url: "/Campanhas", icon: Megaphone },
     { title: "Resultados Cadências", url: "/ResultadosCadencias", icon: TrendingUp },
     { title: "Chat IA", url: createPageUrl("ChatIA"), icon: MessageSquare },

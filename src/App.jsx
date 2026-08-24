@@ -30,6 +30,7 @@ import PlaybookObjecoes from '@/pages/PlaybookObjecoes';
 import BaseConhecimento from '@/pages/BaseConhecimento';
 import AnalisePerdas from '@/pages/AnalisePerdas';
 import PosVenda from '@/pages/PosVenda';
+import Expansao from '@/pages/Expansao';
 import ResultadosCadencias from '@/pages/ResultadosCadencias';
 import QualidadeProspeccao from '@/pages/QualidadeProspeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
@@ -125,6 +126,11 @@ const AuthenticatedApp = () => (
       <Route path="/PosVenda" element={
         <LayoutWrapper currentPageName="PosVenda">
           <PosVenda />
+        </LayoutWrapper>
+      } />
+      <Route path="/Expansao" element={
+        <LayoutWrapper currentPageName="Expansao">
+          <Expansao />
         </LayoutWrapper>
       } />
       <Route path="/AnalisePerdas" element={
