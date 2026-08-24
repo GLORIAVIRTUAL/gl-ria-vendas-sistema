@@ -28,6 +28,7 @@ import RelatorioComercial from '@/pages/RelatorioComercial';
 import HigieneBase from '@/pages/HigieneBase';
 import PlaybookObjecoes from '@/pages/PlaybookObjecoes';
 import BaseConhecimento from '@/pages/BaseConhecimento';
+import AnalisePerdas from '@/pages/AnalisePerdas';
 import ResultadosCadencias from '@/pages/ResultadosCadencias';
 import QualidadeProspeccao from '@/pages/QualidadeProspeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
@@ -118,6 +119,11 @@ const AuthenticatedApp = () => (
       <Route path="/Campanhas" element={
         <LayoutWrapper currentPageName="Campanhas">
           <Campanhas />
+        </LayoutWrapper>
+      } />
+      <Route path="/AnalisePerdas" element={
+        <LayoutWrapper currentPageName="AnalisePerdas">
+          <AnalisePerdas />
         </LayoutWrapper>
       } />
       <Route path="/BaseConhecimento" element={

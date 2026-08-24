@@ -57,6 +57,30 @@
       "format": "date-time",
       "description": "\u00daltima mudan\u00e7a de est\u00e1gio"
     },
+    "motivo_perda": {
+      "type": "string",
+      "enum": [
+        "Preco",
+        "Sem_Budget",
+        "Timing",
+        "Escolheu_Concorrente",
+        "Sem_Necessidade",
+        "Sem_Resposta",
+        "Nao_Era_Decisor",
+        "Fora_do_ICP",
+        "Outro"
+      ],
+      "description": "Motivo pelo qual o lead foi perdido"
+    },
+    "motivo_perda_detalhe": {
+      "type": "string",
+      "description": "Detalhe/contexto da perda"
+    },
+    "perdido_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a perda foi registrada"
+    },
     "temperatura": {
       "type": "string",
       "enum": [
