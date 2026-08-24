@@ -1,0 +1,71 @@
+{
+  "name": "InteracaoRetencao",
+  "type": "object",
+  "properties": {
+    "negocio_id": {
+      "type": "string",
+      "description": "Neg\u00f3cio/cliente relacionado"
+    },
+    "nome_cliente": {
+      "type": "string",
+      "description": "Nome do cliente"
+    },
+    "nome_empresa": {
+      "type": "string",
+      "description": "Empresa do cliente"
+    },
+    "canal": {
+      "type": "string",
+      "enum": [
+        "WhatsApp",
+        "Email",
+        "Ligacao",
+        "Reuniao"
+      ],
+      "default": "WhatsApp",
+      "description": "Canal usado no contato"
+    },
+    "destino": {
+      "type": "string",
+      "description": "Telefone ou e-mail utilizado"
+    },
+    "mensagem": {
+      "type": "string",
+      "description": "Mensagem enviada"
+    },
+    "motivo": {
+      "type": "string",
+      "description": "Motivo/alerta que gerou a a\u00e7\u00e3o de reten\u00e7\u00e3o"
+    },
+    "saude_score": {
+      "type": "number",
+      "description": "Score de sa\u00fade do cliente no momento do contato"
+    }
+  },
+  "required": [
+    "negocio_id",
+    "canal"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
