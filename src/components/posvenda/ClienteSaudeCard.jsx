@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, AlertTriangle, MessageSquare } from "lucide-react";
+import AcaoRetencaoDialog from "./AcaoRetencaoDialog";
 
 const CORES = {
   Saudavel: "bg-cyan-400",
@@ -12,6 +14,8 @@ const CORES = {
 const ROTULOS = { Saudavel: "Saudável", Atencao: "Atenção", Risco: "Risco" };
 
 export default function ClienteSaudeCard({ negocio, saude }) {
+  const [dialogAberto, setDialogAberto] = useState(false);
+
   return (
     <Card>
       <CardContent className="space-y-3 p-5">
@@ -52,6 +56,20 @@ export default function ClienteSaudeCard({ negocio, saude }) {
             <TrendingUp className="h-4 w-4" />
             Cliente maduro e saudável: oportunidade de expansão
           </p>
+        )}
+
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={!negocio.telefone_cliente}
+          onClick={() => setDialogAberto(true)}
+        >
+          <MessageSquare className="h-4 w-4" />
+          {negocio.telefone_cliente ? "Ação de retenção" : "Sem telefone cadastrado"}
+        </Button>
+
+        {dialogAberto && (
+          <AcaoRetencaoDialog negocio={negocio} saude={saude} open={dialogAberto} onOpenChange={setDialogAberto} />
         )}
       </CardContent>
     </Card>
