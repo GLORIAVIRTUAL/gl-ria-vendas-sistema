@@ -99,6 +99,11 @@
       "format": "date-time",
       "description": "Quando a IA calculou a pr\u00f3xima melhor a\u00e7\u00e3o"
     },
+    "proxima_acao_concluida_em": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a pr\u00f3xima melhor a\u00e7\u00e3o foi executada pelo time"
+    },
     "valor_estimado": {
       "type": "number",
       "description": "Valor estimado do neg\u00f3cio em reais"

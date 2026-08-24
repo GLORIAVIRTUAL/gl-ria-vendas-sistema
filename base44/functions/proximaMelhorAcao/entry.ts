@@ -85,7 +85,8 @@ Regras:
           proxima_acao_motivo: analise.motivo,
           proxima_acao_canal: analise.canal,
           proxima_acao_prazo: prazo.toISOString().split('T')[0],
-          proxima_acao_atualizada_em: new Date().toISOString()
+          proxima_acao_atualizada_em: new Date().toISOString(),
+          proxima_acao_concluida_em: null
         });
         atualizados++;
       } catch (erroLead) {

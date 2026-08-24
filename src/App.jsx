@@ -22,6 +22,7 @@ import Prospeccao from '@/pages/Prospeccao';
 import ICPs from '@/pages/ICPs';
 import Campanhas from '@/pages/Campanhas';
 import MotorComercial from '@/pages/MotorComercial';
+import FilaDoDia from '@/pages/FilaDoDia';
 import ResultadosCadencias from '@/pages/ResultadosCadencias';
 import QualidadeProspeccao from '@/pages/QualidadeProspeccao';
 import OnboardingPublico from '@/pages/OnboardingPublico';
@@ -112,6 +113,11 @@ const AuthenticatedApp = () => (
       <Route path="/Campanhas" element={
         <LayoutWrapper currentPageName="Campanhas">
           <Campanhas />
+        </LayoutWrapper>
+      } />
+      <Route path="/FilaDoDia" element={
+        <LayoutWrapper currentPageName="FilaDoDia">
+          <FilaDoDia />
         </LayoutWrapper>
       } />
       <Route path="/MotorComercial" element={
