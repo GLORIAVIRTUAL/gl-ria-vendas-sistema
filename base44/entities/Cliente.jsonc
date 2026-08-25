@@ -31,6 +31,12 @@
       "type": "number",
       "description": "Valor da mensalidade"
     },
+    "dia_pagamento": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 31,
+      "description": "Dia do m\u00eas em que o cliente paga a mensalidade"
+    },
     "status_pagamento": {
       "type": "string",
       "enum": [

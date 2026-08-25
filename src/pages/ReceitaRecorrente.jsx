@@ -6,6 +6,7 @@ import { resumirReceita } from "@/lib/receitaRecorrente";
 import ReceitaStatCard from "@/components/receita/ReceitaStatCard";
 import EvolucaoMRRChart from "@/components/receita/EvolucaoMRRChart";
 import ComposicaoProduto from "@/components/receita/ComposicaoProduto";
+import ClientesRecorrentes from "@/components/receita/ClientesRecorrentes";
 
 const moeda = (v) => `R$ ${Number(v || 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`;
 
@@ -15,7 +16,23 @@ export default function ReceitaRecorrente() {
     queryFn: () => base44.entities.NegocioFechado.list("-created_date", 500)
   });
 
-  const r = resumirReceita(negocios);
+  const { data: clientes = [], isLoading: loadingClientes } = useQuery({
+    queryKey: ["clientes-receita"],
+    queryFn: () => base44.entities.Cliente.list("-created_date", 500)
+  });
+
+  // Clientes recorrentes entram no cálculo; negócios já convertidos em cliente não são contados duas vezes.
+  const negociosVinculados = new Set(clientes.map((c) => c.negocio_id).filter(Boolean));
+  const contratos = [
+    ...negocios.filter((n) => !negociosVinculados.has(n.id)),
+    ...clientes.map((c) => ({
+      ...c,
+      status_pagamento: c.status_pagamento || "Ativo",
+      data_primeira_cobranca: c.data_inicio_contrato || c.created_date
+    }))
+  ];
+
+  const r = resumirReceita(contratos);
   const ultimo = r.evolucao[r.evolucao.length - 1] || {};
 
   return (
@@ -25,7 +42,7 @@ export default function ReceitaRecorrente() {
         <p className="text-slate-400">MRR, ARR, evolução mensal e composição da carteira</p>
       </div>
 
-      {isLoading ? (
+      {isLoading || loadingClientes ? (
         <p className="text-slate-400">Carregando receita...</p>
       ) : (
         <>
@@ -38,6 +55,7 @@ export default function ReceitaRecorrente() {
             <ReceitaStatCard titulo="Novo MRR no mês" valor={moeda(ultimo.novo_mrr)} detalhe={`${ultimo.novos || 0} novo(s) contrato(s)`} icon={Users} />
           </div>
 
+          <ClientesRecorrentes clientes={clientes} />
           <EvolucaoMRRChart dados={r.evolucao} />
           <ComposicaoProduto itens={r.porProduto} total={r.mrr} />
         </>

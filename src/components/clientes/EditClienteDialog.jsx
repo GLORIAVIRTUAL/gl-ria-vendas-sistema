@@ -22,6 +22,7 @@ export default function EditClienteDialog({ cliente, open, onOpenChange, onSave,
     telefone_cliente: "",
     produto: "",
     valor_mensalidade: "",
+    dia_pagamento: "",
     status_pagamento: "",
     cnpj: "",
     endereco_completo: "",
@@ -46,6 +47,7 @@ export default function EditClienteDialog({ cliente, open, onOpenChange, onSave,
         telefone_cliente: cliente.telefone_cliente || "",
         produto: cliente.produto || "",
         valor_mensalidade: cliente.valor_mensalidade || "",
+        dia_pagamento: cliente.dia_pagamento || "",
         status_pagamento: cliente.status_pagamento || "",
         cnpj: cliente.cnpj || "",
         endereco_completo: cliente.endereco_completo || "",
@@ -101,7 +103,8 @@ export default function EditClienteDialog({ cliente, open, onOpenChange, onSave,
     e.preventDefault();
     onSave({
       ...formData,
-      valor_mensalidade: parseFloat(formData.valor_mensalidade) || 0
+      valor_mensalidade: parseFloat(formData.valor_mensalidade) || 0,
+      dia_pagamento: parseInt(formData.dia_pagamento, 10) || undefined
     });
   };
 
@@ -188,6 +191,18 @@ export default function EditClienteDialog({ cliente, open, onOpenChange, onSave,
                   step="0.01"
                   value={formData.valor_mensalidade}
                   onChange={(e) => setFormData({...formData, valor_mensalidade: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label htmlFor="dia_pagamento">Dia do Pagamento</Label>
+                <Input
+                  id="dia_pagamento"
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={formData.dia_pagamento}
+                  onChange={(e) => setFormData({...formData, dia_pagamento: e.target.value})}
+                  placeholder="Ex: 10"
                 />
               </div>
               <div>
