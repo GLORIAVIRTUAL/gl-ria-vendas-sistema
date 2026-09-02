@@ -5,11 +5,18 @@ import { base44 } from "@/api/base44Client";
 import { kipflowSearch } from "@/functions/kipflowSearch";
 import { normalizeCompany } from "@/lib/prospectUtils";
 
+const CACHE_KEY = "prospeccao_ultima_busca";
+
+const readCache = () => {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY)) || null; } catch { return null; }
+};
+
 export default function useProspeccao() {
   const queryClient = useQueryClient();
-  const [results, setResults] = useState([]);
-  const [pagination, setPagination] = useState(null);
-  const [hasSearched, setHasSearched] = useState(false);
+  const cached = readCache();
+  const [results, setResults] = useState(cached?.results || []);
+  const [pagination, setPagination] = useState(cached?.pagination || null);
+  const [hasSearched, setHasSearched] = useState(Boolean(cached?.results?.length));
   const [searching, setSearching] = useState(false);
   const [busyId, setBusyId] = useState("");
   const lastSearchKey = useRef("");
@@ -41,6 +48,9 @@ export default function useProspeccao() {
       nextPage.current = requestedPage + 1;
       setResults(freshResults);
       setPagination(payload?.pagination || null);
+      if (freshResults.length) {
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify({ results: freshResults, pagination: payload?.pagination || null, filters: searchFilters, data: new Date().toISOString() })); } catch { /* cache opcional */ }
+      }
       if (!freshResults.length) toast.info("Não há novas empresas para estes filtros.");
     } catch (error) { toast.error(error.response?.data?.error || error.message); }
     finally { setSearching(false); }
