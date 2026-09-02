@@ -241,15 +241,24 @@ export const normalizeCompany = (company) => {
 
 const primeiro = (lista) => (Array.isArray(lista) && lista.length ? lista[0] : '');
 
+// O Kipflow só aceita estes valores no campo "segmento". Qualquer outro
+// (ex: "Saúde", "Imobiliário") deve virar busca por atividade/CNAE.
+const SEGMENTOS_KIPFLOW = ['COMERCIO', 'INDUSTRIA', 'SERVICOS', 'AGROPECUARIA', 'CONSTRUCAO CIVIL'];
+
 export const icpToFilters = (icp) => {
   const exigeContato = Boolean(icp.exigir_telefone || icp.exigir_email || icp.exigir_whatsapp);
   const filters = { situacaoCadastral: 'ATIVA' };
 
-  if (icp.segmento) filters.segmento = icp.segmento;
+  const segmento = normalizeText(icp.segmento);
+  if (segmento && SEGMENTOS_KIPFLOW.includes(segmento)) filters.segmento = segmento;
   if (icp.porte_minimo) filters.porte = icp.porte_minimo;
   if (primeiro(icp.estados)) filters.uf = primeiro(icp.estados);
   if (primeiro(icp.cidades)) filters.municipio = primeiro(icp.cidades);
-  if (primeiro(icp.cnaes_desejados)) filters.cnae = primeiro(icp.cnaes_desejados);
+  // Sem CNAE configurado, usa o segmento/palavra-chave do ICP como busca por atividade.
+  const cnaeAlvo = primeiro(icp.cnaes_desejados)
+    || (segmento && !filters.segmento ? segmento : '')
+    || primeiro(icp.palavras_chave);
+  if (cnaeAlvo) filters.cnae = cnaeAlvo;
   if (icp.faturamento_minimo) filters.faturamentoMin = icp.faturamento_minimo;
   if (icp.matriz_filial === 'Matriz') filters.matriz = 'TRUE';
   if (icp.matriz_filial === 'Filial') filters.matriz = 'FALSE';
