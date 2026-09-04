@@ -210,7 +210,7 @@ export default function Layout({ children, currentPageName }) {
                       >
                         <Link to={item.url} className="flex items-center gap-3 px-4 py-3">
                           {item.image ? (
-                            <img src={item.image} alt={item.title} className="h-5 w-auto max-w-[90px] object-contain" />
+                            <img src={item.image} alt={item.title} className="h-8 w-auto max-w-[140px] object-contain" />
                           ) : (
                             <item.icon className="w-5 h-5" />
                           )}
