@@ -158,7 +158,7 @@ export default function ChatWindow({
       "relative flex-1 flex flex-col h-full overflow-hidden bg-slate-950",
       isOpenClaw ? "shadow-[inset_0_1px_0_rgba(248,113,113,0.18)]" : "shadow-[inset_0_1px_0_rgba(103,232,249,0.18)]"
     )}>
-      <div className="relative z-20 grid grid-cols-1 gap-4 border-b border-cyan-300/25 bg-slate-950/90 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:grid-cols-[220px_1fr_auto] lg:px-6 lg:py-4">
+      <div className="relative z-20 shrink-0 grid grid-cols-1 gap-4 border-b border-cyan-300/25 bg-slate-950/90 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:grid-cols-[220px_1fr_auto] lg:px-6 lg:py-4">
         <div className="border-r border-cyan-300/20 pr-5">
           <p className="font-heading text-xl font-bold tracking-tight text-cyan-300">GLÓRIA IA</p>
           <p className="mt-1 text-xs leading-relaxed text-slate-300">{contact.name || contact.phone}</p>
@@ -212,18 +212,17 @@ export default function ChatWindow({
       </div>
 
       <div
-        className="relative flex-1 overflow-x-hidden overflow-y-auto bg-slate-950/50 px-4 pb-28 pt-5 bg-blend-overlay before:absolute before:inset-0 before:bg-slate-950/30 md:px-8"
+        className="relative flex-1 min-h-0 overflow-x-hidden overflow-y-auto bg-slate-950/50 px-4 pb-28 pt-5 bg-blend-overlay before:absolute before:inset-0 before:bg-slate-950/30 md:px-8"
         style={{
           backgroundImage: "url('https://media.base44.com/images/public/68f3ccc3a454aaec766ae684/e72093d7d_generated_image.png')",
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          perspective: '1200px'
+          backgroundPosition: 'center'
         }}
       >
         <div className="relative z-10 mx-auto max-w-4xl animate-in fade-in duration-700">
           <TemplateSelector contact={contact} onSent={() => {}} />
         </div>
-        <div className="relative z-10 mx-auto max-w-4xl space-y-4 [perspective:1100px] [transform-style:preserve-3d]">
+        <div className="relative z-10 mx-auto max-w-4xl space-y-4">
           {messages.map((msg) => (
             <MessageBubble key={msg.id} message={msg} isOpenClaw={contact.llm_destino === 'openclaw'} />
           ))}
@@ -255,7 +254,7 @@ export default function ChatWindow({
       )}
 
       <div className="relative z-20 shrink-0 border-t border-cyan-300/15 bg-slate-950/80 px-4 py-4 backdrop-blur-xl md:px-6">
-        <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-cyan-300/45 bg-cyan-400/10 p-2 shadow-[0_18px_45px_rgba(0,0,0,0.55),0_0_26px_rgba(34,211,238,0.18),inset_0_1px_0_rgba(255,255,255,0.08)] [transform:translateZ(36px)]">
+        <div className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-cyan-300/45 bg-cyan-400/10 p-2 shadow-[0_18px_45px_rgba(0,0,0,0.55),0_0_26px_rgba(34,211,238,0.18),inset_0_1px_0_rgba(255,255,255,0.08)]">
           <input
             type="file"
             ref={fileInputRef}
