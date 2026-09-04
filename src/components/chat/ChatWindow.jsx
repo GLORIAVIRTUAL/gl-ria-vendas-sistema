@@ -102,7 +102,13 @@ export default function ChatWindow({
   };
 
   const handleAIToggle = (enabled) => {
-    onUpdateContact({ ai_enabled: enabled });
+    if (enabled) {
+      // Liga a IA e limpa qualquer marca de transferência humana
+      onUpdateContact({ ai_enabled: true, transferido_humano_at: null });
+    } else {
+      // Transfere para humano e marca a data da transferência
+      onUpdateContact({ ai_enabled: false, transferido_humano_at: new Date().toISOString() });
+    }
   };
 
   const handlePipelineChange = (stage) => {
@@ -160,9 +166,31 @@ export default function ChatWindow({
 
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => handleAIToggle(true)} className="rounded-md border border-emerald-400/35 bg-emerald-400/10 px-3 py-1.5 text-xs font-semibold text-emerald-200 shadow-[0_0_16px_rgba(52,211,153,0.18)]">● IA ativa</button>
-            <button className="rounded-md border border-red-400/35 bg-red-400/10 px-3 py-1.5 text-xs font-semibold text-red-300 shadow-[0_0_16px_rgba(248,113,113,0.18)]">● OpenClaw ativa</button>
-            <button onClick={() => handleAIToggle(false)} className="rounded-md border border-slate-500/40 bg-slate-900/60 px-3 py-1.5 text-xs font-semibold text-slate-300">● Atendimento manual</button>
+            <button
+              onClick={() => handleAIToggle(true)}
+              className={cn(
+                "rounded-md border px-3 py-1.5 text-xs font-semibold transition-all",
+                contact.ai_enabled
+                  ? "border-emerald-400/60 bg-emerald-400/25 text-emerald-100 shadow-[0_0_18px_rgba(52,211,153,0.35)]"
+                  : "border-slate-500/40 bg-slate-900/60 text-slate-400 hover:text-emerald-200 hover:border-emerald-400/40"
+              )}
+            >
+              {contact.ai_enabled ? "✓ IA ativa" : "Ligar IA"}
+            </button>
+            <button
+              onClick={() => handleAIToggle(false)}
+              className={cn(
+                "rounded-md border px-3 py-1.5 text-xs font-semibold transition-all",
+                !contact.ai_enabled
+                  ? "border-amber-400/60 bg-amber-400/25 text-amber-100 shadow-[0_0_18px_rgba(251,191,36,0.35)]"
+                  : "border-slate-500/40 bg-slate-900/60 text-slate-400 hover:text-amber-200 hover:border-amber-400/40"
+              )}
+            >
+              {!contact.ai_enabled ? "✓ Humano" : "Transferir para humano"}
+            </button>
+            {isOpenClaw && (
+              <span className="rounded-md border border-red-400/35 bg-red-400/10 px-3 py-1.5 text-xs font-semibold text-red-300 shadow-[0_0_16px_rgba(248,113,113,0.18)]">● OpenClaw</span>
+            )}
           </div>
           <div className="rounded-lg border border-cyan-300/20 bg-cyan-400/10 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
             <p className="text-[11px] text-slate-400">Mover para:</p>
