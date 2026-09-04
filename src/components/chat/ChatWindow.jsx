@@ -155,7 +155,7 @@ export default function ChatWindow({
 
   return (
     <div className={cn(
-      "relative flex-1 flex flex-col h-full overflow-hidden bg-slate-950",
+      "relative flex-1 flex flex-col h-full min-h-0 overflow-hidden bg-slate-950",
       isOpenClaw ? "shadow-[inset_0_1px_0_rgba(248,113,113,0.18)]" : "shadow-[inset_0_1px_0_rgba(103,232,249,0.18)]"
     )}>
       <div className="relative z-20 shrink-0 grid grid-cols-1 gap-4 border-b border-cyan-300/25 bg-slate-950/90 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-2xl lg:grid-cols-[220px_1fr_auto] lg:px-6 lg:py-4">

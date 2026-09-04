@@ -206,7 +206,7 @@ export default function ChatIA() {
   });
 
   return (
-    <div className="h-[calc(100vh-80px)] flex overflow-hidden bg-slate-950/45">
+    <div className="h-full min-h-0 flex overflow-hidden bg-slate-950/45">
       <div className={cn(
         "w-full shrink-0 bg-slate-950/80 border-r border-cyan-400/20 flex-col backdrop-blur-xl md:w-80",
         selectedContact ? "hidden md:flex" : "flex"
