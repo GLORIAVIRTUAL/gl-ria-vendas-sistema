@@ -88,7 +88,7 @@ export default function Layout({ children, currentPageName }) {
   const isAfiliado = user?.tipo_conta === 'afiliado';
 
   const mainNavigationAdmin = [
-    { title: "Glória", url: createPageUrl("ChatIA"), icon: MessageSquare },
+    { title: "Glória", url: createPageUrl("ChatIA"), icon: MessageSquare, image: "https://media.base44.com/images/public/68f3ccc3a454aaec766ae684/f59958bee_ChatGPTImage29deagode202613_58_09.png" },
     { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
     { title: "Agenda", url: createPageUrl("Agenda"), icon: CalendarCheck },
     { title: "CRM / Funil", url: createPageUrl("CRM"), icon: TrendingUp },
@@ -209,8 +209,12 @@ export default function Layout({ children, currentPageName }) {
                         }`}
                       >
                         <Link to={item.url} className="flex items-center gap-3 px-4 py-3">
-                          <item.icon className="w-5 h-5" />
-                          <span className="font-medium">{item.title}</span>
+                          {item.image ? (
+                            <img src={item.image} alt={item.title} className="h-5 w-auto max-w-[90px] object-contain" />
+                          ) : (
+                            <item.icon className="w-5 h-5" />
+                          )}
+                          {!item.image && <span className="font-medium">{item.title}</span>}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
