@@ -88,6 +88,7 @@ export default function Layout({ children, currentPageName }) {
   const isAfiliado = user?.tipo_conta === 'afiliado';
 
   const mainNavigationAdmin = [
+    { title: "Glória", url: createPageUrl("ChatIA"), icon: MessageSquare },
     { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
     { title: "Agenda", url: createPageUrl("Agenda"), icon: CalendarCheck },
     { title: "CRM / Funil", url: createPageUrl("CRM"), icon: TrendingUp },
@@ -108,7 +109,6 @@ export default function Layout({ children, currentPageName }) {
     { title: "Cobrança Automatizada", url: "/Cobrancas", icon: Receipt },
     { title: "Campanhas", url: "/Campanhas", icon: Megaphone },
     { title: "Resultados Cadências", url: "/ResultadosCadencias", icon: TrendingUp },
-    { title: "Chat IA", url: createPageUrl("ChatIA"), icon: MessageSquare },
     { title: "Clientes OpenClaw", url: createPageUrl("ClientesOpenClaw"), icon: Bot },
     { title: "Tráfego Pago", url: createPageUrl("Trafego"), icon: Megaphone },
     { title: "Pipeline IA", url: createPageUrl("PipelineIA"), icon: TrendingUp },
