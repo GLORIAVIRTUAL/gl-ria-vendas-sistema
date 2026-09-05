@@ -13,93 +13,83 @@ import {
 import { toast } from 'sonner';
 
 export default function TemplateSelector({ contact, onSent }) {
-  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [parameters, setParameters] = useState({});
 
-  // Busca templates diretamente do WABA conectado
-  const { data: wabaData, isLoading: loadingTemplates, refetch } = useQuery({
-    queryKey: ['waba-templates'],
+  // Busca templates locais cadastrados na entidade MetaTemplate
+  const { data: templates = [], isLoading: loadingTemplates, refetch } = useQuery({
+    queryKey: ['meta-templates'],
     queryFn: async () => {
-      const response = await base44.functions.invoke('getWabaTemplates');
-      return response.data;
+      const result = await base44.entities.MetaTemplate.filter({ ativo: true });
+      return result || [];
     },
     staleTime: 5 * 60 * 1000, // Cache por 5 minutos
   });
 
-  const templates = wabaData?.templates || [];
+  const currentTemplate = templates.find(t => t.id === selectedTemplateId);
+
+  // Extrai variáveis {{1}}, {{2}}, etc do body do template
+  const getTemplateVariables = () => {
+    if (!currentTemplate?.body) return [];
+    const matches = currentTemplate.body.match(/\{\{(\d+)\}\}/g) || [];
+    return matches.map((match, idx) => {
+      const num = match.replace(/\{\{|\}\}/g, '');
+      const paramName = currentTemplate.parameters?.[idx]?.name;
+      return {
+        key: `var_${idx}`,
+        label: paramName ? `Variável ${num} (${paramName})` : `Variável ${num}`,
+      };
+    });
+  };
+
+  const templateVars = getTemplateVariables();
+
+  // Substitui {{1}}, {{2}} pelos valores preenchidos
+  const buildFinalMessage = () => {
+    if (!currentTemplate?.body) return '';
+    let msg = currentTemplate.body;
+    templateVars.forEach((v, idx) => {
+      const value = parameters[v.key] || '';
+      msg = msg.replace(`{{${idx + 1}}}`, value);
+    });
+    return msg;
+  };
 
   const sendMutation = useMutation({
     mutationFn: async () => {
-      // Extrai os parâmetros em ordem para cada componente
-      const templateParams = [];
-      const currentTemplate = templates.find(t => t.name === selectedTemplate);
-      
-      if (currentTemplate?.components) {
-        currentTemplate.components.forEach(comp => {
-          if (comp.type === 'BODY' && comp.example?.body_text?.[0]) {
-            const bodyParams = comp.example.body_text[0].map((_, idx) => 
-              parameters[`body_${idx}`] || ''
-            );
-            templateParams.push(...bodyParams);
-          }
-        });
+      const mensagem = buildFinalMessage();
+      if (!mensagem.trim()) {
+        throw new Error('Mensagem vazia após preenchimento das variáveis');
       }
-
-      const response = await base44.functions.invoke('sendTemplateMessage', {
-        phone: contact.phone,
-        template_name: selectedTemplate,
-        language: currentTemplate?.language || 'pt_BR',
-        parameters: templateParams.filter(p => p.trim())
+      const response = await base44.functions.invoke('whatsapp/sendMessage', {
+        telefone: contact.phone,
+        mensagem,
       });
       return response;
     },
     onSuccess: () => {
       toast.success('Template enviado com sucesso!');
-      setSelectedTemplate('');
+      setSelectedTemplateId('');
       setParameters({});
       onSent?.();
     },
     onError: (error) => {
-      toast.error('Erro ao enviar template: ' + error.message);
+      toast.error('Erro ao enviar template: ' + (error.message || 'Erro desconhecido'));
     }
   });
 
-  const currentTemplate = templates.find(t => t.name === selectedTemplate);
-  
-  // Extrai variáveis do template
-  const getTemplateVariables = () => {
-    if (!currentTemplate?.components) return [];
-    
-    const variables = [];
-    currentTemplate.components.forEach(comp => {
-      if (comp.type === 'BODY') {
-        // Encontra {{1}}, {{2}}, etc no texto
-        const text = comp.text || '';
-        const matches = text.match(/\{\{(\d+)\}\}/g) || [];
-        matches.forEach((match, idx) => {
-          const num = match.replace(/\{\{|\}\}/g, '');
-          variables.push({ key: `body_${idx}`, label: `Variável ${num}`, example: comp.example?.body_text?.[0]?.[idx] });
-        });
-      }
-    });
-    return variables;
-  };
-
-  const templateVars = getTemplateVariables();
-
   const handleSend = () => {
-    if (!selectedTemplate) {
+    if (!selectedTemplateId) {
       toast.error('Selecione um template');
       return;
     }
+    // Verifica se todas as variáveis foram preenchidas
+    const missingVar = templateVars.find(v => !parameters[v.key]?.trim());
+    if (missingVar) {
+      toast.error(`Preencha a ${missingVar.label}`);
+      return;
+    }
     sendMutation.mutate();
-  };
-
-  // Extrai o texto do body do template
-  const getTemplateBody = () => {
-    if (!currentTemplate?.components) return '';
-    const bodyComp = currentTemplate.components.find(c => c.type === 'BODY');
-    return bodyComp?.text || '';
   };
 
   return (
@@ -107,7 +97,7 @@ export default function TemplateSelector({ contact, onSent }) {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-blue-600" />
-          <span className="text-sm font-semibold text-blue-900">Enviar Template Aprovado</span>
+          <span className="text-sm font-semibold text-blue-900">Enviar Template</span>
         </div>
         <Button
           variant="ghost"
@@ -120,8 +110,8 @@ export default function TemplateSelector({ contact, onSent }) {
         </Button>
       </div>
 
-      <Select value={selectedTemplate} onValueChange={(val) => {
-        setSelectedTemplate(val);
+      <Select value={selectedTemplateId} onValueChange={(val) => {
+        setSelectedTemplateId(val);
         setParameters({});
       }}>
         <SelectTrigger className="bg-white">
@@ -130,14 +120,14 @@ export default function TemplateSelector({ contact, onSent }) {
         <SelectContent>
           {templates.length === 0 && !loadingTemplates && (
             <div className="px-2 py-3 text-sm text-slate-500 text-center">
-              Nenhum template aprovado encontrado
+              Nenhum template ativo encontrado
             </div>
           )}
           {templates.map(t => (
-            <SelectItem key={t.id || t.name} value={t.name}>
+            <SelectItem key={t.id} value={t.id}>
               <div className="flex items-center gap-2">
                 <span>{t.name}</span>
-                <span className="text-xs text-slate-400">({t.language})</span>
+                <span className="text-xs text-slate-400">({t.language || 'pt_BR'})</span>
               </div>
             </SelectItem>
           ))}
@@ -151,7 +141,7 @@ export default function TemplateSelector({ contact, onSent }) {
             <input
               key={v.key}
               type="text"
-              placeholder={v.example ? `Ex: ${v.example}` : v.label}
+              placeholder={v.label}
               value={parameters[v.key] || ''}
               onChange={(e) => {
                 setParameters(prev => ({ ...prev, [v.key]: e.target.value }));
@@ -165,7 +155,7 @@ export default function TemplateSelector({ contact, onSent }) {
       {currentTemplate && (
         <div className="p-3 bg-white rounded-lg border border-slate-200">
           <p className="text-xs text-slate-500 mb-1">Preview:</p>
-          <p className="text-sm text-slate-700 whitespace-pre-wrap">{getTemplateBody()}</p>
+          <p className="text-sm text-slate-700 whitespace-pre-wrap">{buildFinalMessage()}</p>
           {currentTemplate.category && (
             <span className="inline-block mt-2 text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 rounded">
               {currentTemplate.category}
@@ -176,7 +166,7 @@ export default function TemplateSelector({ contact, onSent }) {
 
       <Button
         onClick={handleSend}
-        disabled={!selectedTemplate || sendMutation.isPending}
+        disabled={!selectedTemplateId || sendMutation.isPending}
         className="w-full bg-blue-600 hover:bg-blue-700"
         size="sm"
       >
