@@ -9,10 +9,11 @@ const stat = (label, valor) => <div key={label} className="rounded-lg border bor
 </div>;
 
 export default function CampanhaCard({ campanha, icpNome, envios, busy, onEdit, onToggle, onProcessar }) {
+  const enviosAtivos = envios.filter((envio) => envio.status !== "cancelado");
   const programados = envios.filter((envio) => envio.status === "programado").length;
   const enviados = envios.filter((envio) => envio.status === "enviado").length;
   const erros = envios.filter((envio) => envio.status === "erro").length;
-  const prospects = new Set(envios.map((envio) => envio.prospect_id)).size;
+  const prospects = new Set(enviosAtivos.map((envio) => envio.prospect_id)).size;
 
   return <Card className="border-slate-500/40 bg-slate-950/55"><CardContent className="space-y-4 p-5">
     <div className="flex flex-wrap items-start justify-between gap-3">

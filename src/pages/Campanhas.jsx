@@ -15,7 +15,7 @@ export default function Campanhas() {
 
   const { data: campanhas = [], isLoading } = useQuery({ queryKey: ["campanhas"], queryFn: () => base44.entities.Campanha.list("-created_date") });
   const { data: icps = [] } = useQuery({ queryKey: ["icps"], queryFn: () => base44.entities.ICP.list("-created_date") });
-  const { data: envios = [] } = useQuery({ queryKey: ["cadencia-envios"], queryFn: () => base44.entities.CadenciaEnvio.list("-created_date", 500) });
+  const { data: envios = [] } = useQuery({ queryKey: ["cadencia-envios"], queryFn: () => base44.entities.CadenciaEnvio.list("-created_date", 2000) });
 
   const recarregar = () => Promise.all([
     queryClient.invalidateQueries({ queryKey: ["campanhas"] }),
