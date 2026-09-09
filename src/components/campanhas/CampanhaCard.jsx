@@ -13,7 +13,18 @@ export default function CampanhaCard({ campanha, icpNome, envios, busy, onEdit, 
   const programados = envios.filter((envio) => envio.status === "programado").length;
   const enviados = envios.filter((envio) => envio.status === "enviado").length;
   const erros = envios.filter((envio) => envio.status === "erro").length;
-  const prospects = new Set(enviosAtivos.map((envio) => envio.prospect_id)).size;
+  // Conta prospects únicos por email (para email) ou por prospect_id (para WhatsApp),
+  // garantindo que o mesmo email não seja contado duas vezes.
+  const emailsUnicos = new Set();
+  const prospectsSemEmail = new Set();
+  for (const envio of enviosAtivos) {
+    if (envio.canal === "Email" && envio.destino) {
+      emailsUnicos.add(envio.destino.toLowerCase().trim());
+    } else if (envio.prospect_id) {
+      prospectsSemEmail.add(envio.prospect_id);
+    }
+  }
+  const prospects = emailsUnicos.size + prospectsSemEmail.size;
 
   return <Card className="border-slate-500/40 bg-slate-950/55"><CardContent className="space-y-4 p-5">
     <div className="flex flex-wrap items-start justify-between gap-3">

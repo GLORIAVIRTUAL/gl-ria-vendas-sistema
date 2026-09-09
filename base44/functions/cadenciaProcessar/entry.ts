@@ -19,14 +19,32 @@ const inscreverProspects = async (db, campanha) => {
   const jaNaCampanha = await db.entities.CadenciaEnvio.filter({ campanha_id: campanha.id });
   const inscritosIds = new Set(jaNaCampanha.map((envio) => envio.prospect_id));
 
-  const elegiveis = prospects.filter((prospect) => (
-    !inscritosIds.has(prospect.id) &&
-    !prospect.opt_out &&
-    !prospect.respondeu_em &&
-    prospect.analisado_em &&
-    (Number(prospect.score) || 0) >= scoreMinimo &&
-    passos.some((passo) => destinoDoProspect(prospect, passo.canal))
-  )).slice(0, limite);
+  // REGRA DO SISTEMA: não enviar mais de um email para o mesmo endereço.
+  // Coleta todos os emails já inscritos em QUALQUER campanha para evitar duplicidade global.
+  const todosEnvios = await db.entities.CadenciaEnvio.filter({ status: { $in: ['programado', 'processando', 'enviado'] } });
+  const emailsJaInscritos = new Set(
+    todosEnvios
+      .map((envio) => (envio.canal === 'Email' ? String(envio.destino || '').toLowerCase().trim() : ''))
+      .filter(Boolean)
+  );
+
+  // Controla emails já selecionados neste batch para não inscrever duplicatas
+  const emailsNesteBatch = new Set();
+
+  const elegiveis = prospects.filter((prospect) => {
+    if (inscritosIds.has(prospect.id) || prospect.opt_out || prospect.respondeu_em || !prospect.analisado_em) return false;
+    if ((Number(prospect.score) || 0) < scoreMinimo) return false;
+    if (!passos.some((passo) => destinoDoProspect(prospect, passo.canal))) return false;
+
+    // Deduplicação por email: se há passo de email, verifica se o email já está inscrito
+    const temPassoEmail = passos.some((passo) => passo.canal === 'Email');
+    if (temPassoEmail && prospect.email) {
+      const emailNorm = String(prospect.email).toLowerCase().trim();
+      if (emailsJaInscritos.has(emailNorm) || emailsNesteBatch.has(emailNorm)) return false;
+      emailsNesteBatch.add(emailNorm);
+    }
+    return true;
+  }).slice(0, limite);
 
   let inscritos = 0;
   for (const prospect of elegiveis) {
