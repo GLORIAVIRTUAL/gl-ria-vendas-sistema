@@ -40,7 +40,8 @@ export const enviarEmail = async ({ email, assunto, corpo }) => {
   const gmailEmail = (Deno.env.get('GMAIL_EMAIL') || '').trim();
   const gmailPassword = (Deno.env.get('GMAIL_APP_PASSWORD') || '').trim();
   if (!gmailEmail || !gmailPassword) throw new Error('Gmail não configurado');
-  if (!email) throw new Error('E-mail inválido');
+  const emailNormalizado = String(email || '').toLowerCase().trim();
+  if (!emailNormalizado) throw new Error('E-mail inválido');
   if (!String(corpo || '').trim()) throw new Error('Corpo do e-mail vazio');
 
   const transporter = nodemailer.createTransport({
@@ -49,10 +50,10 @@ export const enviarEmail = async ({ email, assunto, corpo }) => {
   });
   const info = await transporter.sendMail({
     from: `Glória Vendas <${gmailEmail}>`,
-    to: email,
+    to: emailNormalizado,
     subject: assunto || 'Glória Virtual',
     html: corpo,
     text: String(corpo || '').replace(/<[^>]*>/g, '')
   });
-  return { destino: email, provider_message_id: info?.messageId || '' };
+  return { destino: emailNormalizado, provider_message_id: info?.messageId || '' };
 };
