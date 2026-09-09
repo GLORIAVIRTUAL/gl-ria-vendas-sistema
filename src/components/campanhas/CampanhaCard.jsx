@@ -13,18 +13,24 @@ export default function CampanhaCard({ campanha, icpNome, envios, busy, onEdit, 
   const programados = envios.filter((envio) => envio.status === "programado").length;
   const enviados = envios.filter((envio) => envio.status === "enviado").length;
   const erros = envios.filter((envio) => envio.status === "erro").length;
-  // Conta prospects únicos por email (para email) ou por prospect_id (para WhatsApp),
-  // garantindo que o mesmo email não seja contado duas vezes.
+  // REGRA DO SISTEMA: conta prospects únicos por email (canal Email) ou por prospect_id
+  // (canal WhatsApp), garantindo que o mesmo email não seja contado duas vezes e que
+  // um prospect com ambos os canais não seja duplicado.
   const emailsUnicos = new Set();
-  const prospectsSemEmail = new Set();
+  const prospectIdsComEmail = new Set();
+  const prospectsApenasWhats = new Set();
   for (const envio of enviosAtivos) {
     if (envio.canal === "Email" && envio.destino) {
       emailsUnicos.add(envio.destino.toLowerCase().trim());
-    } else if (envio.prospect_id) {
-      prospectsSemEmail.add(envio.prospect_id);
+      if (envio.prospect_id) prospectIdsComEmail.add(envio.prospect_id);
     }
   }
-  const prospects = emailsUnicos.size + prospectsSemEmail.size;
+  for (const envio of enviosAtivos) {
+    if (envio.canal !== "Email" && envio.prospect_id && !prospectIdsComEmail.has(envio.prospect_id)) {
+      prospectsApenasWhats.add(envio.prospect_id);
+    }
+  }
+  const prospects = emailsUnicos.size + prospectsApenasWhats.size;
 
   return <Card className="border-slate-500/40 bg-slate-950/55"><CardContent className="space-y-4 p-5">
     <div className="flex flex-wrap items-start justify-between gap-3">
