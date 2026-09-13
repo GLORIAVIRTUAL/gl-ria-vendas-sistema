@@ -1,20 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.48';
-import { ImapFlow } from 'https://esm.sh/imapflow@1.0.170';
 
 function extrairEmailDestino(texto: string): string | null {
-  // Padrão "para [email]" (Gmail PT-BR)
   let m = texto.match(/para\s+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
   if (m) return m[1].toLowerCase().trim();
 
-  // Padrão "Final-Recipient: rfc822; [email]"
   m = texto.match(/Final-Recipient:\s*rfc822;\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
   if (m) return m[1].toLowerCase().trim();
 
-  // Padrão "Original-Recipient: rfc822; [email]"
   m = texto.match(/Original-Recipient:\s*rfc822;\s*([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i);
   if (m) return m[1].toLowerCase().trim();
 
-  // Fallback: busca qualquer email no corpo (excluindo remetentes do Google)
   const emails = texto.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g);
   if (emails) {
     const filtrados = emails.filter(
@@ -32,7 +27,6 @@ function extrairEmailDestino(texto: string): string | null {
 function classificarMotivo(texto: string): { tipo: string; motivo: string } {
   const t = texto.toLowerCase();
 
-  // Falhas permanentes — email inexistente
   if (
     t.includes("não foi encontrado") ||
     t.includes("does not exist") ||
@@ -50,7 +44,6 @@ function classificarMotivo(texto: string): { tipo: string; motivo: string } {
     return { tipo: "permanente", motivo: "Email inexistente / caixa postal inválida" };
   }
 
-  // Falhas permanentes — conta desativada/bloqueada
   if (
     t.includes("disabled") ||
     t.includes("desativada") ||
@@ -65,7 +58,6 @@ function classificarMotivo(texto: string): { tipo: string; motivo: string } {
     return { tipo: "permanente", motivo: "Conta desativada ou bloqueada por política" };
   }
 
-  // Caixa cheia
   if (
     t.includes("quota") ||
     t.includes("exceeded") ||
@@ -78,7 +70,6 @@ function classificarMotivo(texto: string): { tipo: string; motivo: string } {
     return { tipo: "temporario", motivo: "Caixa postal cheia (quota excedida)" };
   }
 
-  // Falhas temporárias
   if (
     t.includes("temporarily") ||
     t.includes("temporário") ||
@@ -97,6 +88,54 @@ function classificarMotivo(texto: string): { tipo: string; motivo: string } {
   return { tipo: "desconhecido", motivo: "Motivo não identificado automaticamente" };
 }
 
+function decodeBase64Url(data: string): string {
+  const base64 = data.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  try {
+    const bytes = atob(padded);
+    return bytes
+      .split("")
+      .map((c) => String.fromCharCode(c.charCodeAt(0)))
+      .join("");
+  } catch {
+    return "";
+  }
+}
+
+function extrairCorpoMensagem(payload: any): string {
+  if (!payload) return "";
+
+  // Se o corpo está direto no payload (mensagem simples)
+  if (payload.body?.data) {
+    return decodeBase64Url(payload.body.data);
+  }
+
+  // Se há partes, percorre recursivamente buscando text/plain e text/html
+  if (payload.parts) {
+    let textoPlano = "";
+    let textoHtml = "";
+    for (const part of payload.parts) {
+      if (part.mimeType === "text/plain" && part.body?.data) {
+        textoPlano += decodeBase64Url(part.body.data);
+      } else if (part.mimeType === "text/html" && part.body?.data) {
+        textoHtml += decodeBase64Url(part.body.data);
+      } else if (part.parts) {
+        const aninhado = extrairCorpoMensagem(part);
+        if (aninhado && !textoPlano) textoPlano = aninhado;
+      }
+    }
+    return textoPlano || textoHtml;
+  }
+
+  return "";
+}
+
+function extrairHeader(headers: any[], nome: string): string {
+  if (!headers) return "";
+  const h = headers.find((h: any) => h.name?.toLowerCase() === nome.toLowerCase());
+  return h ? h.value : "";
+}
+
 export default async function (req: Request) {
   try {
     const base44 = createClientFromRequest(req);
@@ -111,12 +150,6 @@ export default async function (req: Request) {
     }
 
     const db = base44.asServiceRole;
-
-    const gmailEmail = (Deno.env.get("GMAIL_EMAIL") || "").trim();
-    const gmailPassword = (Deno.env.get("GMAIL_APP_PASSWORD") || "").trim();
-    if (!gmailEmail || !gmailPassword) {
-      return Response.json({ error: "Gmail não configurado" }, { status: 500 });
-    }
 
     // Buscar campanha de imobiliárias
     const campanhas = await db.entities.Campanha.filter({});
@@ -134,64 +167,68 @@ export default async function (req: Request) {
       2000
     );
 
-    // Conectar ao Gmail via IMAP
-    const client = new ImapFlow({
-      host: "imap.gmail.com",
-      port: 993,
-      secure: true,
-      auth: { user: gmailEmail, pass: gmailPassword },
-      logger: false,
-    });
+    // Obter token OAuth do Gmail via conector
+    const { accessToken } = await db.connectors.getConnection("gmail");
+    const authHeader = { Authorization: `Bearer ${accessToken}` };
 
-    await client.connect();
+    // Buscar emails de bounce no Gmail (últimos 30 dias) com paginação
+    const query = '(subject:"Entrega incompleta" OR from:mailer-daemon OR from:mail-delivery) newer_than:30d';
+    const messageIds: string[] = [];
+    let pageToken: string | null = null;
+    let pages = 0;
+    do {
+      let searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
+      if (pageToken) searchUrl += `&pageToken=${pageToken}`;
+      const searchRes = await fetch(searchUrl, { headers: authHeader });
+      if (!searchRes.ok) {
+        const errBody = await searchRes.text();
+        console.error("Erro ao buscar mensagens no Gmail:", errBody);
+        return Response.json({ error: "Erro ao consultar Gmail API" }, { status: 500 });
+      }
+      const searchData = await searchRes.json();
+      const pageIds: string[] = (searchData.messages || []).map((m: any) => m.id);
+      messageIds.push(...pageIds);
+      pageToken = searchData.nextPageToken || null;
+      pages++;
+    } while (pageToken && pages < 5); // limite de 500 mensagens
 
-    const since = new Date();
-    since.setDate(since.getDate() - 30);
+    console.log(`Encontrados ${messageIds.length} emails de bounce no Gmail (${pages} páginas)`);
 
     const bounces: any[] = [];
-    const lock = await client.getMailboxLock("INBOX");
-    try {
-      const uidsSubject = await client.search({ subject: "Entrega incompleta", since });
-      const uidsFrom = await client.search({ from: "mailer-daemon", since });
-      const uidsDelivery = await client.search({ from: "mail-delivery", since });
-      const allUids = [...new Set([...uidsSubject, ...uidsFrom, ...uidsDelivery])];
+    for (const msgId of messageIds) {
+      try {
+        const msgRes = await fetch(
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${msgId}?format=full`,
+          { headers: authHeader }
+        );
+        if (!msgRes.ok) continue;
+        const msg = await msgRes.json();
 
-      console.log(`Encontrados ${allUids.length} emails de bounce no Gmail`);
+        const headers = msg.payload?.headers || [];
+        const subject = extrairHeader(headers, "Subject");
+        const from = extrairHeader(headers, "From");
 
-      for (const uid of allUids) {
-        try {
-          const msg = await client.fetchOne(uid, { source: true });
-          const source = new TextDecoder().decode(msg.source as Uint8Array);
+        const corpo = extrairCorpoMensagem(msg.payload);
+        const textoCompleto = `${subject}\n${from}\n${corpo}`;
 
-          const email = extrairEmailDestino(source);
-          const { tipo, motivo } = classificarMotivo(source);
+        const email = extrairEmailDestino(textoCompleto);
+        const { tipo, motivo } = classificarMotivo(textoCompleto);
 
-          const subjectMatch = source.match(/Subject:\s*(.+)/i);
-          const originalSubject = subjectMatch ? subjectMatch[1].trim() : "";
-
-          bounces.push({ email, tipo, motivo, originalSubject, uid });
-        } catch {
-          // ignora mensagens que não conseguimos parsear
-        }
+        bounces.push({ email, tipo, motivo, originalSubject: subject, msgId });
+      } catch (e) {
+        console.error("Erro ao processar mensagem", msgId, e.message);
       }
-    } finally {
-      lock.release();
-      await client.logout();
     }
 
-    // Filtrar bounces relacionados à campanha de imobiliárias
-    const bouncesCampanha = bounces.filter(
-      (b) =>
-        b.originalSubject &&
-        (b.originalSubject.toLowerCase().includes("imobili") ||
-          b.originalSubject.toLowerCase().includes("como funciona"))
-    );
-
-    // Indexar bounces por email
+    // Indexar TODOS os bounces por email de destino — o cruzamento com os
+    // envios da campanha já garante que só contemos bounces relacionados a ela,
+    // sem depender do Subject (que nas notificações de bounce é "Entrega incompleta")
     const bouncesByEmail: Record<string, any> = {};
-    for (const b of bouncesCampanha) {
+    let bouncesComEmail = 0;
+    for (const b of bounces) {
       if (b.email) {
         bouncesByEmail[b.email.toLowerCase().trim()] = b;
+        bouncesComEmail++;
       }
     }
 
@@ -266,8 +303,9 @@ export default async function (req: Request) {
         envios_marcados_erro: atualizados,
         prospects_marcados_optout: optOuts,
       },
-      bounces_encontrados_no_gmail: bouncesCampanha.length,
-      bounces_sem_email_identificado: bouncesCampanha.filter((b) => !b.email).length,
+      bounces_encontrados_no_gmail: bounces.length,
+      bounces_com_email_identificado: bouncesComEmail,
+      bounces_sem_email_identificado: bounces.filter((b) => !b.email).length,
     });
   } catch (error) {
     console.error("Erro no relatório de entrega:", error.message);
