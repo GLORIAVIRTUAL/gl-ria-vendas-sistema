@@ -270,34 +270,51 @@ export default async function (req: Request) {
       }
     }
 
-    // Calcular totais
-    const enviados = envios.filter(
-      (e: any) => e.status === "enviado" || e.status === "erro"
-    ).length;
-    const totalBounces = enviosComBounce.length;
-    const totalEntregues = Math.max(0, enviados - totalBounces);
+    // Calcular totais por EMAIL ÚNICO (não por envio individual)
+    // Um prospect pode ter vários passos de cadência = vários CadenciaEnvio,
+    // mas conta como 1 email único.
+    const emailsEnviadosSet = new Set<string>();
+    for (const env of envios) {
+      if ((env.status === "enviado" || env.status === "erro") && env.destino) {
+        emailsEnviadosSet.add(env.destino.toLowerCase().trim());
+      }
+    }
 
-    // Agrupar bounces por motivo
-    const motivosAgrupados: Record<string, string[]> = {};
+    // Emails únicos que sofreram bounce
+    const emailsBounceSet = new Set<string>();
     for (const { bounce } of enviosComBounce) {
-      if (!motivosAgrupados[bounce.motivo]) motivosAgrupados[bounce.motivo] = [];
-      if (bounce.email) motivosAgrupados[bounce.motivo].push(bounce.email);
+      if (bounce.email) emailsBounceSet.add(bounce.email.toLowerCase().trim());
+    }
+
+    const totalEnviadosUnicos = emailsEnviadosSet.size;
+    const totalBouncesUnicos = emailsBounceSet.size;
+    const totalEntreguesUnicos = Math.max(0, totalEnviadosUnicos - totalBouncesUnicos);
+
+    // Agrupar bounces por motivo (emails únicos)
+    const motivosAgrupados: Record<string, Set<string>> = {};
+    for (const { bounce } of enviosComBounce) {
+      if (!bounce.email) continue;
+      const key = bounce.email.toLowerCase().trim();
+      if (!motivosAgrupados[bounce.motivo]) motivosAgrupados[bounce.motivo] = new Set();
+      motivosAgrupados[bounce.motivo].add(key);
     }
 
     return Response.json({
       success: true,
       campanha: imobiliarias.nome,
       resumo: {
-        total_enviados: enviados,
-        total_entregues: totalEntregues,
-        total_bounces: totalBounces,
+        total_enviados: totalEnviadosUnicos,
+        total_entregues: totalEntreguesUnicos,
+        total_bounces: totalBouncesUnicos,
         taxa_entrega:
-          enviados > 0 ? `${((totalEntregues / enviados) * 100).toFixed(1)}%` : "0%",
+          totalEnviadosUnicos > 0
+            ? `${((totalEntreguesUnicos / totalEnviadosUnicos) * 100).toFixed(1)}%`
+            : "0%",
       },
-      motivos: Object.entries(motivosAgrupados).map(([motivo, emails]) => ({
+      motivos: Object.entries(motivosAgrupados).map(([motivo, emailsSet]) => ({
         motivo,
-        quantidade: emails.length,
-        emails: [...new Set(emails)],
+        quantidade: emailsSet.size,
+        emails: [...emailsSet],
       })),
       acoes_realizadas: {
         envios_marcados_erro: atualizados,

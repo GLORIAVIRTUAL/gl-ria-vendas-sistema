@@ -71,15 +71,15 @@ export default function RelatorioEntregaDialog({ open, campanha, onClose }) {
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <div className="rounded-lg border border-slate-500/40 bg-slate-900/60 p-3 text-center">
                   <p className="text-2xl font-bold text-cyan-100">{resumo.total_enviados}</p>
-                  <p className="text-xs text-slate-400">Enviados</p>
+                  <p className="text-xs text-slate-400">Prospects enviados</p>
                 </div>
                 <div className="rounded-lg border border-green-400/30 bg-green-400/10 p-3 text-center">
                   <p className="text-2xl font-bold text-green-200">{resumo.total_entregues}</p>
-                  <p className="text-xs text-slate-400">Entregues</p>
+                  <p className="text-xs text-slate-400">Receberam corretamente</p>
                 </div>
                 <div className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-center">
                   <p className="text-2xl font-bold text-red-200">{resumo.total_bounces}</p>
-                  <p className="text-xs text-slate-400">Bounces</p>
+                  <p className="text-xs text-slate-400">Não receberam (bounce)</p>
                 </div>
                 <div className="rounded-lg border border-cyan-400/30 bg-cyan-400/10 p-3 text-center">
                   <p className="text-2xl font-bold text-cyan-200">{resumo.taxa_entrega}</p>
@@ -105,7 +105,7 @@ export default function RelatorioEntregaDialog({ open, campanha, onClose }) {
             {/* Motivos dos bounces */}
             {relatorio.motivos && relatorio.motivos.length > 0 ? (
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-cyan-100">Bounces por motivo</h4>
+                <h4 className="text-sm font-semibold text-cyan-100">Emails que não chegaram (bounce) — por motivo</h4>
                 {relatorio.motivos.map((m, i) => (
                   <div key={i} className="rounded-lg border border-slate-500/30 bg-slate-900/50 p-3">
                     <div className="flex items-center justify-between mb-2">
