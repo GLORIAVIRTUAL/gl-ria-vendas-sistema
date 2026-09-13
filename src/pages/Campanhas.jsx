@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import CampanhaCard from "@/components/campanhas/CampanhaCard";
 import CampanhaFormDialog from "@/components/campanhas/CampanhaFormDialog";
+import RelatorioEntregaDialog from "@/components/campanhas/RelatorioEntregaDialog";
 
 export default function Campanhas() {
   const queryClient = useQueryClient();
@@ -12,6 +13,8 @@ export default function Campanhas() {
   const [editando, setEditando] = useState(null);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState("");
+  const [relatorioOpen, setRelatorioOpen] = useState(false);
+  const [campanhaRelatorio, setCampanhaRelatorio] = useState(null);
 
   const { data: campanhas = [], isLoading } = useQuery({ queryKey: ["campanhas"], queryFn: () => base44.entities.Campanha.list("-created_date") });
   const { data: icps = [] } = useQuery({ queryKey: ["icps"], queryFn: () => base44.entities.ICP.list("-created_date") });
@@ -76,6 +79,7 @@ export default function Campanhas() {
         onEdit={() => { setEditando(campanha); setDialogOpen(true); }}
         onToggle={() => alternar(campanha)}
         onProcessar={() => processar(campanha)}
+        onRelatorioEntrega={() => { setCampanhaRelatorio(campanha); setRelatorioOpen(true); }}
       />)}
     </div>
 
@@ -84,5 +88,7 @@ export default function Campanhas() {
     </div>}
 
     <CampanhaFormDialog open={dialogOpen} campanha={editando} icps={icps} saving={saving} onClose={() => { setDialogOpen(false); setEditando(null); }} onSave={salvar} />
+
+    <RelatorioEntregaDialog open={relatorioOpen} campanha={campanhaRelatorio} onClose={() => setRelatorioOpen(false)} />
   </div>;
 }

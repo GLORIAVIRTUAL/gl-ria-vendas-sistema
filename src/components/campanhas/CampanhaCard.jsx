@@ -8,7 +8,7 @@ const stat = (label, valor) => <div key={label} className="rounded-lg border bor
   <p className="text-xs text-slate-400">{label}</p>
 </div>;
 
-export default function CampanhaCard({ campanha, icpNome, envios, busy, onEdit, onToggle, onProcessar }) {
+export default function CampanhaCard({ campanha, icpNome, envios, busy, onEdit, onToggle, onProcessar, onRelatorioEntrega }) {
   const enviosAtivos = envios.filter((envio) => envio.status !== "cancelado");
   const programados = envios.filter((envio) => envio.status === "programado").length;
   const enviados = envios.filter((envio) => envio.status === "enviado").length;
@@ -63,6 +63,7 @@ export default function CampanhaCard({ campanha, icpNome, envios, busy, onEdit, 
     <div className="flex flex-wrap gap-2">
       <Button variant="outline" onClick={onEdit}>Editar</Button>
       <Button variant="outline" onClick={onToggle}>{campanha.ativa ? "Pausar" : "Ativar"}</Button>
+      <Button variant="outline" onClick={onRelatorioEntrega}>Relatório de Entrega</Button>
       <Button disabled={busy} onClick={onProcessar}>{busy ? "Processando..." : "Processar agora"}</Button>
     </div>
   </CardContent></Card>;
