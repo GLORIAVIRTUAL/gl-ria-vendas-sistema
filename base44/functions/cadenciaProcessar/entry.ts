@@ -3,6 +3,34 @@ import { aplicarVariaveis, enviarEmail, enviarWhatsApp } from '../../shared/envi
 import { personalizarMensagem } from '../../shared/personalizacao.ts';
 import { moverEstagio } from '../../shared/pipeline.ts';
 
+const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Hora e dia da semana no fuso de Recife, usados para respeitar a janela comercial.
+const agoraEmRecife = () => {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Recife',
+    hour: 'numeric',
+    hour12: false,
+    weekday: 'short'
+  }).formatToParts(new Date());
+  const hora = Number(partes.find((p) => p.type === 'hour')?.value || 0);
+  const diaSemana = partes.find((p) => p.type === 'weekday')?.value || '';
+  return { hora, fimDeSemana: diaSemana === 'Sat' || diaSemana === 'Sun' };
+};
+
+const janelaPermitida = (campanha) => {
+  const { hora, fimDeSemana } = agoraEmRecife();
+  const inicio = Number(campanha.hora_inicio_envios ?? 8);
+  const fim = Number(campanha.hora_fim_envios ?? 18);
+  if (campanha.somente_dias_uteis !== false && fimDeSemana) {
+    return { permitido: false, motivo: 'Fora dos dias úteis (America/Recife)' };
+  }
+  if (hora < inicio || hora >= fim) {
+    return { permitido: false, motivo: `Fora da janela de envios (${inicio}h–${fim}h America/Recife, agora ${hora}h)` };
+  }
+  return { permitido: true };
+};
+
 const destinoDoProspect = (prospect, canal) => canal === 'Email'
   ? prospect.email
   : (prospect.whatsapp || prospect.telefone);
@@ -77,16 +105,42 @@ const inscreverProspects = async (db, campanha) => {
 };
 
 const dispararPendentes = async (db, campanha) => {
-  const limite = Number(campanha.limite_diario_envios) || 30;
+  const janela = janelaPermitida(campanha);
+  if (!janela.permitido) {
+    return { enviados: 0, erros: 0, bloqueado: janela.motivo };
+  }
+
+  const limiteDiario = Number(campanha.limite_diario_envios) || 30;
+
+  // O limite é DIÁRIO: conta o que já saiu hoje antes de liberar novos envios.
+  const inicioDoDia = new Date();
+  inicioDoDia.setUTCHours(0, 0, 0, 0);
+  const enviadosHoje = await db.entities.CadenciaEnvio.filter({
+    campanha_id: campanha.id,
+    status: 'enviado',
+    data_envio: { $gte: inicioDoDia.toISOString() }
+  });
+  const restante = limiteDiario - enviadosHoje.length;
+  if (restante <= 0) {
+    return { enviados: 0, erros: 0, bloqueado: `Limite diário de ${limiteDiario} envios já atingido` };
+  }
+
   const pendentes = await db.entities.CadenciaEnvio.filter(
     { campanha_id: campanha.id, status: 'programado', data_programada: { $lte: new Date().toISOString() } },
     'data_programada',
-    limite
+    Math.min(restante, 5)
   );
 
   const resultado = { enviados: 0, erros: 0 };
+  let primeiro = true;
 
   for (const envio of pendentes) {
+    // Intervalo entre mensagens para evitar rajadas (principal gatilho de bloqueio no WhatsApp).
+    if (!primeiro) {
+      await esperar(envio.canal === 'WhatsApp' ? 30000 : 3000);
+    }
+    primeiro = false;
+
     try {
       const prospect = await db.entities.Prospect.get(envio.prospect_id);
       if (!prospect) throw new Error('Prospect não encontrado');
