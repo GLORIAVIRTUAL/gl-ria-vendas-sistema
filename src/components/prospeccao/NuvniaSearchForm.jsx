@@ -5,18 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import FilterSelect from "@/components/prospeccao/FilterSelect";
 import { ufs } from "@/lib/kipflowFilterOptions";
 import { portesNuvnia } from "@/lib/nuvniaUtils";
-
-const quantidades = [
-  { value: "10", label: "10 empresas" },
-  { value: "20", label: "20 empresas" },
-  { value: "50", label: "50 empresas" },
-  { value: "100", label: "100 empresas" }
-];
-
-const simNao = [
-  { value: "sim", label: "Somente com" },
-  { value: "nao", label: "Somente sem" }
-];
+import { anosAbertura, capitaisSociais, cnaesNuvnia, disponibilidadeContato, quantidadesNuvnia } from "@/lib/nuvniaFilterOptions";
 
 const initial = {
   cnpj: "", uf: "", cnae: "", porte: "", cidade: "", nome: "", limit: "20",
@@ -36,16 +25,16 @@ export default function NuvniaSearchForm({ onSearch, onCnpjLookup, loading }) {
       <div className="grid gap-3 md:grid-cols-3">
         <Input value={filters.cnpj} onChange={(event) => set("cnpj", event.target.value)} placeholder="CNPJ exato (consulta direta)" />
         <Input value={filters.nome} onChange={(event) => set("nome", event.target.value)} placeholder="Razão social (busca parcial)" />
-        <Input value={filters.cnae} onChange={(event) => set("cnae", event.target.value)} placeholder="CNAE principal (7 dígitos)" />
+        <FilterSelect value={filters.cnae} onChange={(value) => set("cnae", value)} placeholder="Todas as atividades (CNAE)" options={cnaesNuvnia} />
         <FilterSelect value={filters.uf} onChange={(value) => set("uf", value)} placeholder="Todos os estados" options={ufs} />
         <Input value={filters.cidade} onChange={(event) => set("cidade", event.target.value)} placeholder="Código do município (Receita, 4 dígitos)" />
         <FilterSelect value={filters.porte} onChange={(value) => set("porte", value)} placeholder="Todos os portes" options={portesNuvnia} />
         <Input value={filters.bairro} onChange={(event) => set("bairro", event.target.value)} placeholder="Bairro" />
-        <Input value={filters.capitalMinimo} onChange={(event) => set("capitalMinimo", event.target.value)} placeholder="Capital social mínimo (R$)" />
-        <Input value={filters.anoAberturaMinimo} onChange={(event) => set("anoAberturaMinimo", event.target.value)} placeholder="Aberta a partir do ano (ex: 2015)" />
-        <FilterSelect value={filters.exigirEmail} onChange={(value) => set("exigirEmail", value)} placeholder="Com ou sem e-mail" options={simNao} />
-        <FilterSelect value={filters.exigirTelefone} onChange={(value) => set("exigirTelefone", value)} placeholder="Com ou sem telefone" options={simNao} />
-        <FilterSelect value={filters.limit} onChange={(value) => set("limit", value)} placeholder="Quantidade de resultados" options={quantidades} />
+        <FilterSelect value={filters.capitalMinimo} onChange={(value) => set("capitalMinimo", value)} placeholder="Qualquer capital social" options={capitaisSociais} />
+        <FilterSelect value={filters.anoAberturaMinimo} onChange={(value) => set("anoAberturaMinimo", value)} placeholder="Qualquer ano de abertura" options={anosAbertura} />
+        <FilterSelect value={filters.exigirEmail} onChange={(value) => set("exigirEmail", value)} placeholder="Com ou sem e-mail" options={disponibilidadeContato} />
+        <FilterSelect value={filters.exigirTelefone} onChange={(value) => set("exigirTelefone", value)} placeholder="Com ou sem telefone" options={disponibilidadeContato} />
+        <FilterSelect value={filters.limit} onChange={(value) => set("limit", value)} placeholder="Quantidade de resultados" options={quantidadesNuvnia} />
       </div>
       <p className="text-xs text-slate-400">
         A Nuvnia filtra na origem por CNPJ, razão social, CNAE, estado, município e porte (cada empresa retornada consome 1 crédito).
