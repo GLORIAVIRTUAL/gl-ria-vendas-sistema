@@ -49,6 +49,9 @@ export const filtrarLeads = (leads, filters = {}) => {
     if (filters.exigirEmail === "nao" && prospect.email) return false;
     if (filters.exigirTelefone === "sim" && !prospect.telefone) return false;
     if (filters.exigirTelefone === "nao" && prospect.telefone) return false;
+    const socios = Array.isArray(bruto.socios) ? bruto.socios : [];
+    if (filters.exigirSocios === "sim" && !socios.length) return false;
+    if (filters.exigirSocios === "nao" && socios.length) return false;
     if (bairro && !String(bruto.bairro || "").toLowerCase().includes(bairro)) return false;
     if (capitalMinimo && (Number(prospect.capital_social) || 0) < capitalMinimo) return false;
     if (anoMinimo && Number(String(bruto.data_abertura || "").slice(0, 4)) < anoMinimo) return false;

@@ -9,7 +9,7 @@ import { anosAbertura, capitaisSociais, cnaesNuvnia, disponibilidadeContato, qua
 
 const initial = {
   cnpj: "", uf: "", cnae: "", porte: "", cidade: "", nome: "", limit: "20",
-  bairro: "", capitalMinimo: "", anoAberturaMinimo: "", exigirEmail: "", exigirTelefone: ""
+  bairro: "", capitalMinimo: "", anoAberturaMinimo: "", exigirEmail: "", exigirTelefone: "", exigirSocios: ""
 };
 
 export default function NuvniaSearchForm({ onSearch, onCnpjLookup, loading }) {
@@ -34,11 +34,12 @@ export default function NuvniaSearchForm({ onSearch, onCnpjLookup, loading }) {
         <FilterSelect value={filters.anoAberturaMinimo} onChange={(value) => set("anoAberturaMinimo", value)} placeholder="Qualquer ano de abertura" options={anosAbertura} />
         <FilterSelect value={filters.exigirEmail} onChange={(value) => set("exigirEmail", value)} placeholder="Com ou sem e-mail" options={disponibilidadeContato} />
         <FilterSelect value={filters.exigirTelefone} onChange={(value) => set("exigirTelefone", value)} placeholder="Com ou sem telefone" options={disponibilidadeContato} />
+        <FilterSelect value={filters.exigirSocios} onChange={(value) => set("exigirSocios", value)} placeholder="Com ou sem sócios/administradores" options={disponibilidadeContato} />
         <FilterSelect value={filters.limit} onChange={(value) => set("limit", value)} placeholder="Quantidade de resultados" options={quantidadesNuvnia} />
       </div>
       <p className="text-xs text-slate-400">
         A Nuvnia filtra na origem por CNPJ, razão social, CNAE, estado, município e porte (cada empresa retornada consome 1 crédito).
-        Bairro, capital social, ano de abertura, e-mail e telefone são aplicados sobre o resultado recebido.
+        Bairro, capital social, ano de abertura, e-mail, telefone e sócios/administradores são aplicados sobre o resultado recebido.
       </p>
       <Button type="submit" disabled={loading}>{loading ? "Consultando Nuvnia..." : "Buscar empresas"}</Button>
     </form>
