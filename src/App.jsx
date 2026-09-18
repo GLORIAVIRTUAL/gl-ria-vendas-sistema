@@ -19,6 +19,7 @@ import ClientesOpenClaw from '@/pages/ClientesOpenClaw';
 import Trafego from '@/pages/Trafego';
 import GerenciarUsuarios from '@/pages/GerenciarUsuarios';
 import Prospeccao from '@/pages/Prospeccao';
+import ProspeccaoNuvnia from '@/pages/ProspeccaoNuvnia';
 import ICPs from '@/pages/ICPs';
 import Campanhas from '@/pages/Campanhas';
 import MotorComercial from '@/pages/MotorComercial';
@@ -113,6 +114,11 @@ const AuthenticatedApp = () => (
       <Route path="/Prospeccao" element={
         <LayoutWrapper currentPageName="Prospeccao">
           <Prospeccao />
+        </LayoutWrapper>
+      } />
+      <Route path="/ProspeccaoNuvnia" element={
+        <LayoutWrapper currentPageName="ProspeccaoNuvnia">
+          <ProspeccaoNuvnia />
         </LayoutWrapper>
       } />
       <Route path="/ICPs" element={

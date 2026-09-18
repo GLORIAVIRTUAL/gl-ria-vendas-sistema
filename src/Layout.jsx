@@ -98,6 +98,7 @@ export default function Layout({ children, currentPageName }) {
     { title: "Motor Comercial", url: "/MotorComercial", icon: Target },
     { title: "ICPs", url: "/ICPs", icon: Target },
     { title: "Prospecção", url: "/Prospeccao", icon: Users },
+    { title: "Prospecção Nuvnia", url: "/ProspeccaoNuvnia", icon: Database },
     { title: "Qualidade Prospecção", url: "/QualidadeProspeccao", icon: Target },
     { title: "Higiene da Base", url: "/HigieneBase", icon: Database },
     { title: "Playbook de Objeções", url: "/PlaybookObjecoes", icon: ShieldQuestion },
