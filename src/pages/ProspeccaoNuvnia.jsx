@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import NuvniaSearchForm from "@/components/prospeccao/NuvniaSearchForm";
 import ProspectCard from "@/components/prospeccao/ProspectCard";
 import useProspeccao from "@/hooks/useProspeccao";
-import { normalizeNuvniaLead } from "@/lib/nuvniaUtils";
+import { filtrarLeads, normalizeNuvniaLead } from "@/lib/nuvniaUtils";
 
 export default function ProspeccaoNuvnia() {
   const flow = useProspeccao();
@@ -21,9 +21,31 @@ export default function ProspeccaoNuvnia() {
       const response = await base44.functions.invoke("nuvniaLeads", { acao: "search", filtros: filters, limit: Number(filters.limit) || 20 });
       const payload = response.data;
       if (payload?.error) throw new Error(payload.error);
-      setResults((payload?.data || []).map(normalizeNuvniaLead));
+      const recebidos = (payload?.data || []).map(normalizeNuvniaLead);
+      const filtrados = filtrarLeads(recebidos, filters);
+      setResults(filtrados);
       setCredits(payload?.credits || null);
       if (payload?.meta?.capped) toast.info("O retorno foi limitado pelos créditos restantes da sua conta Nuvnia.");
+      if (recebidos.length && filtrados.length < recebidos.length) {
+        toast.info(`${recebidos.length - filtrados.length} empresas foram descartadas pelos filtros complementares.`);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const buscarPorCnpj = async (cnpj) => {
+    setLoading(true);
+    setHasSearched(true);
+    try {
+      const response = await base44.functions.invoke("nuvniaLeads", { acao: "cnpj", cnpj });
+      const payload = response.data;
+      if (payload?.error) throw new Error(payload.error);
+      const lead = payload?.data;
+      setResults(lead ? [normalizeNuvniaLead(Array.isArray(lead) ? lead[0] : lead)] : []);
+      setCredits(payload?.credits || null);
     } catch (error) {
       toast.error(error.response?.data?.error || error.message);
     } finally {
@@ -53,7 +75,7 @@ export default function ProspeccaoNuvnia() {
 
     {credits && <p className="text-sm text-slate-300">Créditos: {credits.remaining ?? "-"} restantes de {credits.limit ?? "-"} (usados: {credits.used ?? "-"})</p>}
 
-    <NuvniaSearchForm onSearch={buscar} loading={loading} />
+    <NuvniaSearchForm onSearch={buscar} onCnpjLookup={buscarPorCnpj} loading={loading} />
 
     {results.length > 0 && <p className="text-sm text-slate-300">{results.length} empresas retornadas</p>}
 
