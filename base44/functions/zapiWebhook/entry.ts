@@ -5,6 +5,7 @@ import { buscarContextoComercial, montarContextoComercial, registrarQualificacao
 import { registrarHistorico } from '../../shared/pipeline.ts';
 import { montarBaseConhecimento } from '../../shared/conhecimento.ts';
 import { capturarNotaNPS, mensagemAgradecimento } from '../../shared/npsResposta.ts';
+import { enviarMensagemZapi, notificarDono } from '../../shared/zapi.ts';
 
 const processedMessages = new Set();
 
@@ -995,55 +996,7 @@ async function processOpenClawResponse(base44, contact, phone) {
   }
 }
 
-// ========== ENVIA UMA MENSAGEM DE TEXTO VIA Z-API ==========
-async function enviarMensagemZapi(phone, message) {
-  try {
-    const clientToken = (Deno.env.get('CLIENT_TOKEN') || '').trim();
-    const instanceToken = (Deno.env.get('TOKEN_DA_INSTANCIA') || '').trim();
-    const instanceId = (Deno.env.get('IA_DA_INSTANCIA') || '').trim();
-
-    if (!clientToken || !instanceToken || !instanceId) {
-      console.error('❌ Credenciais Z-API incompletas para envio');
-      return { ok: false, messageId: null, erro: 'Credenciais Z-API incompletas' };
-    }
-
-    let telefoneFormatado = phone.replace(/\D/g, '');
-    if (!telefoneFormatado.startsWith('55')) {
-      telefoneFormatado = '55' + telefoneFormatado;
-    }
-
-    const zapiUrl = `https://api.z-api.io/instances/${instanceId}/token/${instanceToken}/send-text`;
-    const res = await fetch(zapiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Client-Token': clientToken
-      },
-      body: JSON.stringify({ phone: telefoneFormatado, message }),
-      signal: AbortSignal.timeout(20000)
-    });
-
-    const texto = await res.text();
-    if (res.ok) {
-      console.log('✅ Mensagem enviada via Z-API!');
-      let data = null;
-      try { data = JSON.parse(texto); } catch { data = null; }
-      return { ok: true, messageId: data?.messageId || data?.id || data?.zaapId || null, erro: null };
-    }
-    console.error('❌ Erro ao enviar via Z-API:', texto);
-    return { ok: false, messageId: null, erro: `HTTP ${res.status}: ${texto.slice(0, 200)}` };
-  } catch (error) {
-    console.error('⚠️ Erro ao enviar mensagem Z-API:', error.message);
-    return { ok: false, messageId: null, erro: error.message };
-  }
-}
-
-// ========== NOTIFICA O DONO (WHATSAPP) ==========
-const NUMERO_DONO = '5587988020504';
-async function notificarDono(mensagem) {
-  const envio = await enviarMensagemZapi(NUMERO_DONO, mensagem);
-  if (!envio.ok) console.error('⚠️ Não foi possível notificar o dono:', envio.erro);
-}
+// Envio via Z-API e notificação do dono vivem em base44/shared/zapi.ts
 
 // ========== NOTIFICA O DONO SOBRE TRANSFERÊNCIA PARA HUMANO ==========
 async function notificarTransferenciaHumano(nomeContato, telefoneCliente) {
