@@ -1,4 +1,3 @@
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
 
 Deno.serve(async (req) => {
@@ -24,8 +23,8 @@ Deno.serve(async (req) => {
     } = body;
 
     // Validação de API Key para segurança
-    const expectedApiKey = Deno.env.get('CHATBOT_API_KEY') || 'sua-chave-secreta-aqui';
-    if (api_key !== expectedApiKey) {
+    const expectedApiKey = (Deno.env.get('CHATBOT_API_KEY') || '').trim();
+    if (!expectedApiKey || api_key !== expectedApiKey) {
       console.error('❌ API Key inválida');
       return Response.json({ 
         error: 'Unauthorized',

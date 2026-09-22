@@ -75,6 +75,13 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log('📩 Payload Z-API:', JSON.stringify(body, null, 2));
 
+    // Validação de origem: só aceita eventos da instância Z-API configurada.
+    const instanciaEsperada = (Deno.env.get('IA_DA_INSTANCIA') || '').trim();
+    if (instanciaEsperada && String(body.instanceId || '') !== instanciaEsperada) {
+      console.error('⛔ Webhook rejeitado: instanceId não corresponde à instância configurada');
+      return Response.json({ error: 'Origem não autorizada' }, { status: 401 });
+    }
+
     // Ignora mensagens enviadas por mim (fromMe) e status replies
     if (body.fromMe === true || body.isStatusReply === true) {
       console.log('⚠️ Mensagem própria ou status reply, ignorando');
@@ -629,10 +636,15 @@ ${history}`;
       const horarioValido = horario && /^\d{2}:\d{2}$/.test(horario);
 
       // Verificação de disponibilidade no servidor: nunca marca dois clientes no mesmo horário.
+      // Idempotência: se este mesmo contato já tem agendamento ativo em data+horário,
+      // reaproveita o registro em vez de criar outro (webhook repetido, IA repetindo o bloco).
       let horarioOcupado = false;
+      let agendamentoExistente = null;
       if (dataValida && horarioValido) {
         const jaAgendados = await base44.asServiceRole.entities.Agendamento.filter({ data, horario });
-        horarioOcupado = jaAgendados.some((a) => a.status !== 'Cancelada');
+        const ativos = jaAgendados.filter((a) => a.status !== 'Cancelada');
+        agendamentoExistente = ativos.find((a) => telefonesIguais(a.telefone_cliente, telefone)) || null;
+        horarioOcupado = !agendamentoExistente && ativos.length > 0;
       }
 
       if (horarioOcupado) {
@@ -641,9 +653,13 @@ ${history}`;
         finalResponse += `\n\nEsse horário (${horario}) já está ocupado. Pode escolher outro horário para eu confirmar?`;
       } else if (nomeValido && emailValido && dataValida && horarioValido && !ehFimDeSemana) {
         try {
-          // Cria evento no Google Calendar
-          let meetLink = null;
+          // Cria evento no Google Calendar (pulado quando o agendamento já existe)
+          let meetLink = agendamentoExistente?.link_reuniao || null;
+          if (agendamentoExistente) {
+            console.log('♻️ Agendamento já existente para este contato, reaproveitando:', agendamentoExistente.id);
+          }
           try {
+            if (!agendamentoExistente) {
             const startDateTime = `${data}T${horario}:00`;
             const [horaNum] = horario.split(':').map(Number);
             const endDateTime = `${data}T${(horaNum + 1).toString().padStart(2, '0')}:${horario.split(':')[1]}:00`;
@@ -710,12 +726,13 @@ ${history}`;
                 }
               }
             }
+            }
           } catch (calendarError) {
             console.error('⚠️ Erro Calendar:', calendarError.message);
           }
 
-          // Cria agendamento
-          const novoAgendamento = await base44.asServiceRole.entities.Agendamento.create({
+          // Cria agendamento (ou reaproveita o existente — idempotente)
+          const novoAgendamento = agendamentoExistente || await base44.asServiceRole.entities.Agendamento.create({
             nome_cliente: nome,
             email_cliente: email,
             telefone_cliente: telefone,
@@ -727,7 +744,7 @@ ${history}`;
             observacoes: `Agendado via WhatsApp IA (Z-API) - Contato: ${contact.name || phone}`
           });
 
-          console.log('✅ Agendamento criado!');
+          console.log(agendamentoExistente ? '♻️ Agendamento existente confirmado.' : '✅ Agendamento criado!');
 
           // Atualiza o Lead existente ou cria um novo — nunca duplica o mesmo cliente.
           try {
@@ -825,47 +842,9 @@ ${history}`;
       status: 'sent'
     });
 
-    // Envia via Z-API
+    // Envia via Z-API e registra o resultado real do envio na mensagem.
     console.log('📤 Enviando resposta via Z-API...');
-
-    const zapiUrl = `https://api.z-api.io/instances/${instanceId}/token/${instanceToken}/send-text`;
-
-    let telefoneFormatado = phone.replace(/\D/g, '');
-    if (!telefoneFormatado.startsWith('55')) {
-      telefoneFormatado = '55' + telefoneFormatado;
-    }
-
-    const sendResponse = await fetch(zapiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Client-Token': clientToken
-      },
-      body: JSON.stringify({
-        phone: telefoneFormatado,
-        message: finalResponse
-      })
-    });
-
-    if (sendResponse.ok) {
-      console.log('✅ Mensagem enviada via Z-API!');
-      // Salva o whatsapp_message_id retornado para que o webhook de status
-      // consiga atualizar os tracinhos (entregue / lido) desta mensagem.
-      try {
-        const sendData = await sendResponse.json();
-        const zaapId = sendData?.messageId || sendData?.id || sendData?.zaapId || '';
-        if (zaapId) {
-          await base44.asServiceRole.entities.Message.update(outboundMsg.id, {
-            whatsapp_message_id: zaapId
-          });
-        }
-      } catch (idErr) {
-        console.error('⚠️ Não foi possível capturar o ID da mensagem enviada:', idErr.message);
-      }
-    } else {
-      const errorText = await sendResponse.text();
-      console.error('❌ Erro ao enviar via Z-API:', errorText);
-    }
+    await enviarERegistrar(base44, outboundMsg.id, phone, finalResponse);
 
     // Registra qualificação, objeções e intenção do prospect a partir da conversa.
     if (contextoComercial) {
@@ -883,7 +862,51 @@ ${history}`;
 
   } catch (error) {
     console.error('❌ Erro no processamento da IA:', error);
+    await responderComFallback(base44, contact, phone, error);
   }
+}
+
+// ========== RESPOSTA SEGURA QUANDO A IA FALHA ==========
+// O cliente nunca fica sem resposta: envia uma mensagem segura (uma única vez
+// por incidente), registra o erro na conversa e avisa o dono.
+const MSG_FALLBACK = 'Estou com uma instabilidade momentânea por aqui. Já avisei nossa equipe e em breve alguém continua o atendimento com você. 🙏';
+
+async function responderComFallback(base44, contact, phone, error) {
+  try {
+    const ultimas = await base44.asServiceRole.entities.Message.filter(
+      { contact_id: contact.id, direction: 'outbound' },
+      '-created_date',
+      1
+    );
+    if (ultimas[0]?.content === MSG_FALLBACK) {
+      console.log('⚠️ Fallback já enviado para este contato, não repetindo.');
+      return;
+    }
+
+    const msg = await base44.asServiceRole.entities.Message.create({
+      contact_id: contact.id,
+      direction: 'outbound',
+      sender: 'ai',
+      content: MSG_FALLBACK,
+      type: 'text',
+      status: 'sent',
+      error_message: `Falha na IA: ${error?.message || 'erro desconhecido'}`
+    });
+    await enviarERegistrar(base44, msg.id, phone, MSG_FALLBACK);
+    await notificarDono(`⚠️ *IA falhou ao responder um cliente*\n\n👤 ${contact.name || phone}\n📱 ${phone}\n\nErro: ${error?.message || 'desconhecido'}\n\nO cliente recebeu uma mensagem de espera. Responda manualmente pelo sistema.`);
+  } catch (fbErr) {
+    console.error('❌ Erro ao enviar fallback:', fbErr.message);
+  }
+}
+
+// ========== ENVIA E GRAVA O RESULTADO REAL DO ENVIO NA MENSAGEM ==========
+async function enviarERegistrar(base44, messageId, phone, texto) {
+  const envio = await enviarMensagemZapi(phone, texto);
+  const patch = envio.ok
+    ? { status: 'sent', whatsapp_message_id: envio.messageId || '' }
+    : { status: 'failed', error_message: `Envio Z-API falhou: ${envio.erro}` };
+  await base44.asServiceRole.entities.Message.update(messageId, patch);
+  return envio;
 }
 
 // ========== PROCESSA RESPOSTA VIA OPENCLAW E ENVIA PELA Z-API ==========
@@ -964,14 +987,8 @@ async function processOpenClawResponse(base44, contact, phone) {
       status: 'sent'
     });
 
-    // Envia a resposta do OpenClaw pelo canal oficial (Z-API)
-    const zaapId = await enviarMensagemZapi(phone, reply);
-    // Salva o ID retornado para o webhook de status atualizar os tracinhos.
-    if (zaapId) {
-      await base44.asServiceRole.entities.Message.update(outboundMsg.id, {
-        whatsapp_message_id: zaapId
-      });
-    }
+    // Envia a resposta do OpenClaw pelo canal oficial (Z-API) e registra o resultado.
+    await enviarERegistrar(base44, outboundMsg.id, phone, reply);
 
   } catch (error) {
     console.error('❌ Erro no processamento OpenClaw:', error.message);
@@ -987,7 +1004,7 @@ async function enviarMensagemZapi(phone, message) {
 
     if (!clientToken || !instanceToken || !instanceId) {
       console.error('❌ Credenciais Z-API incompletas para envio');
-      return null;
+      return { ok: false, messageId: null, erro: 'Credenciais Z-API incompletas' };
     }
 
     let telefoneFormatado = phone.replace(/\D/g, '');
@@ -1002,87 +1019,38 @@ async function enviarMensagemZapi(phone, message) {
         'Content-Type': 'application/json',
         'Client-Token': clientToken
       },
-      body: JSON.stringify({ phone: telefoneFormatado, message })
+      body: JSON.stringify({ phone: telefoneFormatado, message }),
+      signal: AbortSignal.timeout(20000)
     });
 
+    const texto = await res.text();
     if (res.ok) {
       console.log('✅ Mensagem enviada via Z-API!');
-      // Retorna o ID da mensagem para rastrear status (tracinhos de leitura).
-      try {
-        const data = await res.json();
-        return data?.messageId || data?.id || data?.zaapId || null;
-      } catch {
-        return null;
-      }
-    } else {
-      console.error('❌ Erro ao enviar via Z-API:', await res.text());
-      return null;
+      let data = null;
+      try { data = JSON.parse(texto); } catch { data = null; }
+      return { ok: true, messageId: data?.messageId || data?.id || data?.zaapId || null, erro: null };
     }
+    console.error('❌ Erro ao enviar via Z-API:', texto);
+    return { ok: false, messageId: null, erro: `HTTP ${res.status}: ${texto.slice(0, 200)}` };
   } catch (error) {
     console.error('⚠️ Erro ao enviar mensagem Z-API:', error.message);
-    return null;
+    return { ok: false, messageId: null, erro: error.message };
   }
+}
+
+// ========== NOTIFICA O DONO (WHATSAPP) ==========
+const NUMERO_DONO = '5587988020504';
+async function notificarDono(mensagem) {
+  const envio = await enviarMensagemZapi(NUMERO_DONO, mensagem);
+  if (!envio.ok) console.error('⚠️ Não foi possível notificar o dono:', envio.erro);
 }
 
 // ========== NOTIFICA O DONO SOBRE TRANSFERÊNCIA PARA HUMANO ==========
 async function notificarTransferenciaHumano(nomeContato, telefoneCliente) {
-  try {
-    const clientToken = (Deno.env.get('CLIENT_TOKEN') || '').trim();
-    const instanceToken = (Deno.env.get('TOKEN_DA_INSTANCIA') || '').trim();
-    const instanceId = (Deno.env.get('IA_DA_INSTANCIA') || '').trim();
-
-    if (!clientToken || !instanceToken || !instanceId) return;
-
-    const meuNumero = '5587988020504';
-    const mensagem = `🙋 *Cliente pediu atendimento humano!*\n\n👤 Nome: ${nomeContato}\n📱 Telefone: ${telefoneCliente}\n\nA IA foi desligada para este contato. Responda manualmente pelo sistema.`;
-
-    const zapiUrl = `https://api.z-api.io/instances/${instanceId}/token/${instanceToken}/send-text`;
-    await fetch(zapiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Client-Token': clientToken
-      },
-      body: JSON.stringify({ phone: meuNumero, message: mensagem })
-    });
-    console.log('✅ Dono notificado sobre transferência para humano!');
-  } catch (error) {
-    console.error('⚠️ Erro ao notificar transferência:', error.message);
-  }
+  await notificarDono(`🙋 *Cliente pediu atendimento humano!*\n\n👤 Nome: ${nomeContato}\n📱 Telefone: ${telefoneCliente}\n\nA IA foi desligada para este contato. Responda manualmente pelo sistema.`);
 }
 
 // ========== NOTIFICA O DONO SOBRE CLIENTE NOVO NO CHAT ==========
 async function notificarClienteNovo(nomeContato, telefoneCliente) {
-  try {
-    const clientToken = (Deno.env.get('CLIENT_TOKEN') || '').trim();
-    const instanceToken = (Deno.env.get('TOKEN_DA_INSTANCIA') || '').trim();
-    const instanceId = (Deno.env.get('IA_DA_INSTANCIA') || '').trim();
-
-    if (!clientToken || !instanceToken || !instanceId) {
-      console.error('❌ Credenciais Z-API incompletas para notificação');
-      return;
-    }
-
-    const meuNumero = '5587988020504';
-    const mensagem = `🔔 *Novo cliente no chat da Glória!*\n\n👤 Nome: ${nomeContato}\n📱 Telefone: ${telefoneCliente}\n\nUm novo contato acabou de iniciar uma conversa.`;
-
-    const zapiUrl = `https://api.z-api.io/instances/${instanceId}/token/${instanceToken}/send-text`;
-
-    const res = await fetch(zapiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Client-Token': clientToken
-      },
-      body: JSON.stringify({ phone: meuNumero, message: mensagem })
-    });
-
-    if (res.ok) {
-      console.log('✅ Notificação de cliente novo enviada ao dono!');
-    } else {
-      console.error('❌ Erro ao notificar dono:', await res.text());
-    }
-  } catch (error) {
-    console.error('⚠️ Erro ao notificar cliente novo:', error.message);
-  }
+  await notificarDono(`🔔 *Novo cliente no chat da Glória!*\n\n👤 Nome: ${nomeContato}\n📱 Telefone: ${telefoneCliente}\n\nUm novo contato acabou de iniciar uma conversa.`);
 }
