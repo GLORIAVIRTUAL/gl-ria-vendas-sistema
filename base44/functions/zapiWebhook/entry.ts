@@ -63,6 +63,13 @@ async function souAExecucaoMaisRecente(base44, contactId, minhaMsgId) {
 }
 
 Deno.serve(async (req) => {
+  // trace_id: identificador único desta execução, prefixado em todos os logs
+  // para permitir seguir uma mensagem de ponta a ponta no explorador de logs.
+  const traceId = crypto.randomUUID().slice(0, 8);
+  const logOriginal = { log: console.log, error: console.error };
+  console.log = (...args) => logOriginal.log(`[${traceId}]`, ...args);
+  console.error = (...args) => logOriginal.error(`[${traceId}]`, ...args);
+
   console.log('🔔 Webhook Z-API recebido:', req.method);
 
   // Z-API só envia POST
@@ -566,34 +573,7 @@ ${contextoComercial ? montarContextoComercial(contextoComercial) : ''}
 HISTÓRICO DA CONVERSA (as últimas mensagens "Cliente:" são as mais recentes, responda a elas):
 ${history}`;
 
-    console.log('🔄 Chamando OpenAI GPT-4o...');
-
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${secrets.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [{ role: 'user', content: fullPrompt }],
-        temperature: 0.4
-      }),
-      signal: AbortSignal.timeout(120000)
-    });
-
-    if (!openaiResponse.ok) {
-      throw new Error(`OpenAI retornou status ${openaiResponse.status}`);
-    }
-
-    const openaiData = await openaiResponse.json();
-    const aiResponse = (openaiData.choices?.[0]?.message?.content || '').trim();
-
-    if (!aiResponse) {
-      throw new Error('OpenAI não retornou texto de resposta');
-    }
-
-    console.log('✅ Resposta do GPT-4o recebida');
+    const aiResponse = await gerarRespostaIA(base44, fullPrompt);
 
     // Verifica comando de agendamento
     let finalResponse = aiResponse;
@@ -865,6 +845,42 @@ ${history}`;
     console.error('❌ Erro no processamento da IA:', error);
     await responderComFallback(base44, contact, phone, error);
   }
+}
+
+// ========== GERA A RESPOSTA DA IA COM FALLBACK DE PROVEDOR ==========
+// 1º tenta a OpenAI (GPT-4o). Se falhar (erro, timeout ou resposta vazia),
+// usa o modelo interno da plataforma para que o cliente não fique sem resposta.
+async function gerarRespostaIA(base44, prompt) {
+  try {
+    console.log('🔄 Chamando OpenAI GPT-4o...');
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${secrets.get('OPENAI_API_KEY')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.4
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+    if (!res.ok) throw new Error(`OpenAI retornou status ${res.status}`);
+    const data = await res.json();
+    const texto = (data.choices?.[0]?.message?.content || '').trim();
+    if (!texto) throw new Error('OpenAI não retornou texto de resposta');
+    console.log('✅ Resposta do GPT-4o recebida');
+    return texto;
+  } catch (openaiErr) {
+    console.error('⚠️ OpenAI falhou, usando provedor reserva:', openaiErr.message);
+  }
+
+  const reserva = await base44.asServiceRole.integrations.Core.InvokeLLM({ prompt });
+  const texto = (typeof reserva === 'string' ? reserva : JSON.stringify(reserva)).trim();
+  if (!texto) throw new Error('Provedor reserva também não retornou resposta');
+  console.log('✅ Resposta gerada pelo provedor reserva');
+  return texto;
 }
 
 // ========== RESPOSTA SEGURA QUANDO A IA FALHA ==========
