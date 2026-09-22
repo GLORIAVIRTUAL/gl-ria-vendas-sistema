@@ -8,6 +8,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import SaudeChatbot from "@/components/dashboard/SaudeChatbot";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
@@ -174,6 +175,8 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <SaudeChatbot />
 
         {/* Seção de Usuários do Sistema */}
         <Card className="shadow-lg">
